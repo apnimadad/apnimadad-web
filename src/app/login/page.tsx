@@ -24,7 +24,7 @@ import { UserRole } from "@/types/database";
 function LoginForm() {
   const searchParams = useSearchParams();
   const { lang } = useLanguage();
-  const { signIn, signUp, requestOtp, verifyOtp } = useAuth();
+  const { signIn, signUp, requestOtp, verifyOtp, loginAsDemo } = useAuth();
 
   // Role: "donor" | "beneficiary" | "admin"
   const [role, setRole] = useState<UserRole>("donor");
@@ -244,6 +244,11 @@ function LoginForm() {
     }
 
     window.location.href = "/dashboard";
+  };
+
+  const handleQuickDemo = (demoRole: UserRole) => {
+    loginAsDemo(demoRole);
+    handleRedirect(demoRole);
   };
 
   // 1. Password Sign In
@@ -821,6 +826,44 @@ function LoginForm() {
             </button>
           </form>
         )}
+
+        {/* Quick Demo Access Bar */}
+        <div className="mt-6 pt-5 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              {lang === "hi" ? "त्वरित डेमो लॉगिन (1-क्लिक परीक्षण)" : "Instant Demo Login (1-Click Test)"}
+            </span>
+            <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+              {lang === "hi" ? "कोई पासवर्ड नहीं" : "No Password Needed"}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickDemo("beneficiary")}
+              className="px-2 py-2 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition text-center flex flex-col items-center gap-1 shadow-2xs"
+            >
+              <User className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{lang === "hi" ? "यूजर / मरीज" : "User / Patient"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDemo("donor")}
+              className="px-2 py-2 text-xs font-semibold rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 transition text-center flex flex-col items-center gap-1 shadow-2xs"
+            >
+              <Heart className="w-3.5 h-3.5 text-blue-600" />
+              <span>{lang === "hi" ? "दानदाता" : "Donor"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDemo("admin")}
+              className="px-2 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition text-center flex flex-col items-center gap-1 shadow-2xs"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
+              <span>{lang === "hi" ? "व्यवस्थापक" : "Admin Desk"}</span>
+            </button>
+          </div>
+        </div>
 
         {/* Footer Security Note */}
         <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
