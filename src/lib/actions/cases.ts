@@ -427,13 +427,17 @@ export async function getConfidentialCases(): Promise<ConfidentialCaseItem[]> {
 /**
  * Fetch cases for a specific user from Supabase
  */
-export async function getUserCases(userId?: string): Promise<Case[]> {
+export async function getUserCases(userId?: string, phone?: string): Promise<Case[]> {
   const supabase = createServiceClient() || (await createServerSupabase());
   if (!supabase) return [];
 
   let query = supabase.from("cases").select("*").order("created_at", { ascending: false });
-  if (userId) {
+  if (userId && phone) {
+    query = query.or(`patient_id.eq.${userId},phone.eq.${phone}`);
+  } else if (userId) {
     query = query.eq("patient_id", userId);
+  } else if (phone) {
+    query = query.eq("phone", phone);
   }
 
   const { data, error } = await query;
@@ -442,6 +446,40 @@ export async function getUserCases(userId?: string): Promise<Case[]> {
     return [];
   }
   return (data || []) as Case[];
+}
+
+/**
+ * Beneficiary: append an additional verified document to an existing case
+ */
+export async function uploadAdditionalDocument(
+  caseId: string,
+  doc: { name: string; type: string; url: string }
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return { success: false, error: "Database not connected" };
+
+  const { data: c, error: fetchErr } = await supabase
+    .from("cases")
+    .select("documents")
+    .eq("id", caseId)
+    .single();
+
+  if (fetchErr || !c) return { success: false, error: fetchErr?.message || "Case not found" };
+
+  const currentDocs = (c.documents as { name: string; type: string; url: string }[]) || [];
+  const updatedDocs = [...currentDocs, doc];
+
+  const { error: updateErr } = await supabase
+    .from("cases")
+    .update({ documents: updatedDocs })
+    .eq("id", caseId);
+
+  if (updateErr) return { success: false, error: updateErr.message };
+
+  revalidatePath(`/cases/${caseId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/admin");
+  return { success: true };
 }
 
 /**
