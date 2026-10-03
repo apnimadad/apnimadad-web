@@ -26,7 +26,7 @@ interface AuthContextType {
   profile: Profile | null;
   role: UserRole | null;
   loading: boolean;
-  signIn: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, pass: string) => Promise<{ success: boolean; role?: UserRole; profile?: Profile; error?: string }>;
   signUp: (payload: {
     email: string;
     password: string;
@@ -48,7 +48,7 @@ interface AuthContextType {
     role?: UserRole;
     fullName?: string;
     phone?: string;
-  }) => Promise<{ success: boolean; error?: string }>;
+  }) => Promise<{ success: boolean; role?: UserRole; profile?: Profile; error?: string }>;
   requestWhatsApp: (payload: {
     phone: string;
     role?: UserRole;
@@ -171,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isSupabaseConfigured()) {
           localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(res.profile));
         }
-        return { success: true };
+        return { success: true, role: res.profile.role, profile: res.profile };
       }
       return { success: false, error: res.error || "Login failed" };
     } finally {
@@ -228,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(res.user || null);
         setProfile(res.profile);
         localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(res.profile));
-        return { success: true };
+        return { success: true, role: res.profile.role, profile: res.profile };
       }
       return { success: false, error: res.error || "Verification failed." };
     } finally {

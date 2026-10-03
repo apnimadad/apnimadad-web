@@ -411,21 +411,34 @@ export async function signInUser(
     return { success: false, error: "User not found" };
   }
 
-  const { data: profileData } = await supabase
+  const service = createServiceClient() || supabase;
+  const { data: profileData } = await service
     .from("profiles")
     .select("*")
     .eq("id", data.user.id)
     .single();
 
-  const profile: Profile = profileData || {
-    id: data.user.id,
-    email: data.user.email || cleanEmail,
-    role: (data.user.user_metadata?.role as UserRole) || "donor",
-    full_name: data.user.user_metadata?.full_name || cleanEmail.split("@")[0],
-    phone: data.user.user_metadata?.phone || null,
-    is_verified: true,
-    created_at: data.user.created_at,
-  };
+  let profile: Profile;
+  if (profileData) {
+    profile = profileData as Profile;
+  } else {
+    const fallbackRole = (data.user.user_metadata?.role as UserRole) || "donor";
+    const newProfile = {
+      id: data.user.id,
+      email: data.user.email || cleanEmail,
+      role: fallbackRole,
+      full_name: data.user.user_metadata?.full_name || cleanEmail.split("@")[0],
+      phone: data.user.user_metadata?.phone || null,
+      is_verified: true,
+      created_at: data.user.created_at,
+    };
+    try {
+      await service.from("profiles").upsert(newProfile);
+    } catch {
+      // Ignore if table insert fails
+    }
+    profile = newProfile;
+  }
 
   revalidatePath("/");
   return {

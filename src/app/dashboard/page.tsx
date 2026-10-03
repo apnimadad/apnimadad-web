@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import { formatINR, getProgress } from "@/lib/format";
 import { getUserCases, getUserDonations } from "@/lib/actions/cases";
@@ -44,8 +45,15 @@ interface UserDonationItem {
 
 export default function DashboardPage() {
   const { profile, role, signOut } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"cases" | "donations" | "verification">("cases");
   const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (role === "admin") {
+      router.replace("/admin");
+    }
+  }, [role, router]);
 
   const [userCases, setUserCases] = useState<Case[]>([]);
   const [userDonations, setUserDonations] = useState<UserDonationItem[]>([]);

@@ -228,14 +228,19 @@ function LoginForm() {
   const currentRole = t.roles[role];
 
   // Route after login
-  const handleRedirect = () => {
-    if (redirectUrl && redirectUrl.startsWith("/")) {
-      router.push(redirectUrl);
-    } else if (role === "admin") {
+  const handleRedirect = (loggedInRole?: UserRole) => {
+    const effectiveRole = loggedInRole || role;
+    if (effectiveRole === "admin") {
       router.push("/admin");
-    } else {
-      router.push("/dashboard");
+      return;
     }
+
+    if (redirectUrl && redirectUrl.startsWith("/") && redirectUrl !== "/admin") {
+      router.push(redirectUrl);
+      return;
+    }
+
+    router.push("/dashboard");
   };
 
   // 1. Password Sign In
@@ -260,7 +265,7 @@ function LoginForm() {
         return;
       }
 
-      handleRedirect();
+      handleRedirect(res.role);
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.signInFailed });
     } finally {
@@ -379,7 +384,7 @@ function LoginForm() {
       }
 
       setMessage({ type: "success", text: t.errors.verifySuccess });
-      setTimeout(handleRedirect, 600);
+      setTimeout(() => handleRedirect(res.role), 600);
     } catch (err: unknown) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.verifyFailed });
     } finally {
