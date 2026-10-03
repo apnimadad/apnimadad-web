@@ -163,8 +163,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignIn = async (email: string, pass: string) => {
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      const res = await signInUser(email, pass);
+      if (isSupabaseConfigured()) {
+        const supabase = createClient();
+        if (supabase) {
+          try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password: pass,
+            });
+
+            if (error) {
+              return { success: false, error: error.message };
+            }
+
+            if (data?.user) {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", data.user.id)
+                .single();
+
+              const resolvedProfile: Profile = (prof as Profile) || {
+                id: data.user.id,
+                email: data.user.email || cleanEmail,
+                role: (data.user.user_metadata?.role as UserRole) || "donor",
+                full_name: data.user.user_metadata?.full_name || cleanEmail.split("@")[0],
+                phone: data.user.user_metadata?.phone || null,
+                is_verified: true,
+                created_at: data.user.created_at,
+              };
+
+              setUser({ id: data.user.id, email: data.user.email || cleanEmail });
+              setProfile(resolvedProfile);
+              return { success: true, role: resolvedProfile.role, profile: resolvedProfile };
+            }
+          } catch (clientErr) {
+            console.warn("Direct browser signIn fallback to server action:", clientErr);
+          }
+        }
+      }
+
+      const res = await signInUser(cleanEmail, pass);
       if (res.success && res.profile) {
         setUser(res.user || null);
         setProfile(res.profile);
@@ -174,6 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true, role: res.profile.role, profile: res.profile };
       }
       return { success: false, error: res.error || "Login failed" };
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : "Login failed" };
     } finally {
       setLoading(false);
     }
