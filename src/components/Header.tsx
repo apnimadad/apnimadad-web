@@ -102,7 +102,7 @@ export default function Header() {
               suppressHydrationWarning
               className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
             >
-              <div className="relative shrink-0">
+              <span className="relative shrink-0 block">
                 <Image
                   src="/logo.jpeg"
                   alt="Apni Madad Foundation Logo"
@@ -114,15 +114,15 @@ export default function Header() {
                 <span className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-0.5 rounded-full ring-2 ring-white">
                   <ShieldCheck className="w-3 h-3" />
                 </span>
-              </div>
-              <div className="block leading-tight">
-                <div className="font-black text-base sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition">
+              </span>
+              <span className="block leading-tight">
+                <span className="block font-black text-base sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition">
                   Apni Madad
-                </div>
-                <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase whitespace-nowrap">
+                </span>
+                <span className="block text-[9px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase whitespace-nowrap">
                   FOUNDATION · 100% DIRECT HELP
-                </div>
-              </div>
+                </span>
+              </span>
             </Link>
 
             {/* 2. Center: Navigation Links (Compact & perfectly fitted, no overflow) */}

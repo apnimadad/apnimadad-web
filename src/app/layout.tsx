@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/AuthContext";
 import { SiteSettingsProvider } from "@/components/SiteSettingsContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ClientErrorGuard from "@/components/ClientErrorGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -102,6 +103,7 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col antialiased">
+        <ClientErrorGuard />
         <AuthProvider>
           <LanguageProvider>
             <SiteSettingsProvider>
