@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { 
   User, 
   Mail, 
@@ -22,7 +22,6 @@ import { useLanguage } from "@/components/LanguageContext";
 import { UserRole } from "@/types/database";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { lang } = useLanguage();
   const { signIn, signUp, requestOtp, verifyOtp } = useAuth();
@@ -53,12 +52,16 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const redirectUrl = searchParams.get("redirect");
+  const redirectUrl = searchParams.get("redirect") || searchParams.get("next");
 
   // Read URL query parameters
   useEffect(() => {
     const roleParam = searchParams.get("role");
-    if (roleParam === "beneficiary" || roleParam === "donor" || roleParam === "admin") {
+    const nextParam = searchParams.get("next");
+    if (nextParam === "/admin" || nextParam?.includes("admin")) {
+      setRole("admin");
+      setAuthTab("signin");
+    } else if (roleParam === "beneficiary" || roleParam === "donor" || roleParam === "admin") {
       setRole(roleParam);
       if (roleParam === "admin") {
         setAuthTab("signin");
@@ -231,16 +234,16 @@ function LoginForm() {
   const handleRedirect = (loggedInRole?: UserRole) => {
     const effectiveRole = loggedInRole || role;
     if (effectiveRole === "admin") {
-      router.push("/admin");
+      window.location.href = "/admin";
       return;
     }
 
     if (redirectUrl && redirectUrl.startsWith("/") && redirectUrl !== "/admin") {
-      router.push(redirectUrl);
+      window.location.href = redirectUrl;
       return;
     }
 
-    router.push("/dashboard");
+    window.location.href = "/dashboard";
   };
 
   // 1. Password Sign In

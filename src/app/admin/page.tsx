@@ -14,7 +14,6 @@ import {
 import { submitVerificationReview } from "@/lib/actions/verification";
 import { useSiteSettings } from "@/components/SiteSettingsContext";
 import { useLanguage } from "@/components/LanguageContext";
-import { useAuth } from "@/components/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -47,7 +46,6 @@ import {
   AlertTriangle,
   UserCheck,
   Globe,
-  LogOut,
 } from "lucide-react";
 
 type AdminCase = Case & {
@@ -98,7 +96,6 @@ export default function AdminPage() {
   } = useSiteSettings();
 
   const { lang, setLang } = useLanguage();
-  const { signOut } = useAuth();
 
   const [adminSection, setAdminSection] = useState<"cases" | "confidential" | "website">("cases");
   const [cases, setCases] = useState<AdminCase[]>([]);
@@ -592,17 +589,6 @@ export default function AdminPage() {
                   हिंदी
                 </button>
               </div>
-
-              {/* Admin Sign Out Button */}
-              <button
-                type="button"
-                onClick={() => signOut()}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                title={lang === "hi" ? "साइन आउट करें और होम पेज पर जाएं" : "Sign Out and return to Home"}
-              >
-                <LogOut className="w-3.5 h-3.5 text-rose-600" />
-                <span>{lang === "hi" ? "साइन आउट" : "Sign Out"}</span>
-              </button>
 
               {adminSection === "cases" ? (
                 <button

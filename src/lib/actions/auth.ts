@@ -440,7 +440,6 @@ export async function signInUser(
     profile = newProfile;
   }
 
-  revalidatePath("/");
   return {
     success: true,
     user: { id: data.user.id, email: data.user.email || cleanEmail },
