@@ -2,11 +2,10 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 import { Notification, NotificationType, UserRole } from "@/types/database";
-import { initialMockNotifications, MockNotification } from "@/lib/mock-data";
 import { revalidatePath } from "next/cache";
 
-// Server memory store for demo mode fallback
-let demoNotifications: MockNotification[] = [...initialMockNotifications];
+// Server memory store for session notifications when DB connection is not initialized
+let sessionNotifications: Notification[] = [];
 
 export async function getNotifications(params?: {
   userId?: string;
@@ -15,23 +14,10 @@ export async function getNotifications(params?: {
   const supabase = await createServerSupabase();
 
   if (!supabase) {
-    // Strictly filter demo notifications based on role
-    return demoNotifications
-      .filter((n) => {
-        if (!params?.role || params.role === "all") return true;
-        return n.recipientRole === params.role;
-      })
-      .map((n) => ({
-        id: n.id,
-        user_id: n.userId || null,
-        recipient_role: n.recipientRole,
-        type: n.type as NotificationType,
-        title: n.title,
-        message: n.message,
-        link_url: n.linkUrl || null,
-        is_read: n.isRead,
-        created_at: n.createdAt,
-      }));
+    return sessionNotifications.filter((n) => {
+      if (!params?.role || params.role === "all") return true;
+      return n.recipient_role === params.role;
+    });
   }
 
   let query = supabase
@@ -67,18 +53,18 @@ export async function createNotification(payload: {
   const supabase = await createServerSupabase();
 
   if (!supabase) {
-    const newNotif: MockNotification = {
+    const newNotif: Notification = {
       id: "notif-" + Date.now(),
-      userId: payload.userId,
-      recipientRole: payload.recipientRole || "all",
+      user_id: payload.userId || null,
+      recipient_role: payload.recipientRole || "all",
       type: payload.type,
       title: payload.title,
       message: payload.message,
-      linkUrl: payload.linkUrl,
-      isRead: false,
-      createdAt: "Just now",
+      link_url: payload.linkUrl || null,
+      is_read: false,
+      created_at: new Date().toISOString(),
     };
-    demoNotifications = [newNotif, ...demoNotifications];
+    sessionNotifications = [newNotif, ...sessionNotifications];
     return { success: true, id: newNotif.id };
   }
 
@@ -109,8 +95,8 @@ export async function markNotificationAsRead(id: string): Promise<{ success: boo
   const supabase = await createServerSupabase();
 
   if (!supabase) {
-    demoNotifications = demoNotifications.map((n) =>
-      n.id === id ? { ...n, isRead: true } : n
+    sessionNotifications = sessionNotifications.map((n) =>
+      n.id === id ? { ...n, is_read: true } : n
     );
     return { success: true };
   }
@@ -129,7 +115,7 @@ export async function markAllNotificationsAsRead(userId?: string): Promise<{ suc
   const supabase = await createServerSupabase();
 
   if (!supabase) {
-    demoNotifications = demoNotifications.map((n) => ({ ...n, isRead: true }));
+    sessionNotifications = sessionNotifications.map((n) => ({ ...n, is_read: true }));
     return { success: true };
   }
 

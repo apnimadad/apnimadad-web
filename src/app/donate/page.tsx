@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useLanguage } from "@/components/LanguageContext";
 import { useAuth } from "@/components/AuthContext";
 import CaseCard from "@/components/CaseCard";
-import { mockCases } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { Case } from "@/types/database";
 import { 
   ShieldCheck, 
   QrCode, 
@@ -12,20 +13,33 @@ import {
   ArrowRight,
   Sparkles,
   Lock,
-  User
+  User,
+  Loader2,
 } from "lucide-react";
 
 export default function DonatePage() {
   const { lang, t } = useLanguage();
   const { user, profile, role } = useAuth();
   const isDonor = role === "donor" || role === "admin";
-  const active = mockCases.filter(
-    (c) =>
-      c.status === "approved" &&
-      c.category !== "women_help" &&
-      c.category !== "satta_mukt" &&
-      !c.title?.includes("[CONFIDENTIAL")
-  );
+  const [active, setActive] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCases() {
+      try {
+        const res = await fetch("/api/cases");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.cases)) {
+          setActive(json.cases);
+        }
+      } catch (e) {
+        console.error("Failed to load donate cases:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCases();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
@@ -151,19 +165,24 @@ export default function DonatePage() {
           </Link>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {active.map((c) => (
-            <CaseCard key={c.id} c={c} />
-          ))}
-        </div>
-
-        {active.length === 0 && (
+        {loading ? (
+          <div className="py-20 text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+            <p className="text-xs text-slate-500 font-medium">Loading urgent verified cases...</p>
+          </div>
+        ) : active.length === 0 ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-md mx-auto">
             <Sparkles className="w-10 h-10 text-amber-500 mx-auto mb-3" />
             <h3 className="font-bold text-slate-900">All Active Cases Funded</h3>
             <p className="text-xs text-slate-500 mt-1">
               All ongoing emergencies have reached their goals! New verified cases will be posted shortly.
             </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {active.map((c) => (
+              <CaseCard key={c.id} c={c} />
+            ))}
           </div>
         )}
       </main>

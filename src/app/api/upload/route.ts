@@ -25,17 +25,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServerSupabase();
 
-    // If running in demo mode without Supabase credentials
     if (!supabase) {
-      const mockUrl = `/uploads/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-      return NextResponse.json({
-        success: true,
-        url: mockUrl,
-        size: file.size,
-        name: file.name,
-        type: file.type,
-        demoMode: true,
-      });
+      return NextResponse.json(
+        { success: false, error: "Supabase storage is not configured" },
+        { status: 503 }
+      );
     }
 
     const serviceClient = createServiceClient() || supabase;

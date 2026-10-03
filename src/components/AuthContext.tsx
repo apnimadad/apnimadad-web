@@ -40,7 +40,7 @@ interface AuthContextType {
     role?: UserRole;
     fullName?: string;
     phone?: string;
-  }) => Promise<{ success: boolean; message?: string; demoOtp?: string; error?: string }>;
+  }) => Promise<{ success: boolean; message?: string; error?: string }>;
   verifyOtp: (payload: {
     email: string;
     token: string;

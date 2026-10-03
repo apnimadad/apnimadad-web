@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import CaseCard from "@/components/CaseCard";
-import { mockCases, Category, AgeGroup } from "@/lib/mock-data";
+import { Case, Category, AgeGroup } from "@/types/database";
 import { useLanguage } from "@/components/LanguageContext";
 import TopDonorsTicker from "@/components/TopDonorsTicker";
 import { 
@@ -15,16 +15,37 @@ import {
   Users, 
   Sparkles,
   RotateCcw,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 
 export default function CasesPage() {
   const { lang, t } = useLanguage();
+  const [cases, setCases] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category | "all">("all");
   const [ageGroup, setAgeGroup] = useState<AgeGroup | "all">("all");
   const [status, setStatus] = useState<"all" | "approved" | "funded">("approved");
   const [sort, setSort] = useState<"urgency" | "recent" | "remaining">("urgency");
+
+  useEffect(() => {
+    async function loadCases() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/cases");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.cases)) {
+          setCases(json.cases);
+        }
+      } catch (err) {
+        console.error("Failed to load cases:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCases();
+  }, []);
 
   const categories: { key: Category | "all"; label: string; icon: React.ReactNode }[] = [
     { key: "all", label: t("all"), icon: <Sparkles className="w-3.5 h-3.5" /> },
@@ -44,9 +65,9 @@ export default function CasesPage() {
   };
 
   const filtered = useMemo(() => {
-    let list = mockCases.filter(
+    let list = cases.filter(
       (c) =>
-        (c.verified || c.status === "funded") &&
+        (c.verified || c.status === "funded" || c.status === "approved") &&
         c.category !== "women_help" &&
         c.category !== "satta_mukt" &&
         !c.title?.includes("[CONFIDENTIAL")
@@ -54,32 +75,38 @@ export default function CasesPage() {
 
     if (status !== "all") list = list.filter((c) => c.status === status);
     if (category !== "all") list = list.filter((c) => c.category === category);
-    if (ageGroup !== "all") list = list.filter((c) => c.ageGroup === ageGroup);
+    if (ageGroup !== "all") {
+      list = list.filter((c) => {
+        const ag = c.age_group || (c as { ageGroup?: AgeGroup }).ageGroup;
+        return ag === ageGroup;
+      });
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (c) =>
           c.title.toLowerCase().includes(q) ||
-          c.titleHi.includes(q) ||
-          c.patientName.toLowerCase().includes(q) ||
-          c.city.toLowerCase().includes(q) ||
+          (c.title_hi && c.title_hi.toLowerCase().includes(q)) ||
+          c.patient_name.toLowerCase().includes(q) ||
+          (c.city && c.city.toLowerCase().includes(q)) ||
           c.description.toLowerCase().includes(q)
       );
     }
 
     if (sort === "urgency") {
-      const order = { high: 0, medium: 1, low: 2 };
-      list = [...list].sort((a, b) => order[a.urgency] - order[b.urgency]);
+      const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
+      list = [...list].sort((a, b) => (order[a.urgency] ?? 1) - (order[b.urgency] ?? 1));
     } else if (sort === "recent") {
-      list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      list = [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
     } else {
       list = [...list].sort(
-        (a, b) => b.amountNeeded - b.amountRaised - (a.amountNeeded - a.amountRaised)
+        (a, b) =>
+          Number(b.amount_needed) - Number(b.amount_raised) - (Number(a.amount_needed) - Number(a.amount_raised))
       );
     }
 
     return list;
-  }, [search, category, ageGroup, status, sort]);
+  }, [cases, search, category, ageGroup, status, sort]);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
@@ -205,7 +232,12 @@ export default function CasesPage() {
         </div>
 
         {/* Case Cards Grid */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-20 text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+            <p className="text-xs text-slate-500 font-medium">Loading verified medical cases...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-md mx-auto space-y-3">
             <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
               <Filter className="w-6 h-6" />

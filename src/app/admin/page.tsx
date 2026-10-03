@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { mockCases, formatINR, getProgress, Case, TopDonor } from "@/lib/mock-data";
+import { formatINR, getProgress } from "@/lib/format";
+import { Case, TopDonor, ConfidentialCaseItem } from "@/types/database";
+import {
+  getAllCasesAdmin,
+  submitCase,
+  updateCase,
+  approveCase,
+  rejectCase,
+  getConfidentialCases,
+} from "@/lib/actions/cases";
 import { submitVerificationReview } from "@/lib/actions/verification";
 import { useSiteSettings } from "@/components/SiteSettingsContext";
 import Image from "next/image";
@@ -36,8 +45,42 @@ import {
   AlertTriangle,
   UserCheck,
 } from "lucide-react";
-import { getConfidentialCases } from "@/lib/actions/cases";
-import { ConfidentialCaseItem } from "@/types/database";
+
+type AdminCase = Case & {
+  patientName: string;
+  amountRaised: number;
+  amountNeeded: number;
+  photoUrl: string;
+  upiId: string;
+  bankAccount: string;
+};
+
+function normalizeAdminCase(c: Case | (Case & Partial<AdminCase>)): AdminCase {
+  const custom = c as Case & Partial<AdminCase>;
+  return {
+    ...c,
+    patientName: c.patient_name || custom.patientName || "Beneficiary",
+    patient_name: c.patient_name || custom.patientName || "Beneficiary",
+    amountRaised: Number(c.amount_raised ?? custom.amountRaised ?? 0),
+    amount_raised: Number(c.amount_raised ?? custom.amountRaised ?? 0),
+    amountNeeded: Number(c.amount_needed ?? custom.amountNeeded ?? 0),
+    amount_needed: Number(c.amount_needed ?? custom.amountNeeded ?? 0),
+    photoUrl:
+      c.photo_url ||
+      custom.photoUrl ||
+      "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&h=400&fit=crop",
+    photo_url:
+      c.photo_url ||
+      custom.photoUrl ||
+      "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&h=400&fit=crop",
+    upiId: c.upi_id || custom.upiId || "",
+    upi_id: c.upi_id || custom.upiId || "",
+    bankAccount: c.bank_account || custom.bankAccount || "",
+    bank_account: c.bank_account || custom.bankAccount || "",
+    ifsc: c.ifsc || "",
+    city: c.city || "India",
+  };
+}
 
 export default function AdminPage() {
   const {
@@ -51,8 +94,8 @@ export default function AdminPage() {
   } = useSiteSettings();
 
   const [adminSection, setAdminSection] = useState<"cases" | "confidential" | "website">("cases");
-  const [cases, setCases] = useState<Case[]>(mockCases);
-  const [selected, setSelected] = useState<Case | null>(null);
+  const [cases, setCases] = useState<AdminCase[]>([]);
+  const [selected, setSelected] = useState<AdminCase | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "funded" | "rejected" | "all">("pending");
   const [search, setSearch] = useState("");
@@ -83,58 +126,32 @@ export default function AdminPage() {
     setSettingsForm(settings);
   }, [settings]);
 
+  const loadAdminCases = async () => {
+    try {
+      const data = await getAllCasesAdmin();
+      if (data && data.length > 0) {
+        setCases(data.map(normalizeAdminCase));
+      } else {
+        setCases([]);
+      }
+    } catch (err) {
+      console.error("loadAdminCases error:", err);
+      setCases([]);
+    }
+  };
+
   const loadConfidential = async () => {
     try {
       const data = await getConfidentialCases();
-      if (data && data.length > 0) {
-        setConfidentialCases(data);
-      } else {
-        setConfidentialCases([
-          {
-            id: "conf-sample-1",
-            title: "[CONFIDENTIAL - WOMEN HELP] पारिवारिक संकट व सुरक्षित कानूनी परामर्श",
-            patient_name: "स्वाति (काल्पनिक नाम)",
-            aliasName: "स्वाति / बहन X",
-            realName: "सुमन शर्मा",
-            contactPhone: "+91 98765 43210",
-            city: "इंदौर, मध्य प्रदेश",
-            category: "women_help",
-            confidentialCategory: "women_help",
-            safeContactTime: "दोपहर 01:00 PM से 03:00 PM (ससुराल में शांति का समय)",
-            supportType: "पारिवारिक कलह / कानूनी सहायता",
-            description:
-              "ससुराल में प्रताड़ना का मामला है। सुरक्षित आश्रय और कानूनी सलाह की आवश्यकता है। कृपया केवल दिए गए समय पर ही कॉल करें ताकि कोई पास न हो।",
-            status: "pending",
-            created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-            counselorNotes:
-              "प्रथम कॉल शेड्यूल: दोपहर 1:30 बजे वरिष्ठ महिला काउंसलर द्वारा संपर्क किया जाएगा।",
-          },
-          {
-            id: "conf-sample-2",
-            title: "[CONFIDENTIAL - SATTA MUKT] जुआ/सट्टे की लत व भारी कर्ज से मुक्ति मार्गदर्शन",
-            patient_name: "राहुल (काल्पनिक नाम)",
-            aliasName: "राहुल",
-            realName: "राजेश वर्मा",
-            contactPhone: "+91 98111 22334",
-            city: "जयपुर, राजस्थान",
-            category: "satta_mukt",
-            confidentialCategory: "satta_mukt",
-            safeContactTime: "शाम 05:00 PM से 07:00 PM",
-            supportType: "मनोवैज्ञानिक परामर्श व ऋण राहत योजना",
-            description:
-              "ऑनलाइन गेमिंग व सट्टे में भारी नुकसान हुआ है, मानसिक तनाव में हैं और रिकवरी कॉल्स आ रहे हैं। कानूनी व मनोवैज्ञानिक मार्गदर्शन चाहिए। परिवार को अभी नहीं पता है।",
-            status: "pending",
-            created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-            counselorNotes: "ऋण प्रबंधन विशेषज्ञ को केस असाइन किया गया।",
-          },
-        ]);
-      }
+      setConfidentialCases(data || []);
     } catch (err) {
       console.error("loadConfidential error:", err);
+      setConfidentialCases([]);
     }
   };
 
   useEffect(() => {
+    loadAdminCases();
     loadConfidential();
   }, []);
 
@@ -264,10 +281,10 @@ export default function AdminPage() {
 
       const matchSearch =
         search.trim() === "" ||
-        c.title.toLowerCase().includes(search.toLowerCase()) ||
-        c.patientName.toLowerCase().includes(search.toLowerCase()) ||
-        c.city.toLowerCase().includes(search.toLowerCase()) ||
-        c.id.toLowerCase().includes(search.toLowerCase());
+        (c.title && c.title.toLowerCase().includes(search.toLowerCase())) ||
+        (c.patientName && c.patientName.toLowerCase().includes(search.toLowerCase())) ||
+        (c.city && c.city.toLowerCase().includes(search.toLowerCase())) ||
+        (c.id && c.id.toLowerCase().includes(search.toLowerCase()));
 
       return matchTab && matchSearch;
     });
@@ -352,13 +369,14 @@ export default function AdminPage() {
       badges: ["id_verified", "hospital_verified", "zero_commission_guarantee"],
       reviewerName: "NGO Administrator",
     });
+    await approveCase(id);
     setCases((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: "approved", verified: true } : c))
     );
     if (selected?.id === id) {
       setSelected((s) => (s ? { ...s, status: "approved", verified: true } : null));
     }
-    showToast("Case verified & published live! Beneficiary notified.");
+    showToast("Case verified & published live in Supabase! Beneficiary notified.");
   };
 
   const handleReject = async (id: string) => {
@@ -370,6 +388,7 @@ export default function AdminPage() {
       badges: [],
       reviewerName: "NGO Administrator",
     });
+    await rejectCase(id);
     setCases((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: "rejected", verified: false } : c))
     );
@@ -379,26 +398,36 @@ export default function AdminPage() {
     showToast("Case rejected. Notification sent to beneficiary.");
   };
 
-  const openEdit = (c: Case) => {
+  const openEdit = (c: AdminCase) => {
     setSelected(c);
     setEditForm({
-      amountRaised: c.amountRaised,
-      amountNeeded: c.amountNeeded,
+      amountRaised: Number(c.amount_raised ?? c.amountRaised ?? 0),
+      amountNeeded: Number(c.amount_needed ?? c.amountNeeded ?? 0),
       status: c.status,
-      upiId: c.upiId,
-      bankAccount: c.bankAccount,
-      ifsc: c.ifsc,
-      urgency: c.urgency,
+      upiId: c.upi_id || c.upiId || "",
+      bankAccount: c.bank_account || c.bankAccount || "",
+      ifsc: c.ifsc || "",
+      urgency: c.urgency || "medium",
     });
     setEditMode(true);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!selected) return;
+    await updateCase(selected.id, {
+      amount_raised: Number(editForm.amountRaised),
+      amount_needed: Number(editForm.amountNeeded),
+      status: editForm.status,
+      upi_id: editForm.upiId,
+      bank_account: editForm.bankAccount,
+      ifsc: editForm.ifsc,
+      urgency: editForm.urgency,
+      verified: editForm.status === "approved" || editForm.status === "funded",
+    });
     setCases((prev) =>
       prev.map((c) =>
         c.id === selected.id
-          ? {
+          ? normalizeAdminCase({
               ...c,
               amountRaised: Number(editForm.amountRaised),
               amountNeeded: Number(editForm.amountNeeded),
@@ -408,13 +437,13 @@ export default function AdminPage() {
               ifsc: editForm.ifsc,
               urgency: editForm.urgency,
               verified: editForm.status === "approved" || editForm.status === "funded",
-            }
+            })
           : c
       )
     );
     setSelected((prev) =>
       prev
-        ? {
+        ? normalizeAdminCase({
             ...prev,
             amountRaised: Number(editForm.amountRaised),
             amountNeeded: Number(editForm.amountNeeded),
@@ -424,56 +453,50 @@ export default function AdminPage() {
             ifsc: editForm.ifsc,
             urgency: editForm.urgency,
             verified: editForm.status === "approved" || editForm.status === "funded",
-          }
+          })
         : null
     );
     setEditMode(false);
-    showToast("Case details and payment accounts updated successfully!");
+    showToast("Case details and payment accounts updated successfully in Supabase!");
   };
 
-  const handleCreateCase = (e: React.FormEvent) => {
+  const handleCreateCase = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newCase: Case = {
-      id: `case-${Date.now().toString().slice(-4)}`,
+    const res = await submitCase({
       title: newCaseForm.title,
-      titleHi: newCaseForm.title,
       description: newCaseForm.description,
-      descriptionHi: newCaseForm.description,
-      patientName: newCaseForm.patientName,
+      patient_name: newCaseForm.patientName,
       age: Number(newCaseForm.age),
-      ageGroup: Number(newCaseForm.age) < 18 ? "child" : Number(newCaseForm.age) > 60 ? "elderly" : "adult",
       city: newCaseForm.city,
       category: newCaseForm.category,
-      amountNeeded: Number(newCaseForm.amountNeeded),
-      amountRaised: 0,
-      status: "approved",
-      verified: true,
-      photoUrl: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&h=400&fit=crop",
-      documents: [{ name: "Verified Hospital Bill Estimate", type: "pdf", url: "#" }],
-      upiId: newCaseForm.upiId,
-      bankAccount: newCaseForm.bankAccount,
+      amount_needed: Number(newCaseForm.amountNeeded),
+      upi_id: newCaseForm.upiId,
+      bank_account: newCaseForm.bankAccount,
       ifsc: newCaseForm.ifsc,
-      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=upi://pay?pa=${encodeURIComponent(newCaseForm.upiId)}`,
-      createdAt: new Date().toISOString().split("T")[0],
       urgency: newCaseForm.urgency,
-    };
-
-    setCases([newCase, ...cases]);
-    setNewCaseModal(false);
-    showToast("New case created, verified, and published live!");
-    setNewCaseForm({
-      title: "",
-      patientName: "",
-      age: "",
-      city: "",
-      category: "medical",
-      amountNeeded: "",
-      upiId: "",
-      bankAccount: "",
-      ifsc: "",
-      description: "",
-      urgency: "high",
     });
+
+    if (res.success && res.id) {
+      await approveCase(res.id);
+      await loadAdminCases();
+      setNewCaseModal(false);
+      showToast("New case created, verified, and published live in Supabase!");
+      setNewCaseForm({
+        title: "",
+        patientName: "",
+        age: "",
+        city: "",
+        category: "medical",
+        amountNeeded: "",
+        upiId: "",
+        bankAccount: "",
+        ifsc: "",
+        description: "",
+        urgency: "high",
+      });
+    } else {
+      showToast(`Error creating case: ${res.error || "Failed"}`);
+    }
   };
 
   return (

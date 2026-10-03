@@ -7,7 +7,7 @@ import { useAuth } from "@/components/AuthContext";
 import { compressImage, compressVideo, formatBytes } from "@/lib/compression";
 import { submitCase, submitConfidentialCase } from "@/lib/actions/cases";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { Category } from "@/lib/mock-data";
+import { Category } from "@/types/database";
 import { ShieldCheck, Lock, EyeOff, Clock } from "lucide-react";
 
 type FileStatus = {
@@ -20,7 +20,7 @@ type FileStatus = {
 
 export default function SubmitCasePage() {
   const { t } = useLanguage();
-  const { user, profile, role, loginAsDemo } = useAuth();
+  const { user, profile, role } = useAuth();
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -249,11 +249,6 @@ export default function SubmitCasePage() {
       });
 
       if (!result.success) {
-        // Demo mode still shows success if no supabase
-        if (!isSupabaseConfigured()) {
-          setSubmitted(true);
-          return;
-        }
         throw new Error(result.error || "Submission failed");
       }
 
@@ -331,17 +326,10 @@ export default function SubmitCasePage() {
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
             <Link
               href="/login?role=beneficiary&mode=signup_otp&redirect=/submit"
-              className="flex-1 sm:flex-none text-center px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-2xs"
+              className="flex-1 sm:flex-none text-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-xs"
             >
               Verify Account
             </Link>
-            <button
-              type="button"
-              onClick={() => loginAsDemo("beneficiary")}
-              className="flex-1 sm:flex-none px-3 py-1.5 bg-white border border-amber-300 text-amber-900 font-bold rounded-xl text-xs hover:bg-amber-50 transition"
-            >
-              Demo Fill
-            </button>
           </div>
         </div>
       )}
@@ -351,12 +339,6 @@ export default function SubmitCasePage() {
         Fill carefully. Photos & videos are auto-compressed (approx 100 KB images, optimized 720p videos)
         directly in your browser before upload.
       </p>
-
-      {!isSupabaseConfigured() && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-          <strong>Demo mode:</strong> Supabase keys not set. Compression works, data is saved in memory and mock state.
-        </div>
-      )}
 
       <form
         onSubmit={handleSubmit}

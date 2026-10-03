@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Case, formatINR, getProgress } from "@/lib/mock-data";
+import { Case } from "@/types/database";
+import { formatINR, getProgress } from "@/lib/format";
 import { useLanguage } from "./LanguageContext";
 import { 
   ShieldCheck, 
@@ -14,15 +15,36 @@ import {
   GraduationCap, 
   Car, 
   Accessibility, 
-  Users,
-  CheckCircle2,
-  Sparkles
+  Users, 
+  CheckCircle2, 
+  Sparkles 
 } from "lucide-react";
 
-export default function CaseCard({ c }: { c: Case }) {
+export default function CaseCard({
+  c,
+}: {
+  c: Case & {
+    patientName?: string;
+    photoUrl?: string;
+    titleHi?: string;
+    descriptionHi?: string;
+    amountRaised?: number;
+    amountNeeded?: number;
+  };
+}) {
   const { lang, t } = useLanguage();
-  const progress = getProgress(c.amountRaised, c.amountNeeded);
-  const remaining = c.amountNeeded - c.amountRaised;
+
+  const amountRaised = Number(c.amount_raised ?? c.amountRaised ?? 0);
+  const amountNeeded = Number(c.amount_needed ?? c.amountNeeded ?? 1);
+  const progress = getProgress(amountRaised, amountNeeded);
+  const remaining = Math.max(0, amountNeeded - amountRaised);
+
+  const patientName = c.patient_name || c.patientName || "Patient";
+  const photoUrl = c.photo_url || c.photoUrl || "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=400&fit=crop";
+  const title = (lang === "hi" ? (c.title_hi || c.titleHi || c.title) : c.title) || "Medical Case";
+  const description = (lang === "hi" ? (c.description_hi || c.descriptionHi || c.description) : c.description) || "";
+  const city = c.city || "India";
+  const age = c.age ? `${c.age} ${lang === "hi" ? "वर्ष" : "yrs"}` : "";
 
   const categoryIcon = () => {
     switch (c.category) {
@@ -40,8 +62,8 @@ export default function CaseCard({ c }: { c: Case }) {
       {/* Photo Header */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         <Image
-          src={c.photoUrl}
-          alt={c.patientName}
+          src={photoUrl}
+          alt={patientName}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -78,26 +100,30 @@ export default function CaseCard({ c }: { c: Case }) {
 
         <div className="absolute bottom-3 left-3 text-white text-xs font-medium flex items-center gap-1.5 drop-shadow-md">
           <MapPin className="w-3.5 h-3.5 text-amber-300" />
-          <span>{c.city}</span>
-          <span>·</span>
-          <span>{c.patientName} ({c.age} {lang === "hi" ? "वर्ष" : "yrs"})</span>
+          <span>{city}</span>
+          {patientName && (
+            <>
+              <span>·</span>
+              <span>{patientName} {age ? `(${age})` : ""}</span>
+            </>
+          )}
         </div>
       </div>
 
       {/* Body Content */}
       <div className="p-5 flex flex-col flex-1">
         <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug mb-2 line-clamp-2 group-hover:text-blue-700 transition">
-          {lang === "hi" ? c.titleHi : c.title}
+          {title}
         </h3>
         <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 mb-4 flex-1 leading-relaxed">
-          {lang === "hi" ? c.descriptionHi : c.description}
+          {description}
         </p>
 
         {/* Progress Tracker */}
         <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 mb-4">
           <div className="flex justify-between items-baseline text-xs mb-1.5">
             <span className="font-extrabold text-emerald-700 text-sm">
-              {formatINR(c.amountRaised)}
+              {formatINR(amountRaised)}
             </span>
             <span className="text-slate-500 font-medium">
               {t("raised")} ({progress}%)
@@ -112,9 +138,9 @@ export default function CaseCard({ c }: { c: Case }) {
           </div>
 
           <div className="flex justify-between text-[11px] text-slate-500 mt-1.5 pt-1 border-t border-slate-200/60 font-medium">
-            <span>Goal: {formatINR(c.amountNeeded)}</span>
+            <span>Goal: {formatINR(amountNeeded)}</span>
             <span className="text-slate-700 font-semibold">
-              Remaining: {formatINR(Math.max(0, remaining))}
+              Remaining: {formatINR(remaining)}
             </span>
           </div>
         </div>

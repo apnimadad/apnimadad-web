@@ -157,3 +157,12 @@ export interface ConfidentialCaseItem {
   phone?: string;
   urgency?: string;
 }
+
+export interface TopDonor {
+  id: string;
+  name: string;
+  amount: number;
+  photoUrl: string;
+  caseTitle: string;
+}
+

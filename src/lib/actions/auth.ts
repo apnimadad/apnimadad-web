@@ -9,7 +9,6 @@ export interface AuthResponse {
   user?: { id: string; email: string } | null;
   profile?: Profile | null;
   message?: string;
-  demoOtp?: string;
   error?: string;
 }
 
@@ -94,8 +93,7 @@ export async function sendEmailOtp(payload: {
 
   return {
     success: true,
-    message: `Verification code generated for ${email}. Check your email.`,
-    demoOtp: generatedOtp,
+    message: `Verification code sent to ${email}. Please check your email inbox.`,
   };
 }
 
@@ -393,31 +391,11 @@ export async function signInUser(
   const cleanEmail = email.trim().toLowerCase();
   const supabase = await createServerSupabase();
 
-  if (!supabase || !password) {
-    let role: UserRole = "donor";
-    if (cleanEmail.includes("admin")) role = "admin";
-    else if (cleanEmail.includes("patient") || cleanEmail.includes("beneficiary")) role = "beneficiary";
-
-    const demoProfile: Profile = {
-      id: "demo-user-" + role,
-      email: cleanEmail,
-      role,
-      full_name:
-        role === "admin"
-          ? "Dr. Shahnawaz (Admin)"
-          : role === "beneficiary"
-          ? "Aarav Sharma (Patient)"
-          : "Vikram Mehta (Verified Donor)",
-      phone: "+91 98765 43210",
-      is_verified: true,
-      created_at: new Date().toISOString(),
-    };
-
-    return {
-      success: true,
-      user: { id: demoProfile.id, email: cleanEmail },
-      profile: demoProfile,
-    };
+  if (!supabase) {
+    return { success: false, error: "Database authentication is not connected" };
+  }
+  if (!password) {
+    return { success: false, error: "Password is required for password sign-in" };
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -471,21 +449,7 @@ export async function signUpUser(payload: {
   const supabase = await createServerSupabase();
 
   if (!supabase) {
-    const demoProfile: Profile = {
-      id: "user-" + Math.random().toString(36).substring(2, 9),
-      email: cleanEmail,
-      role: payload.role,
-      full_name: payload.fullName,
-      phone: payload.phone || null,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-    };
-
-    return {
-      success: true,
-      user: { id: demoProfile.id, email: cleanEmail },
-      profile: demoProfile,
-    };
+    return { success: false, error: "Database authentication is not connected" };
   }
 
   const { data, error } = await supabase.auth.signUp({

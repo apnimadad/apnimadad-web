@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useLanguage } from "@/components/LanguageContext";
 import TopDonorsTicker from "@/components/TopDonorsTicker";
 import CaseCard from "@/components/CaseCard";
-import { mockCases } from "@/lib/mock-data";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Case } from "@/types/database";
 import {
   ShieldCheck,
   HeartHandshake,
@@ -16,21 +16,32 @@ import {
   CheckCircle2,
   ChevronDown,
   Lock,
-  Smartphone
+  Smartphone,
+  Loader2,
 } from "lucide-react";
 
 export default function HomePage() {
   const { lang, t } = useLanguage();
-  const featured = mockCases
-    .filter(
-      (c) =>
-        c.status === "approved" &&
-        c.category !== "women_help" &&
-        c.category !== "satta_mukt" &&
-        !c.title?.includes("[CONFIDENTIAL")
-    )
-    .slice(0, 3);
+  const [featured, setFeatured] = useState<Case[]>([]);
+  const [loadingCases, setLoadingCases] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  useEffect(() => {
+    async function loadRealCases() {
+      try {
+        const res = await fetch("/api/cases");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.cases)) {
+          setFeatured(json.cases.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Failed to load featured cases:", err);
+      } finally {
+        setLoadingCases(false);
+      }
+    }
+    loadRealCases();
+  }, []);
 
   const faqs = [
     {
@@ -146,7 +157,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30">
-                      LIVE DEMO
+                      DIRECT TRANSFER
                     </span>
                   </div>
 
@@ -271,11 +282,18 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {featured.map((c) => (
-              <CaseCard key={c.id} c={c} />
-            ))}
-          </div>
+          {loadingCases ? (
+            <div className="py-16 text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-xs text-slate-500 font-medium">Loading verified emergency cases...</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {featured.map((c) => (
+                <CaseCard key={c.id} c={c} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

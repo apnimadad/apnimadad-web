@@ -8,7 +8,31 @@ import {
   ReactNode,
   useCallback,
 } from "react";
-import { TopDonor, topDonors as defaultTopDonors } from "@/lib/mock-data";
+import { TopDonor } from "@/types/database";
+
+const defaultTopDonors: TopDonor[] = [
+  {
+    id: "td-1",
+    name: "Vikram Mehta",
+    amount: 50000,
+    photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
+    caseTitle: "Pediatric Heart Surgery",
+  },
+  {
+    id: "td-2",
+    name: "Dr. Ananya Roy",
+    amount: 35000,
+    photoUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop",
+    caseTitle: "Cancer Chemotherapy Support",
+  },
+  {
+    id: "td-3",
+    name: "Rajesh Singhania",
+    amount: 25000,
+    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+    caseTitle: "Orphan Education Care",
+  },
+];
 
 export interface SiteAnnouncement {
   enabled: boolean;

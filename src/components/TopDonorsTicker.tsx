@@ -1,6 +1,6 @@
 "use client";
 
-import { formatINR } from "@/lib/mock-data";
+import { formatINR } from "@/lib/format";
 import { useLanguage } from "./LanguageContext";
 import { useSiteSettings } from "./SiteSettingsContext";
 import Image from "next/image";
