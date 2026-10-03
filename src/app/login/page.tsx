@@ -160,7 +160,7 @@ function LoginForm() {
       roles: {
         donor: {
           title: "दानदाता पोर्टल",
-          desc: "सीधे जरूरतमंदों को दान करें, प्रभाव ट्रैक करें व 80G टैक्स रसीद प्राप्त करें।",
+          desc: "सीधे जरूरतमंदों को दान करें, प्रभाव ट्रैक करें व दान रसीद प्राप्त करें।",
           badgeColor: "bg-blue-100 text-blue-900 border-blue-200",
           btnColor: "bg-blue-600 hover:bg-blue-700",
           icon: Heart,

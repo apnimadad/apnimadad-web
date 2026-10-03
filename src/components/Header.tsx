@@ -328,7 +328,7 @@ export default function Header() {
                           <Heart className="w-3.5 h-3.5 text-rose-500" />
                           <div className="leading-tight">
                             <div className="font-bold">{lang === "hi" ? "दानदाता पोर्टल" : "Donor Portal"}</div>
-                            <div className="text-[10px] text-slate-400">{lang === "hi" ? "दान करें व रसीद प्राप्त करें" : "Direct giving & 80G tax receipt"}</div>
+                            <div className="text-[10px] text-slate-400">{lang === "hi" ? "दान करें व रसीद प्राप्त करें" : "Direct giving & donation receipt"}</div>
                           </div>
                         </Link>
                         <Link

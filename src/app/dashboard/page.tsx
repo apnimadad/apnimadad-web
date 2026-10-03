@@ -37,7 +37,6 @@ import {
   Receipt,
   Search,
   X,
-  CreditCard,
   UserCheck,
   Award,
   Calendar,
@@ -106,7 +105,7 @@ export default function DashboardPage() {
 
   // Donor sub-tabs
   const [donorTab, setDonorTab] = useState<
-    "donations" | "updates" | "urgent" | "tax80g"
+    "donations" | "updates" | "urgent"
   >("donations");
 
   // Data states
@@ -125,9 +124,7 @@ export default function DashboardPage() {
   const [qrModal, setQrModal] = useState<Case | null>(null);
   const [attachDocModal, setAttachDocModal] = useState<string | null>(null);
 
-  // PAN state for 80G tax receipt
-  const [donorPan, setDonorPan] = useState("");
-  const [panSaved, setPanSaved] = useState(false);
+
 
   // Beneficiary Appeal Form State (With photo, video, docs, hospital details, and direct UPI)
   const [appealForm, setAppealForm] = useState({
@@ -286,16 +283,7 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSavePan = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!donorPan.trim()) return;
-    try {
-      localStorage.setItem("apni_madad_donor_pan", donorPan.trim().toUpperCase());
-      setPanSaved(true);
-    } catch {
-      // ignore
-    }
-  };
+
 
   // Upload Handlers for Beneficiary Appeal
   const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1706,17 +1694,17 @@ export default function DashboardPage() {
 
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col justify-between">
                 <div className="flex items-center justify-between text-slate-500 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">80G Tax Exemption</span>
-                  <div className="p-2 bg-amber-50 text-amber-700 rounded-xl">
-                    <Receipt className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Direct Verification</span>
+                  <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
                 </div>
                 <div>
                   <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    50% Deduction
+                    100% Direct
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Instant digital 80G tax receipts ready
+                    Direct UPI &amp; hospital account transfers
                   </p>
                 </div>
               </div>
@@ -1768,19 +1756,6 @@ export default function DashboardPage() {
                   {urgentCases.length}
                 </span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setDonorTab("tax80g")}
-                className={`pb-3 px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-                  donorTab === "tax80g"
-                    ? "border-blue-700 text-blue-800"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>80G Tax Exemption Center</span>
-              </button>
             </div>
 
             {/* Donor Sub-Tab 1: Direct Transfers & Receipts */}
@@ -1829,7 +1804,7 @@ export default function DashboardPage() {
                       {donationSearch ? "No matching transfers found" : "No direct transfers recorded yet"}
                     </h3>
                     <p className="text-xs text-slate-500 max-w-md mx-auto mb-6">
-                      When you donate directly to any verified patient via UPI QR, record your UTR reference to generate official 80G tax receipts and follow patient recovery updates.
+                      When you donate directly to any verified patient via UPI QR, record your UTR reference to generate your official donation receipt and follow patient recovery updates.
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       <button
@@ -1859,7 +1834,7 @@ export default function DashboardPage() {
                             <th className="py-3 px-4 font-bold">Amount</th>
                             <th className="py-3 px-4 font-bold">Payment Ref (UTR)</th>
                             <th className="py-3 px-4 font-bold">Status</th>
-                            <th className="py-3 px-4 font-bold text-right">80G Receipt</th>
+                            <th className="py-3 px-4 font-bold text-right">Receipt</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -1934,7 +1909,7 @@ export default function DashboardPage() {
                                     className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg transition text-xs border border-blue-200"
                                   >
                                     <Download className="w-3.5 h-3.5" />
-                                    <span>80G Receipt</span>
+                                    <span>Receipt</span>
                                   </button>
                                 </td>
                               </tr>
@@ -2107,62 +2082,11 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Donor Sub-Tab 4: 80G Tax Exemption Center */}
-            {donorTab === "tax80g" && (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 sm:p-8 rounded-3xl shadow-md">
-                  <div className="max-w-2xl space-y-3">
-                    <span className="px-3 py-1 bg-white/10 text-blue-200 border border-white/20 text-xs font-bold rounded-full uppercase tracking-wider">
-                      Section 80G Income Tax Exemption
-                    </span>
-                    <h2 className="text-2xl font-black tracking-tight">
-                      Maximize Your Philanthropic Tax Savings
-                    </h2>
-                    <p className="text-xs text-slate-200 leading-relaxed">
-                      Apni Madad Foundation is recognized under Section 80G of the Indian Income Tax Act. All verified donations made directly through our platform qualify for a 50% deduction on your taxable income.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs max-w-xl">
-                  <h3 className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-blue-600" />
-                    <span>Link Permanent Account Number (PAN) for Tax Invoices</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mb-4">
-                    Indian Income Tax department mandates PAN for donation receipts exceeding ₹2,000 to be eligible for Form 10BE filing.
-                  </p>
-
-                  <form onSubmit={handleSavePan} className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      maxLength={10}
-                      placeholder="e.g. ABCDE1234F"
-                      value={donorPan}
-                      onChange={(e) => setDonorPan(e.target.value.toUpperCase())}
-                      className="flex-1 px-3 py-2 text-xs sm:text-sm uppercase font-mono border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition shrink-0"
-                    >
-                      {panSaved ? "Update PAN" : "Save PAN"}
-                    </button>
-                  </form>
-                  {panSaved && (
-                    <p className="text-[11px] text-emerald-700 font-semibold mt-2 flex items-center gap-1">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      PAN linked successfully. It will automatically appear on all your 80G receipts.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </main>
 
-      {/* MODAL 1: Official 80G Tax Exemption Receipt */}
+      {/* MODAL 1: Official Donation Receipt */}
       {receiptModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
           <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95">
@@ -2176,16 +2100,16 @@ export default function DashboardPage() {
             <div id="print-receipt-area" className="border border-slate-300 rounded-2xl p-6 bg-slate-50/50 space-y-4">
               <div className="text-center border-b border-slate-300 pb-4">
                 <span className="text-[10px] font-bold text-blue-800 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">
-                  Official 80G Tax Exemption Certificate
+                  Official Donation Receipt
                 </span>
                 <h3 className="text-xl font-black text-slate-900 mt-1">
                   APNI MADAD FOUNDATION
                 </h3>
                 <p className="text-[10px] text-slate-600">
-                  Registered under Section 80G & 12A of the Income Tax Act, 1961
+                  100% Direct Peer-to-Peer Relief &amp; Emergency Assistance
                 </p>
                 <p className="text-[10px] text-slate-500 font-mono">
-                  Reg No: U85300MP2024NPL012345 | 80G Approval: CIT(E)/BPL/80G/2024-25/A-1082
+                  Verified Direct Contribution Voucher | Zero Platform Fee
                 </p>
               </div>
 
@@ -2210,10 +2134,6 @@ export default function DashboardPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-600">Donor Name:</span>
                   <span className="font-bold text-slate-900">{profile?.full_name || receiptModal.donor_name || "Generous Supporter"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Donor PAN:</span>
-                  <span className="font-mono font-bold text-slate-900">{donorPan || "Not Provided (Form 10BE General)"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Patient / Purpose:</span>
@@ -2248,7 +2168,7 @@ export default function DashboardPage() {
 
             <div className="mt-5 flex items-center justify-between gap-3">
               <span className="text-[11px] text-slate-500">
-                Print or save as PDF for your Income Tax Return.
+                Save or print this receipt for your donation transfer records.
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -2287,7 +2207,7 @@ export default function DashboardPage() {
               Record a Direct UPI / Bank Transfer
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              If you scanned a patient&apos;s QR code on PhonePe, GPay, or Paytm, enter the UTR to reconcile and generate your 80G tax receipt.
+              If you scanned a patient&apos;s QR code on PhonePe, GPay, or Paytm, enter the UTR to reconcile and generate your verified donation receipt.
             </p>
 
             {recordError && (
@@ -2380,7 +2300,7 @@ export default function DashboardPage() {
                   ) : (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      <span>Record Transfer & Generate 80G</span>
+                      <span>Record Transfer & Save Receipt</span>
                     </>
                   )}
                 </button>
@@ -2440,7 +2360,7 @@ export default function DashboardPage() {
             </div>
 
             <p className="text-[11px] text-slate-500 mb-4">
-              Scan with Google Pay, PhonePe, Paytm, or BHIM. After paying, click &quot;Record Transfer&quot; above to claim your 80G tax receipt.
+              Scan with Google Pay, PhonePe, Paytm, or BHIM. After paying, click &quot;Record Transfer&quot; above to save your verified donation receipt.
             </p>
 
             <button
@@ -2453,7 +2373,7 @@ export default function DashboardPage() {
               className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md"
             >
               <CheckCircle className="w-4 h-4" />
-              <span>I Have Transferred - Claim 80G Receipt</span>
+              <span>I Have Transferred - Save Receipt</span>
             </button>
           </div>
         </div>
