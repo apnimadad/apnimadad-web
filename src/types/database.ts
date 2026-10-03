@@ -1,6 +1,6 @@
 export type CaseStatus = "pending" | "approved" | "funded" | "closed" | "rejected";
 export type AgeGroup = "child" | "adult" | "elderly";
-export type Category = "medical" | "education" | "accident" | "disability" | "family" | "other";
+export type Category = "medical" | "education" | "accident" | "disability" | "family" | "women_help" | "satta_mukt" | "other";
 export type UserRole = "donor" | "beneficiary" | "admin";
 export type VerificationStage = "submitted" | "docs_under_review" | "field_check" | "verified" | "rejected";
 export type NotificationType = "case_submitted" | "case_approved" | "case_rejected" | "donation_received" | "verification_update" | "payout_proof" | "system";
@@ -134,4 +134,26 @@ export interface CaseInsert {
   hospital_contact?: string;
   documents?: { name: string; type: string; url: string }[];
   urgency?: "high" | "medium" | "low";
+}
+
+export interface ConfidentialCaseItem {
+  id: string;
+  title: string;
+  description: string;
+  patient_name: string;
+  city?: string | null;
+  category: Category;
+  confidentialCategory?: "women_help" | "satta_mukt";
+  aliasName?: string;
+  realName?: string;
+  contactPhone?: string;
+  safeContactTime?: string;
+  supportType?: string;
+  counselorNotes?: string;
+  status: string;
+  created_at: string;
+  isConfidential?: boolean;
+  confidentialMeta?: Record<string, unknown>;
+  phone?: string;
+  urgency?: string;
 }

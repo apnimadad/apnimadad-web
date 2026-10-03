@@ -14,7 +14,8 @@ import {
   LogOut,
   Heart,
   HeartHandshake,
-  LayoutDashboard
+  LayoutDashboard,
+  Lock
 } from "lucide-react";
 
 import { useAuth } from "./AuthContext";
@@ -128,6 +129,34 @@ export default function Header() {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
                 <span>{lang === "hi" ? "सत्यापित केस" : "Verified Cases"}</span>
+              </Link>
+
+              {/* Woman Help (Safe & Secure) */}
+              <Link
+                href="/women-help"
+                className={`px-3 py-2 text-xs sm:text-xs lg:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 border ${
+                  pathname === "/women-help"
+                    ? "bg-rose-100 text-rose-950 border-rose-300 shadow-2xs font-extrabold"
+                    : "bg-rose-50/60 hover:bg-rose-100/70 text-rose-900 border-rose-200/90 hover:border-rose-300"
+                }`}
+                title="महिला सहायता (पहचान पूरी तरह गोपनीय)"
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-600" />
+                <span>Woman Help (Safe & Secure)</span>
+              </Link>
+
+              {/* सट्टा मुक्त अभियान (Secure) */}
+              <Link
+                href="/satta-mukt"
+                className={`px-3 py-2 text-xs sm:text-xs lg:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 border ${
+                  pathname === "/satta-mukt"
+                    ? "bg-amber-100 text-amber-950 border-amber-300 shadow-2xs font-extrabold"
+                    : "bg-amber-50/60 hover:bg-amber-100/70 text-amber-950 border-amber-200/90 hover:border-amber-300"
+                }`}
+                title="सट्टा मुक्त अभियान (100% गोपनीय व सुरक्षित)"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                <span>सट्टा मुक्त अभियान (Secure)</span>
               </Link>
 
               {/* 3. Need Help Button with Warm Empathetic Styling */}
@@ -266,6 +295,42 @@ export default function Header() {
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+            </Link>
+
+            {/* Mobile Woman Help */}
+            <Link
+              href="/women-help"
+              className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition border ${
+                pathname === "/women-help"
+                  ? "bg-rose-100 text-rose-950 border-rose-300"
+                  : "bg-rose-50/60 text-rose-900 border-rose-100 hover:bg-rose-100"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Lock className="w-4 h-4 text-rose-600" />
+                <span>Woman Help (Safe & Secure)</span>
+              </span>
+              <span className="text-[10px] bg-rose-200 text-rose-800 px-2 py-0.5 rounded-full font-extrabold">
+                100% गोपनीय
+              </span>
+            </Link>
+
+            {/* Mobile Satta Mukt */}
+            <Link
+              href="/satta-mukt"
+              className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition border ${
+                pathname === "/satta-mukt"
+                  ? "bg-amber-100 text-amber-950 border-amber-300"
+                  : "bg-amber-50/60 text-amber-900 border-amber-100 hover:bg-amber-100"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-amber-700" />
+                <span>सट्टा मुक्त अभियान (Secure)</span>
+              </span>
+              <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-extrabold">
+                Secure
               </span>
             </Link>
 

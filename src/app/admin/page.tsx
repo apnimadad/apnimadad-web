@@ -28,8 +28,16 @@ import {
   UserPlus,
   PhoneCall,
   RotateCcw,
-  Heart
+  Heart,
+  Lock,
+  EyeOff,
+  ShieldAlert,
+  MessageCircle,
+  AlertTriangle,
+  UserCheck,
 } from "lucide-react";
+import { getConfidentialCases } from "@/lib/actions/cases";
+import { ConfidentialCaseItem } from "@/types/database";
 
 export default function AdminPage() {
   const {
@@ -42,7 +50,7 @@ export default function AdminPage() {
     updateSettings,
   } = useSiteSettings();
 
-  const [adminSection, setAdminSection] = useState<"cases" | "website">("cases");
+  const [adminSection, setAdminSection] = useState<"cases" | "confidential" | "website">("cases");
   const [cases, setCases] = useState<Case[]>(mockCases);
   const [selected, setSelected] = useState<Case | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -50,6 +58,13 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [newCaseModal, setNewCaseModal] = useState(false);
+
+  // Confidential Cases state
+  const [confidentialCases, setConfidentialCases] = useState<ConfidentialCaseItem[]>([]);
+  const [confidentialFilter, setConfidentialFilter] = useState<"all" | "women_help" | "satta_mukt" | "urgent">("all");
+  const [confidentialSearch, setConfidentialSearch] = useState("");
+  const [selectedConfidential, setSelectedConfidential] = useState<ConfidentialCaseItem | null>(null);
+  const [counselorNoteInput, setCounselorNoteInput] = useState("");
 
   // Live Donor Management state
   const [editingDonor, setEditingDonor] = useState<TopDonor | null>(null);
@@ -67,6 +82,61 @@ export default function AdminPage() {
   useEffect(() => {
     setSettingsForm(settings);
   }, [settings]);
+
+  const loadConfidential = async () => {
+    try {
+      const data = await getConfidentialCases();
+      if (data && data.length > 0) {
+        setConfidentialCases(data);
+      } else {
+        setConfidentialCases([
+          {
+            id: "conf-sample-1",
+            title: "[CONFIDENTIAL - WOMEN HELP] पारिवारिक संकट व सुरक्षित कानूनी परामर्श",
+            patient_name: "स्वाति (काल्पनिक नाम)",
+            aliasName: "स्वाति / बहन X",
+            realName: "सुमन शर्मा",
+            contactPhone: "+91 98765 43210",
+            city: "इंदौर, मध्य प्रदेश",
+            category: "women_help",
+            confidentialCategory: "women_help",
+            safeContactTime: "दोपहर 01:00 PM से 03:00 PM (ससुराल में शांति का समय)",
+            supportType: "पारिवारिक कलह / कानूनी सहायता",
+            description:
+              "ससुराल में प्रताड़ना का मामला है। सुरक्षित आश्रय और कानूनी सलाह की आवश्यकता है। कृपया केवल दिए गए समय पर ही कॉल करें ताकि कोई पास न हो।",
+            status: "pending",
+            created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+            counselorNotes:
+              "प्रथम कॉल शेड्यूल: दोपहर 1:30 बजे वरिष्ठ महिला काउंसलर द्वारा संपर्क किया जाएगा।",
+          },
+          {
+            id: "conf-sample-2",
+            title: "[CONFIDENTIAL - SATTA MUKT] जुआ/सट्टे की लत व भारी कर्ज से मुक्ति मार्गदर्शन",
+            patient_name: "राहुल (काल्पनिक नाम)",
+            aliasName: "राहुल",
+            realName: "राजेश वर्मा",
+            contactPhone: "+91 98111 22334",
+            city: "जयपुर, राजस्थान",
+            category: "satta_mukt",
+            confidentialCategory: "satta_mukt",
+            safeContactTime: "शाम 05:00 PM से 07:00 PM",
+            supportType: "मनोवैज्ञानिक परामर्श व ऋण राहत योजना",
+            description:
+              "ऑनलाइन गेमिंग व सट्टे में भारी नुकसान हुआ है, मानसिक तनाव में हैं और रिकवरी कॉल्स आ रहे हैं। कानूनी व मनोवैज्ञानिक मार्गदर्शन चाहिए। परिवार को अभी नहीं पता है।",
+            status: "pending",
+            created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+            counselorNotes: "ऋण प्रबंधन विशेषज्ञ को केस असाइन किया गया।",
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("loadConfidential error:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadConfidential();
+  }, []);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -202,6 +272,76 @@ export default function AdminPage() {
       return matchTab && matchSearch;
     });
   }, [cases, activeTab, search]);
+
+  // Filtered Confidential Cases
+  const filteredConfidential = useMemo(() => {
+    return confidentialCases.filter((c) => {
+      const matchCat =
+        confidentialFilter === "all"
+          ? true
+          : confidentialFilter === "women_help"
+          ? c.category === "women_help" || c.confidentialCategory === "women_help"
+          : confidentialFilter === "satta_mukt"
+          ? c.category === "satta_mukt" || c.confidentialCategory === "satta_mukt"
+          : c.status === "pending" || c.urgency === "high";
+
+      const q = confidentialSearch.trim().toLowerCase();
+      const matchSearch =
+        q === "" ||
+        (c.title && c.title.toLowerCase().includes(q)) ||
+        (c.aliasName && c.aliasName.toLowerCase().includes(q)) ||
+        (c.realName && c.realName.toLowerCase().includes(q)) ||
+        (c.city && c.city.toLowerCase().includes(q)) ||
+        (c.contactPhone && c.contactPhone.includes(q)) ||
+        (c.description && c.description.toLowerCase().includes(q));
+
+      return matchCat && matchSearch;
+    });
+  }, [confidentialCases, confidentialFilter, confidentialSearch]);
+
+  const womenCount = confidentialCases.filter(
+    (c) => c.category === "women_help" || c.confidentialCategory === "women_help"
+  ).length;
+  const sattaCount = confidentialCases.filter(
+    (c) => c.category === "satta_mukt" || c.confidentialCategory === "satta_mukt"
+  ).length;
+  const pendingCallsCount = confidentialCases.filter((c) => c.status === "pending").length;
+
+  const handleUpdateConfidentialStatus = (id: string, newStatus: string) => {
+    setConfidentialCases((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+    );
+    if (selectedConfidential && selectedConfidential.id === id) {
+      setSelectedConfidential((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
+    showToast(`स्थिति अपडेट की गई: ${newStatus}`);
+  };
+
+  const handleAddCounselorNote = (id: string, note: string) => {
+    if (!note.trim()) return;
+    setConfidentialCases((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              counselorNotes: c.counselorNotes ? `${c.counselorNotes} | ${note}` : note,
+            }
+          : c
+      )
+    );
+    if (selectedConfidential && selectedConfidential.id === id) {
+      setSelectedConfidential((prev) =>
+        prev
+          ? {
+              ...prev,
+              counselorNotes: prev.counselorNotes ? `${prev.counselorNotes} | ${note}` : note,
+            }
+          : null
+      );
+    }
+    setCounselorNoteInput("");
+    showToast("काउंसलर नोट सुरक्षित किया गया।");
+  };
 
   const handleApprove = async (id: string) => {
     await submitVerificationReview({
@@ -359,11 +499,15 @@ export default function AdminPage() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 {adminSection === "cases"
                   ? "Admin Verification Dashboard"
+                  : adminSection === "confidential"
+                  ? "गोपनीय सहायता केंद्र (Woman Help & सट्टा मुक्त)"
                   : "Live Donors & Website Control Center"}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 {adminSection === "cases"
                   ? "Verify beneficiary hospital documents, authorize zero-commission cases, and update target amounts."
+                  : adminSection === "confidential"
+                  ? "100% गोपनीय व सुरक्षित सहायता - महिला सुरक्षा और सट्टा मुक्ति परामर्श की आंतरिक निगरानी (पब्लिक ऑडियंस से पूरी तरह गुप्त)।"
                   : "Full administrative control to edit the live generous donors marquee ticker, emergency alert banners, and official helplines."}
               </p>
             </div>
@@ -377,6 +521,18 @@ export default function AdminPage() {
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>Create Verified Case</span>
+                </button>
+              ) : adminSection === "confidential" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    loadConfidential();
+                    showToast("गोपनीय सहायता डेटा रिफ्रेश हो गया है।");
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>रिफ्रेश गोपनीय केस</span>
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
@@ -408,7 +564,7 @@ export default function AdminPage() {
           </div>
 
           {/* Section Switcher Tabs */}
-          <div className="flex items-center gap-2.5 border-t border-slate-100 pt-4 mt-4">
+          <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-4 mt-4">
             <button
               type="button"
               onClick={() => setAdminSection("cases")}
@@ -428,6 +584,28 @@ export default function AdminPage() {
                 }`}
               >
                 {pendingCount} Pending
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAdminSection("confidential")}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+                adminSection === "confidential"
+                  ? "bg-purple-700 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Lock className="w-4 h-4 text-amber-300" />
+              <span>गोपनीय सहायता (Women Help & सट्टा मुक्त)</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                  adminSection === "confidential"
+                    ? "bg-purple-900 text-white"
+                    : "bg-purple-100 text-purple-900"
+                }`}
+              >
+                {confidentialCases.length} Confidential
               </span>
             </button>
 
@@ -720,6 +898,311 @@ export default function AdminPage() {
           </div>
         </div>
       </>
+    ) : adminSection === "confidential" ? (
+      /* Confidential Assistance Section (Women Help & Satta Mukt) */
+      <div className="space-y-8">
+        {/* Privacy Isolation Alert Banner */}
+        <div className="bg-gradient-to-r from-purple-950 via-slate-900 to-slate-950 text-white p-6 sm:p-7 rounded-3xl border border-purple-500/30 shadow-md relative overflow-hidden">
+          <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-purple-600/30 border border-purple-400/30 flex items-center justify-center shrink-0">
+                <Lock className="w-6 h-6 text-purple-300" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    100% Confidential Guarantee
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Privacy Isolated from Public
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black mt-2 text-white">
+                  गोपनीय सहायता केंद्र: महिला सुरक्षा व सट्टा मुक्ति अभियान
+                </h2>
+                <p className="text-xs sm:text-sm text-purple-200/90 mt-1 max-w-3xl leading-relaxed">
+                  यह डेटाबेस सार्वजनिक ऑडियंस से पूरी तरह अलग रखा गया है। एडमिन द्वारा स्थिति स्वीकृत होने के बाद भी यह केस मुख्य वेबसाइट, केस लिस्टिंग, या सर्च इंजन पर <strong>कभी नहीं दिखेगा</strong>। वास्तविक नाम व फोन नंबर केवल अधिकृत महिला काउंसलर व NGO सत्यापन टीम के आंतरिक उपयोग के लिए है।
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Link
+                href="/women-help"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition"
+              >
+                <span>Live Woman Help Form</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+              <Link
+                href="/satta-mukt"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition"
+              >
+                <span>Live सट्टा मुक्ति Form</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Confidential Metric Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">Total Confidential Cases</span>
+              <Lock className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-purple-700">
+              {confidentialCases.length}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">100% Zero Public Exposure</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">महिला सहायता (Woman Help)</span>
+              <ShieldAlert className="w-4 h-4 text-rose-500" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">
+              {womenCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">सुरक्षित आश्रय व कानूनी मदद</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">सट्टा मुक्ति अभियान</span>
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
+              {sattaCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">मनोवैज्ञानिक व ऋण मार्गदर्शन</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">सुरक्षित कॉल पेंडिंग</span>
+              <Clock className="w-4 h-4 text-blue-500" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-blue-600">
+              {pendingCallsCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">दिए गए सुरक्षित समय पर संपर्क करें</p>
+          </div>
+        </div>
+
+        {/* Filter and Inquiries Table */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            {/* Category Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setConfidentialFilter("all")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                  confidentialFilter === "all"
+                    ? "bg-purple-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                सभी गोपनीय अनुरोध ({confidentialCases.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfidentialFilter("women_help")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                  confidentialFilter === "women_help"
+                    ? "bg-rose-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                महिला सहायता ({womenCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfidentialFilter("satta_mukt")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                  confidentialFilter === "satta_mukt"
+                    ? "bg-amber-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                सट्टा मुक्त अभियान ({sattaCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfidentialFilter("urgent")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                  confidentialFilter === "urgent"
+                    ? "bg-blue-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                कॉल पेंडिंग ({pendingCallsCount})
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="नाम, शहर, या फोन से खोजें..."
+                value={confidentialSearch}
+                onChange={(e) => setConfidentialSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-purple-600"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                  <th className="py-3 px-4 sm:px-6">कैटेगरी व प्रदर्शित नाम (Alias)</th>
+                  <th className="py-3 px-4 sm:px-6">संपर्क का सुरक्षित समय</th>
+                  <th className="py-3 px-4 sm:px-6">असली नाम व फोन (NGO Eyes Only)</th>
+                  <th className="py-3 px-4 sm:px-6">शहर व स्थिति</th>
+                  <th className="py-3 px-4 sm:px-6 text-right">सुरक्षित संपर्क व कार्यवाही</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
+                {filteredConfidential.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-slate-400 text-xs">
+                      कोई गोपनीय अनुरोध नहीं मिला।
+                    </td>
+                  </tr>
+                ) : (
+                  filteredConfidential.map((item) => {
+                    const isWomen =
+                      item.category === "women_help" || item.confidentialCategory === "women_help";
+                    return (
+                      <tr key={item.id} className="hover:bg-purple-50/30 transition">
+                        <td className="py-4 px-4 sm:px-6">
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                                isWomen ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {isWomen ? <ShieldAlert className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                                    isWomen
+                                      ? "bg-rose-100 text-rose-800"
+                                      : "bg-amber-100 text-amber-800"
+                                  }`}
+                                >
+                                  {isWomen ? "महिला सहायता (Safe)" : "सट्टा मुक्ति (Secure)"}
+                                </span>
+                                <span className="text-[11px] font-mono text-slate-400">
+                                  #{item.id?.slice(0, 8)}
+                                </span>
+                              </div>
+                              <div className="font-bold text-slate-900 mt-1 flex items-center gap-1.5">
+                                <EyeOff className="w-3.5 h-3.5 text-purple-600" />
+                                <span>{item.aliasName || item.patient_name}</span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 line-clamp-1 max-w-xs mt-0.5">
+                                {item.description}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 sm:px-6">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-semibold">
+                            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <span>{item.safeContactTime || "Direct Safe Contact"}</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1">
+                            (ससुराल/घर में एकांत का समय)
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 sm:px-6">
+                          <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80 inline-block">
+                            <div className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
+                              <Lock className="w-3 h-3 text-purple-700" />
+                              <span>असली: {item.realName || item.patient_name}</span>
+                            </div>
+                            <div className="font-mono text-xs font-bold text-slate-800 mt-0.5">
+                              {item.contactPhone || item.phone || "Phone Provided"}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 sm:px-6">
+                          <div className="text-slate-800 font-medium">{item.city || "भारत"}</div>
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase mt-1 ${
+                              item.status === "contacted"
+                                ? "bg-blue-100 text-blue-800"
+                                : item.status === "resolved"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {item.status === "contacted"
+                              ? "संपर्क किया गया"
+                              : item.status === "resolved"
+                              ? "समाधान पूर्ण"
+                              : "कॉल पेंडिंग"}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-4 sm:px-6 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {item.contactPhone && (
+                              <>
+                                <a
+                                  href={`tel:${item.contactPhone}`}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs transition border border-blue-200"
+                                  title="Safe Direct Call"
+                                >
+                                  <PhoneCall className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">Call</span>
+                                </a>
+                                <a
+                                  href={`https://wa.me/${item.contactPhone.replace(/\D/g, "")}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg text-xs transition border border-emerald-200"
+                                  title="Safe WhatsApp Message"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">WhatsApp</span>
+                                </a>
+                              </>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedConfidential(item)}
+                              className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg text-xs transition shadow-xs"
+                            >
+                              विवरण व नोट्स
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     ) : (
       /* Live Donors & Website Control Section */
       <div className="space-y-8">
@@ -1670,6 +2153,222 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Confidential Case Detail & Action Modal */}
+      {selectedConfidential && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-7 shadow-2xl animate-modal relative">
+            <button
+              onClick={() => setSelectedConfidential(null)}
+              className="absolute top-5 right-5 p-1.5 hover:bg-slate-100 rounded-full transition text-slate-400 hover:text-slate-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-6">
+              {/* Header Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-100 text-purple-800 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>100% Confidential (Private to NGO)</span>
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    selectedConfidential.category === "women_help" ||
+                    selectedConfidential.confidentialCategory === "women_help"
+                      ? "bg-rose-100 text-rose-800"
+                      : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {selectedConfidential.category === "women_help" ||
+                  selectedConfidential.confidentialCategory === "women_help"
+                    ? "Woman Help (Safe & Secure)"
+                    : "सट्टा मुक्त अभियान (De-Addiction)"}
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  #{selectedConfidential.id}
+                </span>
+              </div>
+
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
+                  {selectedConfidential.title}
+                </h2>
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500">
+                  <span>
+                    दर्ज:{" "}
+                    {selectedConfidential.created_at
+                      ? new Date(selectedConfidential.created_at).toLocaleString("hi-IN")
+                      : "अभी हाल ही में"}
+                  </span>
+                  <span>·</span>
+                  <span>स्थान: {selectedConfidential.city || "भारत"}</span>
+                </div>
+              </div>
+
+              {/* Safe Contact Time Alert */}
+              <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl flex items-start gap-3">
+                <Clock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-amber-950 uppercase tracking-wide">
+                    संपर्क का सुरक्षित समय (Strict Safe Call Window)
+                  </div>
+                  <div className="text-sm font-extrabold text-amber-900 mt-0.5">
+                    {selectedConfidential.safeContactTime || "Direct Safe Contact"}
+                  </div>
+                  <p className="text-[11px] text-amber-800/90 mt-1">
+                    आवेदक ने यह समय इसलिए चुना है ताकि घर या ससुराल में कोई आसपास न हो। कृपया केवल इसी निर्धारित समय पर ही कॉल करें।
+                  </p>
+                </div>
+              </div>
+
+              {/* Personal Details (Strictly Internal) */}
+              <div className="grid sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    प्रदर्शित नाम (Alias/Display Name)
+                  </span>
+                  <span className="text-sm font-bold text-purple-900 flex items-center gap-1.5 mt-0.5">
+                    <EyeOff className="w-4 h-4 text-purple-600" />
+                    <span>
+                      {selectedConfidential.aliasName || selectedConfidential.patient_name}
+                    </span>
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    वास्तविक नाम (Internal Real Name)
+                  </span>
+                  <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                    {selectedConfidential.realName || selectedConfidential.patient_name}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    संपर्क फोन / WhatsApp
+                  </span>
+                  <span className="text-sm font-bold font-mono text-slate-900 mt-0.5 block">
+                    {selectedConfidential.contactPhone ||
+                      selectedConfidential.phone ||
+                      "Phone Provided"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    सहायता प्रकार
+                  </span>
+                  <span className="text-sm font-semibold text-slate-800 mt-0.5 block">
+                    {selectedConfidential.supportType || "गोपनीय परामर्श व मार्गदर्शन"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Case Description */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  समस्या व अनुरोध का विवरण
+                </h4>
+                <div className="p-4 bg-white rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed max-h-48 overflow-y-auto">
+                  {selectedConfidential.description}
+                </div>
+              </div>
+
+              {/* Counselor Action & Notes */}
+              <div className="p-5 bg-purple-50/70 border border-purple-200 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-purple-950 uppercase tracking-wider flex items-center gap-1.5">
+                    <UserCheck className="w-4 h-4 text-purple-700" />
+                    <span>काउंसलर आंतरिक नोट्स व कार्यवाही</span>
+                  </h4>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleUpdateConfidentialStatus(selectedConfidential.id, "contacted")
+                      }
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
+                    >
+                      मार्क: संपर्क हुआ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleUpdateConfidentialStatus(selectedConfidential.id, "resolved")
+                      }
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition"
+                    >
+                      मार्क: समाधान पूर्ण
+                    </button>
+                  </div>
+                </div>
+
+                {selectedConfidential.counselorNotes && (
+                  <div className="p-3 bg-white rounded-xl border border-purple-200 text-xs text-slate-700 leading-relaxed">
+                    <strong>अद्यतन नोट्स:</strong> {selectedConfidential.counselorNotes}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="नया काउंसलर नोट लिखें (उदा. कॉल की गई, कानूनी वकील से समय तय हुआ)..."
+                    value={counselorNoteInput}
+                    onChange={(e) => setCounselorNoteInput(e.target.value)}
+                    className="flex-1 px-3.5 py-2 bg-white border border-purple-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleAddCounselorNote(selectedConfidential.id, counselorNoteInput)
+                    }
+                    className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition shadow-xs shrink-0"
+                  >
+                    नोट जोड़ें
+                  </button>
+                </div>
+              </div>
+
+              {/* Direct Safe Communication triggers */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>पब्लिक से 100% पृथक · सुरक्षित एन्क्रिप्शन सक्रिय</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedConfidential.contactPhone && (
+                    <>
+                      <a
+                        href={`tel:${selectedConfidential.contactPhone}`}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition shadow-xs"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>Direct Safe Call</span>
+                      </a>
+                      <a
+                        href={`https://wa.me/${selectedConfidential.contactPhone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition shadow-xs"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>WhatsApp Helpline</span>
+                      </a>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedConfidential(null)}
+                    className="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    बंद करें
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

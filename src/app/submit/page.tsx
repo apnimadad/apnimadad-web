@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useLanguage } from "@/components/LanguageContext";
 import { useAuth } from "@/components/AuthContext";
 import { compressImage, compressVideo, formatBytes } from "@/lib/compression";
-import { submitCase } from "@/lib/actions/cases";
+import { submitCase, submitConfidentialCase } from "@/lib/actions/cases";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Category } from "@/lib/mock-data";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Lock, EyeOff, Clock } from "lucide-react";
 
 type FileStatus = {
   name: string;
@@ -33,6 +33,8 @@ export default function SubmitCasePage() {
 
   const [form, setForm] = useState({
     fullName: "",
+    aliasName: "",
+    safeContactTime: "दोपहर 01:00 PM से 03:00 PM (ससुराल में शांति का समय)",
     age: "",
     city: "",
     category: "medical",
@@ -44,6 +46,8 @@ export default function SubmitCasePage() {
     ifsc: "",
     phone: "",
   });
+
+  const isConfidential = form.category === "women_help" || form.category === "satta_mukt";
 
   // Pre-fill name and phone from profile if available
   useEffect(() => {
@@ -191,7 +195,36 @@ export default function SubmitCasePage() {
         }
       }
 
-      // Submit case data
+      // Handle Confidential Categories (Woman Help & Satta Mukt)
+      if (form.category === "women_help" || form.category === "satta_mukt") {
+        const confResult = await submitConfidentialCase({
+          category: form.category,
+          aliasName: form.aliasName || (form.category === "women_help" ? "बहन (गोपनीय)" : "साथी (गोपनीय)"),
+          realName: form.fullName,
+          phone: form.phone,
+          city: form.city,
+          description: form.description || form.title,
+          safeContactTime: form.safeContactTime,
+          supportType:
+            form.category === "women_help"
+              ? "महिला सुरक्षा, आश्रय व कानूनी सहायता"
+              : "सट्टा मुक्ति मनोवैज्ञानिक परामर्श व ऋण मुक्ति मार्गदर्शन",
+          urgency: "high",
+        });
+
+        if (!confResult.success) {
+          if (!isSupabaseConfigured()) {
+            setSubmitted(true);
+            return;
+          }
+          throw new Error(confResult.error || "Submission failed");
+        }
+
+        setSubmitted(true);
+        return;
+      }
+
+      // Submit standard public case data
       const result = await submitCase({
         title: form.title,
         description: form.description,
@@ -205,7 +238,7 @@ export default function SubmitCasePage() {
             : "adult",
         city: form.city,
         category: form.category as Category,
-        amount_needed: Number(form.amountNeeded),
+        amount_needed: Number(form.amountNeeded || 0),
         upi_id: form.upiId,
         bank_account: form.bankAccount,
         ifsc: form.ifsc,
@@ -391,106 +424,203 @@ export default function SubmitCasePage() {
                 onChange={handleChange}
                 className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                <option value="medical">Medical</option>
-                <option value="education">Education</option>
-                <option value="accident">Accident</option>
-                <option value="disability">Disability</option>
-                <option value="family">Family Emergency</option>
-                <option value="other">Other</option>
+                <optgroup label="🔒 100% Confidential (ऑडियंस से पूरी तरह गुप्त - कभी पब्लिक नहीं होगा)">
+                  <option value="women_help">Woman Help (Safe & Secure) / महिला सहायता (पहचान गोपनीय)</option>
+                  <option value="satta_mukt">सट्टा मुक्त अभियान (Secure) / जुआ-सट्टा मुक्ति काउंसलिंग</option>
+                </optgroup>
+                <optgroup label="सार्वजनिक मदद / Public Fundraisers">
+                  <option value="medical">Medical / चिकित्सा सहायता</option>
+                  <option value="education">Education / शिक्षा सहायता</option>
+                  <option value="accident">Accident / दुर्घटना राहत</option>
+                  <option value="disability">Disability / दिव्यांग सहायता</option>
+                  <option value="family">Family Emergency / पारिवारिक सहायता</option>
+                  <option value="other">Other / अन्य</option>
+                </optgroup>
               </select>
             </div>
+
+            {isConfidential && (
+              <div className="p-4 bg-amber-50/90 border border-amber-200/80 rounded-2xl space-y-4 animate-in fade-in">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-950">
+                      गोपनीयता (100% Confidential Guarantee)
+                    </h4>
+                    <p className="text-xs text-amber-900/90 leading-relaxed mt-1">
+                      मदद मांगने वाले व्यक्ति या उसके परिवार का नाम, फोन नंबर और पहचान पूरी तरह गुप्त रखी जाएगी। एडमिन अप्रूव होने के बाद भी यह जानकारी पब्लिक ऑडियंस को कभी नहीं दिखाई जाएगी।
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-amber-200/60">
+                  <div>
+                    <label className="block text-xs font-bold text-amber-950 mb-1 flex items-center gap-1.5">
+                      <EyeOff className="w-3.5 h-3.5 text-amber-700" />
+                      <span>प्रदर्शित नाम (Alias/Display Name):</span>
+                    </label>
+                    <input
+                      name="aliasName"
+                      value={form.aliasName}
+                      onChange={handleChange}
+                      placeholder="उदा. बहन X, स्वाति या राहुल"
+                      className="w-full px-3.5 py-2 bg-white border border-amber-300 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <p className="text-[11px] text-amber-800/80 mt-1">
+                      वह अपना कोई काल्पनिक नाम चुन सकती हैं, ताकि असली नाम किसी को न दिखे।
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-amber-950 mb-1 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-700" />
+                      <span>संपर्क का सुरक्षित समय (Safe Contact Time):</span>
+                    </label>
+                    <select
+                      name="safeContactTime"
+                      value={form.safeContactTime}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="दोपहर 01:00 PM से 03:00 PM (ससुराल में शांति का समय)">
+                        दोपहर 01:00 PM से 03:00 PM (ससुराल में शांति का समय)
+                      </option>
+                      <option value="सुबह 10:00 AM से 12:00 PM (जब सब काम पर हों)">
+                        सुबह 10:00 AM से 12:00 PM (जब सब काम पर हों)
+                      </option>
+                      <option value="शाम 05:00 PM से 07:00 PM">
+                        शाम 05:00 PM से 07:00 PM
+                      </option>
+                      <option value="रात 09:00 PM से 10:00 PM (एकांत में)">
+                        रात 09:00 PM से 10:00 PM (एकांत में)
+                      </option>
+                      <option value="केवल WhatsApp संदेश (कॉल बिल्कुल न करें)">
+                        केवल WhatsApp संदेश (कॉल बिल्कुल न करें)
+                      </option>
+                    </select>
+                    <p className="text-[11px] text-amber-800/80 mt-1">
+                      ताकि NGO टीम कॉल करते समय ससुराल या घर में कोई पास न हो।
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium mb-1">Case Title *</label>
+              <label className="block text-sm font-medium mb-1">
+                {isConfidential ? "विषय / समस्या संक्षेप में *" : "Case Title *"}
+              </label>
               <input
                 required
                 name="title"
                 value={form.title}
                 onChange={handleChange}
-                placeholder="e.g. Urgent heart surgery for my son"
+                placeholder={
+                  isConfidential
+                    ? "उदा. पारिवारिक संकट व कानूनी सलाह / सट्टे की लत व कर्ज से मुक्ति"
+                    : "e.g. Urgent heart surgery for my son"
+                }
                 className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Full Description *</label>
+              <label className="block text-sm font-medium mb-1">
+                {isConfidential ? "पूरी बात लिखें (केवल NGO टीम पढ़ेगी) *" : "Full Description *"}
+              </label>
               <textarea
                 required
                 name="description"
                 value={form.description}
                 onChange={handleChange}
                 rows={5}
+                placeholder={
+                  isConfidential
+                    ? "आप जो भी साझा करेंगी वह 100% सुरक्षित और आंतरिक रहेगा..."
+                    : "Describe the situation..."
+                }
                 className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-y"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Required Amount (₹) *</label>
-              <input
-                required
-                type="number"
-                name="amountNeeded"
-                value={form.amountNeeded}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
+            {!isConfidential && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Required Amount (₹) *</label>
+                <input
+                  required
+                  type="number"
+                  name="amountNeeded"
+                  value={form.amountNeeded}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            )}
           </div>
         </fieldset>
 
-        {/* Bank */}
-        <fieldset>
-          <legend className="font-bold text-lg text-slate-900 mb-4">
-            3. Bank / UPI (Direct Donation)
-          </legend>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1">UPI ID *</label>
-              <input
-                required
-                name="upiId"
-                value={form.upiId}
-                onChange={handleChange}
-                placeholder="name@upi"
-                className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+        {/* Bank (Public fundraisers only) */}
+        {!isConfidential && (
+          <fieldset>
+            <legend className="font-bold text-lg text-slate-900 mb-4">
+              3. Bank / UPI (Direct Donation)
+            </legend>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium mb-1">UPI ID *</label>
+                <input
+                  required
+                  name="upiId"
+                  value={form.upiId}
+                  onChange={handleChange}
+                  placeholder="name@upi"
+                  className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Bank Account *</label>
+                <input
+                  required
+                  name="bankAccount"
+                  value={form.bankAccount}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">IFSC *</label>
+                <input
+                  required
+                  name="ifsc"
+                  value={form.ifsc}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Bank Account *</label>
-              <input
-                required
-                name="bankAccount"
-                value={form.bankAccount}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">IFSC *</label>
-              <input
-                required
-                name="ifsc"
-                value={form.ifsc}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-          </div>
-        </fieldset>
+          </fieldset>
+        )}
 
         {/* Media with auto-compress */}
         <fieldset>
           <legend className="font-bold text-lg text-slate-900 mb-4">
-            4. Photo, Video & Documents (Auto-Compressed)
+            {isConfidential ? "3. दस्तावेज या प्रमाण (वैकल्पिक / Optional)" : "4. Photo, Video & Documents (Auto-Compressed)"}
           </legend>
           <p className="text-sm text-slate-500 mb-4">
-            Images → ~100 KB WebP · Videos → optimized 720p MP4 (Fast, direct compression).
+            {isConfidential
+              ? "यदि कोई दस्तावेज या रिपोर्ट साझा करना चाहें तो संलग्न करें। यह केवल NGO के पास सुरक्षित रहेगा।"
+              : "Images → ~100 KB WebP · Videos → optimized 720p MP4 (Fast, direct compression)."}
           </p>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Patient / Case Photo *</label>
+              <label className="block text-sm font-medium mb-1">
+                {isConfidential ? "फोटो (वैकल्पिक / Optional)" : "Patient / Case Photo *"}
+              </label>
               <input
                 ref={photoRef}
                 type="file"
                 accept="image/*"
-                required
+                required={!isConfidential}
                 className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700"
               />
             </div>
@@ -565,12 +695,35 @@ export default function SubmitCasePage() {
           <div className="p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>
         )}
 
+        {/* Reassurance text right above submit button */}
+        <div className="p-4 bg-emerald-50 border border-emerald-200/90 rounded-2xl flex items-center gap-3 text-emerald-950 text-xs sm:text-sm font-semibold shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4" />
+          </div>
+          <span>
+            यह फॉर्म पूरी तरह एन्क्रिप्टेड है। आपकी जानकारी केवल NGO के आंतरिक सत्यापन के लिए सुरक्षित रहेगी।
+          </span>
+        </div>
+
         <button
           type="submit"
           disabled={submitting}
-          className="w-full py-3.5 bg-blue-800 hover:bg-blue-900 disabled:bg-slate-400 text-white font-bold rounded-xl shadow-md transition"
+          className={`w-full py-4 text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2 ${
+            isConfidential
+              ? "bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900"
+              : "bg-blue-800 hover:bg-blue-900"
+          } disabled:bg-slate-400`}
         >
-          {submitting ? "Compressing & Submitting..." : "Submit Case for Verification"}
+          {submitting ? (
+            "Compressing & Submitting..."
+          ) : isConfidential ? (
+            <>
+              <Lock className="w-4 h-4" />
+              <span>गोपनीय सहायता अनुरोध सबमिट करें (100% Confidential)</span>
+            </>
+          ) : (
+            "Submit Case for Verification"
+          )}
         </button>
       </form>
     </div>

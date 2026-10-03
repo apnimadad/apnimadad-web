@@ -1,6 +1,6 @@
 export type CaseStatus = "pending" | "approved" | "funded" | "closed" | "rejected";
 export type AgeGroup = "child" | "adult" | "elderly";
-export type Category = "medical" | "education" | "accident" | "disability" | "family" | "other";
+export type Category = "medical" | "education" | "accident" | "disability" | "family" | "women_help" | "satta_mukt" | "other";
 
 export interface Case {
   id: string;

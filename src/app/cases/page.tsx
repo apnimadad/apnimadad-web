@@ -44,7 +44,13 @@ export default function CasesPage() {
   };
 
   const filtered = useMemo(() => {
-    let list = mockCases.filter((c) => c.verified || c.status === "funded");
+    let list = mockCases.filter(
+      (c) =>
+        (c.verified || c.status === "funded") &&
+        c.category !== "women_help" &&
+        c.category !== "satta_mukt" &&
+        !c.title?.includes("[CONFIDENTIAL")
+    );
 
     if (status !== "all") list = list.filter((c) => c.status === status);
     if (category !== "all") list = list.filter((c) => c.category === category);

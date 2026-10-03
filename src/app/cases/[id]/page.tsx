@@ -46,7 +46,7 @@ export default function CaseDetailPage() {
   const [donorRef, setDonorRef] = useState("");
   const [donationRecorded, setDonationRecorded] = useState(false);
 
-  if (!c) {
+  if (!c || c.category === "women_help" || c.category === "satta_mukt" || c.title?.includes("[CONFIDENTIAL")) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-24 text-center">
         <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
