@@ -19,7 +19,13 @@ export default function DonatePage() {
   const { lang, t } = useLanguage();
   const { user, profile, role } = useAuth();
   const isDonor = role === "donor" || role === "admin";
-  const active = mockCases.filter((c) => c.status === "approved");
+  const active = mockCases.filter(
+    (c) =>
+      c.status === "approved" &&
+      c.category !== "women_help" &&
+      c.category !== "satta_mukt" &&
+      !c.title?.includes("[CONFIDENTIAL")
+  );
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">

@@ -4,9 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "./LanguageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
-  Home,
   ShieldCheck, 
   Globe, 
   Menu, 
@@ -15,7 +14,9 @@ import {
   Heart,
   HeartHandshake,
   LayoutDashboard,
-  Lock
+  Lock,
+  User,
+  ChevronDown
 } from "lucide-react";
 
 import { useAuth } from "./AuthContext";
@@ -27,20 +28,39 @@ export default function Header() {
   const { user, profile, role, signOut } = useAuth();
   const { settings } = useSiteSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [signInMenuOpen, setSignInMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const signInMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   const announcement = settings?.announcement;
 
-  // Close mobile drawer on route change
+  // Close menus on outside click or route change
   useEffect(() => {
     setMobileOpen(false);
+    setUserMenuOpen(false);
+    setSignInMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+      if (signInMenuRef.current && !signInMenuRef.current.contains(event.target as Node)) {
+        setSignInMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
       {/* Top micro-announcement banner */}
       {announcement?.enabled && (
-        <div suppressHydrationWarning className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white text-xs py-2 px-4">
+        <div suppressHydrationWarning className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white text-xs py-2 px-4 border-b border-white/10">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2 font-medium">
               <span className="flex h-2 w-2 relative">
@@ -62,8 +82,8 @@ export default function Header() {
                 </Link>
               )}
             </div>
-            <div className="hidden sm:flex items-center gap-4 text-slate-300">
-              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+            <div className="hidden sm:flex items-center gap-4 text-slate-300 text-[11px]">
+              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 100% Verified
               </span>
@@ -76,8 +96,7 @@ export default function Header() {
       <header suppressHydrationWarning className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-18">
-            {/* Logo */}
-            {/* Logo */}
+            {/* Logo & Foundation Identity */}
             <Link
               href="/"
               suppressHydrationWarning
@@ -87,47 +106,34 @@ export default function Header() {
                 <Image
                   src="/logo.jpeg"
                   alt="Apni Madad Foundation Logo"
-                  width={46}
-                  height={46}
+                  width={44}
+                  height={44}
                   priority
-                  className="rounded-full border-2 border-amber-400 shadow-sm group-hover:scale-105 transition duration-200"
+                  className="rounded-full border border-slate-200 shadow-xs group-hover:scale-105 transition duration-200"
                 />
                 <span className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-0.5 rounded-full ring-2 ring-white">
                   <ShieldCheck className="w-3 h-3" />
                 </span>
               </span>
               <span suppressHydrationWarning className="block">
-                <span className="block font-extrabold text-lg sm:text-xl text-slate-900 leading-tight tracking-tight group-hover:text-blue-700 transition">
+                <span className="block font-black text-lg sm:text-xl text-slate-900 leading-tight tracking-tight group-hover:text-blue-700 transition">
                   Apni Madad
                 </span>
-                <span className="block text-[10px] sm:text-xs text-amber-600 font-bold tracking-wider uppercase">
-                  FOUNDATION · अपनी मदद
+                <span className="block text-[10px] sm:text-xs text-slate-500 font-semibold tracking-wider uppercase">
+                  FOUNDATION · 100% DIRECT HELP
                 </span>
               </span>
             </Link>
 
-            {/* Desktop Navigation: Unique & Amazing Custom Styled Buttons */}
-            <nav className="hidden md:flex items-center gap-2 lg:gap-2.5">
-              {/* 1. Home Button */}
-              <Link
-                href="/"
-                className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 ${
-                  pathname === "/"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "text-slate-700 hover:text-blue-900 hover:bg-slate-100"
-                }`}
-              >
-                <Home className="w-3.5 h-3.5" />
-                <span>{lang === "hi" ? "होम" : "Home"}</span>
-              </Link>
-
-              {/* 2. Verified Cases Button with Live Pulse */}
+            {/* Desktop Navigation: Elegant, modern, uncluttered text links */}
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+              {/* 1. Verified Cases */}
               <Link
                 href="/cases"
-                className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-2 border ${
+                className={`px-3.5 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 ${
                   pathname.startsWith("/cases")
-                    ? "bg-emerald-50 text-emerald-950 border-emerald-300 shadow-2xs font-extrabold"
-                    : "bg-white/90 hover:bg-emerald-50/70 text-slate-700 hover:text-emerald-950 border-slate-200/90 hover:border-emerald-200"
+                    ? "text-blue-700 bg-blue-50/80 font-bold"
+                    : "text-slate-700 hover:text-slate-900 hover:bg-slate-100/70"
                 }`}
               >
                 <span className="relative flex h-2 w-2">
@@ -137,109 +143,85 @@ export default function Header() {
                 <span>{lang === "hi" ? "सत्यापित केस" : "Verified Cases"}</span>
               </Link>
 
-              {/* Woman Help (Safe & Secure) */}
+              {/* 2. Woman Help (Safe & Secure) */}
               <Link
                 href="/women-help"
-                className={`px-3 py-2 text-xs sm:text-xs lg:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 border ${
+                className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
                   pathname === "/women-help"
-                    ? "bg-rose-100 text-rose-950 border-rose-300 shadow-2xs font-extrabold"
-                    : "bg-rose-50/60 hover:bg-rose-100/70 text-rose-900 border-rose-200/90 hover:border-rose-300"
+                    ? "text-rose-900 bg-rose-50 font-bold ring-1 ring-rose-200"
+                    : "text-slate-700 hover:text-rose-800 hover:bg-rose-50/50"
                 }`}
                 title="महिला सहायता (पहचान पूरी तरह गोपनीय)"
               >
                 <Lock className="w-3.5 h-3.5 text-rose-600" />
-                <span>Woman Help (Safe & Secure)</span>
+                <span>Woman Help</span>
+                <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded">
+                  Safe
+                </span>
               </Link>
 
-              {/* सट्टा मुक्त अभियान (Secure) */}
+              {/* 3. सट्टा मुक्त अभियान (Secure) */}
               <Link
                 href="/satta-mukt"
-                className={`px-3 py-2 text-xs sm:text-xs lg:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 border ${
+                className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
                   pathname === "/satta-mukt"
-                    ? "bg-amber-100 text-amber-950 border-amber-300 shadow-2xs font-extrabold"
-                    : "bg-amber-50/60 hover:bg-amber-100/70 text-amber-950 border-amber-200/90 hover:border-amber-300"
+                    ? "text-amber-950 bg-amber-50 font-bold ring-1 ring-amber-200"
+                    : "text-slate-700 hover:text-amber-900 hover:bg-amber-50/50"
                 }`}
                 title="सट्टा मुक्त अभियान (100% गोपनीय व सुरक्षित)"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                <span>सट्टा मुक्त अभियान (Secure)</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                <span>सट्टा मुक्त अभियान</span>
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                  Secure
+                </span>
               </Link>
 
-              {/* 3. Need Help Button with Warm Empathetic Styling */}
+              {/* 4. Need Help */}
               <Link
                 href="/submit"
-                className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 border ${
+                className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
                   pathname.startsWith("/submit")
-                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-600 shadow-xs"
-                    : "bg-gradient-to-r from-amber-50/90 to-orange-50/90 hover:from-amber-100 hover:to-orange-100 text-amber-950 border-amber-300/80 shadow-2xs hover:scale-[1.02] active:scale-98"
+                    ? "text-amber-800 bg-amber-50 font-bold"
+                    : "text-slate-700 hover:text-slate-900 hover:bg-slate-100/70"
                 }`}
               >
-                <HeartHandshake className={`w-4 h-4 ${pathname.startsWith("/submit") ? "text-white" : "text-amber-700"}`} />
+                <HeartHandshake className="w-4 h-4 text-amber-600" />
                 <span>{lang === "hi" ? "मदद चाहिए" : "Need Help"}</span>
-              </Link>
-
-              {/* 4. Donor Button with Philanthropy Jewel Gradient */}
-              <Link
-                href={user && role === "donor" ? "/dashboard" : "/login?role=donor"}
-                className="px-4 py-2 text-xs sm:text-sm font-extrabold rounded-full transition-all duration-200 flex items-center gap-1.5 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:from-blue-800 hover:to-indigo-700 text-white shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 border border-indigo-400/30"
-              >
-                <Heart className="w-3.5 h-3.5 text-rose-300 fill-rose-300" />
-                <span>{lang === "hi" ? "दानदाता" : "Donor"}</span>
-                {user && role === "donor" && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-blue-900" title="Donor Active" />
-                )}
-              </Link>
-
-              {/* 5. Admin Button with Security Badge Pill */}
-              <Link
-                href={user && role === "admin" ? "/admin" : "/login?role=admin"}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold rounded-full transition-all duration-200 flex items-center gap-1.5 border ${
-                  pathname.startsWith("/admin")
-                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                    : "bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 hover:text-slate-950 border-slate-200 shadow-2xs"
-                }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5 text-slate-500" />
-                <span>{lang === "hi" ? "व्यवस्थापक" : "Admin"}</span>
-                {user && role === "admin" && (
-                  <span className="bg-amber-400 text-amber-950 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">
-                    Desk
-                  </span>
-                )}
               </Link>
             </nav>
 
-            {/* Right Side Controls: Notifications (only after login) | Language | User Status */}
+            {/* Right Side: Language | Auth Buttons | Profile Dropdown */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Notifications: ONLY visible after login for donor, user/beneficiary, or admin */}
+              {/* Notifications: ONLY visible after login */}
               {user && <NotificationBell />}
 
-              {/* Language Switcher Pill */}
+              {/* Language Switcher */}
               <button
                 onClick={() => setLang(lang === "en" ? "hi" : "en")}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-bold border border-slate-300/80 bg-white/90 hover:bg-slate-100 rounded-full text-slate-700 hover:text-slate-900 transition shadow-2xs group"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition border border-slate-200"
                 title="Change Language / भाषा बदलें"
                 aria-label="Toggle language"
               >
-                <Globe className="w-4 h-4 text-blue-700 group-hover:rotate-45 transition-transform duration-300" />
-                <span>{lang === "en" ? "हिंदी" : "English"}</span>
+                <Globe className="w-3.5 h-3.5 text-slate-500" />
+                <span>{lang === "en" ? "हिं" : "EN"}</span>
               </button>
 
-              {/* User Session Status & Sign Out (if logged in) */}
-              {user && (
-                <div className="hidden sm:flex items-center gap-1.5 pl-1.5 border-l border-slate-200">
-                  <Link
-                    href={role === "admin" ? "/admin" : "/dashboard"}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100/90 hover:bg-slate-200/90 text-slate-800 rounded-full text-xs font-bold transition shadow-2xs"
-                    title={`Logged in as ${profile?.full_name || user.email}`}
+              {/* Case 1: User is Logged In */}
+              {user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 rounded-full text-xs font-semibold text-slate-800 transition"
+                    aria-label="User menu"
                   >
-                    <div className="w-5 h-5 rounded-full bg-blue-700 text-white flex items-center justify-center text-[10px] font-bold">
-                      {profile?.full_name?.charAt(0) || "U"}
+                    <div className="w-6 h-6 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">
+                      {profile?.full_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
                     </div>
-                    <span className="max-w-[85px] truncate">
+                    <span className="hidden sm:inline-block max-w-[100px] truncate font-bold text-slate-800">
                       {profile?.full_name?.split(" ")[0] || "User"}
                     </span>
-                    <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full ${
+                    <span className={`text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded-full ${
                       role === "admin"
                         ? "bg-amber-200 text-amber-950"
                         : role === "beneficiary"
@@ -248,22 +230,116 @@ export default function Header() {
                     }`}>
                       {role === "admin" ? "Admin" : role === "beneficiary" ? "User" : "Donor"}
                     </span>
-                  </Link>
-
-                  <button
-                    onClick={() => signOut()}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition"
-                    title="Sign Out"
-                    aria-label="Sign Out"
-                  >
-                    <LogOut className="w-4 h-4" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
                   </button>
+
+                  {/* Dropdown Menu */}
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-modal">
+                      <div className="px-4 py-2.5 border-b border-slate-100">
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {profile?.full_name || "Apni Madad User"}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                      </div>
+
+                      <div className="py-1">
+                        <Link
+                          href={role === "admin" ? "/admin" : "/dashboard"}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-700"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-slate-500" />
+                          <span>{role === "admin" ? "Admin Desk" : "My Dashboard"}</span>
+                        </Link>
+
+                        <Link
+                          href="/submit"
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-700"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <HeartHandshake className="w-4 h-4 text-slate-500" />
+                          <span>Submit a New Case</span>
+                        </Link>
+                      </div>
+
+                      <div className="pt-1 border-t border-slate-100">
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            signOut();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 text-left"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-600" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Case 2: Guest (Not Logged In) */
+                <div className="flex items-center gap-2">
+                  {/* Production Sign In Dropdown / Link */}
+                  <div className="relative" ref={signInMenuRef}>
+                    <button
+                      onClick={() => setSignInMenuOpen(!signInMenuOpen)}
+                      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-blue-700 hover:bg-slate-100 rounded-lg transition"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>{lang === "hi" ? "साइन इन" : "Sign In"}</span>
+                      <ChevronDown className="w-3 h-3 text-slate-400" />
+                    </button>
+
+                    {signInMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-modal">
+                        <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          Select Role / पद चुनें
+                        </div>
+                        <Link
+                          href="/login?role=donor"
+                          className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                          onClick={() => setSignInMenuOpen(false)}
+                        >
+                          <Heart className="w-3.5 h-3.5 text-rose-500" />
+                          <span>दानदाता (Donor)</span>
+                        </Link>
+                        <Link
+                          href="/login?role=beneficiary"
+                          className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                          onClick={() => setSignInMenuOpen(false)}
+                        >
+                          <User className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>सहायता प्रार्थी (User)</span>
+                        </Link>
+                        <div className="border-t border-slate-100 my-1" />
+                        <Link
+                          href="/login?role=admin"
+                          className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-800"
+                          onClick={() => setSignInMenuOpen(false)}
+                        >
+                          <LayoutDashboard className="w-3.5 h-3.5 text-slate-600" />
+                          <span>व्यवस्थापक (Admin Desk)</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Primary Donate CTA Button */}
+                  <Link
+                    href="/cases"
+                    className="px-4 py-2 text-xs sm:text-sm font-bold rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xs hover:shadow transition flex items-center gap-1.5 active:scale-98"
+                  >
+                    <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                    <span>{lang === "hi" ? "दान करें" : "Donate"}</span>
+                  </Link>
                 </div>
               )}
 
               {/* Mobile Hamburger Toggle */}
               <button
-                className="md:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-xl transition"
+                className="lg:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Open menu"
               >
@@ -275,26 +351,15 @@ export default function Header() {
 
         {/* Mobile Slide-down Drawer */}
         {mobileOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-xl animate-modal">
-            {/* Mobile Home */}
-            <Link
-              href="/"
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-semibold transition ${
-                pathname === "/" ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              <Home className="w-4 h-4" />
-              <span>{lang === "hi" ? "होम" : "Home"}</span>
-            </Link>
-
+          <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-xl animate-modal">
             {/* Mobile Verified Cases */}
             <Link
               href="/cases"
-              className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-semibold transition ${
-                pathname.startsWith("/cases") ? "bg-emerald-50 text-emerald-900 font-bold" : "text-slate-800 hover:bg-slate-50"
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+                pathname.startsWith("/cases") ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <span className="flex items-center gap-2.5">
+              <span className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>{lang === "hi" ? "सत्यापित केस" : "Verified Cases"}</span>
               </span>
@@ -307,17 +372,15 @@ export default function Header() {
             {/* Mobile Woman Help */}
             <Link
               href="/women-help"
-              className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition border ${
-                pathname === "/women-help"
-                  ? "bg-rose-100 text-rose-950 border-rose-300"
-                  : "bg-rose-50/60 text-rose-900 border-rose-100 hover:bg-rose-100"
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+                pathname === "/women-help" ? "bg-rose-50 text-rose-900 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <span className="flex items-center gap-2.5">
+              <span className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-rose-600" />
                 <span>Woman Help (Safe & Secure)</span>
               </span>
-              <span className="text-[10px] bg-rose-200 text-rose-800 px-2 py-0.5 rounded-full font-extrabold">
+              <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded">
                 100% गोपनीय
               </span>
             </Link>
@@ -325,17 +388,15 @@ export default function Header() {
             {/* Mobile Satta Mukt */}
             <Link
               href="/satta-mukt"
-              className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition border ${
-                pathname === "/satta-mukt"
-                  ? "bg-amber-100 text-amber-950 border-amber-300"
-                  : "bg-amber-50/60 text-amber-900 border-amber-100 hover:bg-amber-100"
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+                pathname === "/satta-mukt" ? "bg-amber-50 text-amber-950 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <span className="flex items-center gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-amber-700" />
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
                 <span>सट्टा मुक्त अभियान (Secure)</span>
               </span>
-              <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-extrabold">
+              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
                 Secure
               </span>
             </Link>
@@ -343,80 +404,63 @@ export default function Header() {
             {/* Mobile Need Help */}
             <Link
               href="/submit"
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-semibold transition ${
-                pathname.startsWith("/submit") ? "bg-amber-100 text-amber-950 font-bold" : "text-slate-800 hover:bg-slate-50"
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+                pathname.startsWith("/submit") ? "bg-amber-50 text-amber-900 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
               <HeartHandshake className="w-4 h-4 text-amber-600" />
-              <span>{lang === "hi" ? "मदद चाहिए" : "Need Help"}</span>
+              <span>{lang === "hi" ? "मदद चाहिए (आवेदन करें)" : "Need Help (Submit Case)"}</span>
             </Link>
 
-            {/* Mobile Donor */}
-            <Link
-              href={user && role === "donor" ? "/dashboard" : "/login?role=donor"}
-              className="flex items-center justify-between px-4 py-3 rounded-xl text-base font-extrabold bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-xs"
-            >
-              <span className="flex items-center gap-2.5">
-                <Heart className="w-4 h-4 text-rose-300 fill-rose-300" />
-                <span>{lang === "hi" ? "दानदाता पोर्टल" : "Donor Portal"}</span>
-              </span>
-              {user && role === "donor" && (
-                <span className="bg-emerald-400 text-emerald-950 text-xs px-2 py-0.5 rounded-full font-bold">
-                  Active
-                </span>
-              )}
-            </Link>
-
-            {/* Mobile Admin */}
-            <Link
-              href={user && role === "admin" ? "/admin" : "/login?role=admin"}
-              className="flex items-center justify-between px-4 py-3 rounded-xl text-base font-semibold bg-slate-100 text-slate-800"
-            >
-              <span className="flex items-center gap-2.5">
-                <LayoutDashboard className="w-4 h-4 text-slate-600" />
-                <span>{lang === "hi" ? "व्यवस्थापक" : "Admin"}</span>
-              </span>
-              {user && role === "admin" && (
-                <span className="bg-amber-400 text-amber-950 text-xs px-2 py-0.5 rounded-full font-bold">
-                  Desk
-                </span>
-              )}
-            </Link>
-
-            {/* Mobile Logged-in Options */}
+            {/* Mobile Auth / Role links */}
             <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
               {user ? (
                 <>
                   <Link
                     href={role === "admin" ? "/admin" : "/dashboard"}
-                    className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-blue-50 text-blue-900 font-bold"
+                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-100 text-slate-900 font-bold text-sm"
                   >
-                    <span>My Dashboard ({profile?.full_name?.split(" ")[0] || "User"})</span>
-                    <span className="text-xs uppercase bg-blue-200 px-2 py-0.5 rounded-full">
+                    <span>Dashboard ({profile?.full_name?.split(" ")[0] || "User"})</span>
+                    <span className="text-xs uppercase bg-blue-200 text-blue-900 px-2 py-0.5 rounded-full">
                       {role || "user"}
                     </span>
                   </Link>
 
                   <button
                     onClick={() => signOut()}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-rose-700 font-medium hover:bg-rose-50 text-left w-full"
+                    className="flex items-center gap-2 px-3.5 py-2 text-rose-600 font-semibold hover:bg-rose-50 rounded-xl text-left w-full text-sm"
                   >
-                    <LogOut className="w-4 h-4 text-rose-600" />
+                    <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
                   </button>
                 </>
-              ) : null}
+              ) : (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Link
+                    href="/login?role=donor"
+                    className="py-2.5 px-3 rounded-xl border border-slate-200 text-slate-800 font-bold text-center text-xs hover:bg-slate-50"
+                  >
+                    Donor Sign In
+                  </Link>
+                  <Link
+                    href="/login?role=beneficiary"
+                    className="py-2.5 px-3 rounded-xl border border-slate-200 text-slate-800 font-bold text-center text-xs hover:bg-slate-50"
+                  >
+                    User Sign In
+                  </Link>
+                </div>
+              )}
 
               {/* Language Switcher in Mobile Drawer */}
               <button
                 onClick={() => setLang(lang === "en" ? "hi" : "en")}
-                className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold"
+                className="flex items-center justify-between px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold"
               >
                 <span className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-blue-700" />
+                  <Globe className="w-4 h-4 text-slate-500" />
                   <span>Language / भाषा</span>
                 </span>
-                <span className="font-bold text-blue-800">{lang === "en" ? "हिंदी" : "English"}</span>
+                <span className="font-bold text-blue-700">{lang === "en" ? "हिंदी" : "English"}</span>
               </button>
             </div>
           </div>

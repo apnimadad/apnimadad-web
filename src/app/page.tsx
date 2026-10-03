@@ -21,7 +21,15 @@ import {
 
 export default function HomePage() {
   const { lang, t } = useLanguage();
-  const featured = mockCases.filter((c) => c.status === "approved").slice(0, 3);
+  const featured = mockCases
+    .filter(
+      (c) =>
+        c.status === "approved" &&
+        c.category !== "women_help" &&
+        c.category !== "satta_mukt" &&
+        !c.title?.includes("[CONFIDENTIAL")
+    )
+    .slice(0, 3);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const faqs = [

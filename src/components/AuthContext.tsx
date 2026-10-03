@@ -110,13 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
         } else {
-          // Check local storage for demo session
+          // Clear any legacy demo profiles so visitors start as clean guests
           const savedDemo = localStorage.getItem(DEMO_STORAGE_KEY);
           if (savedDemo) {
             try {
               const parsed = JSON.parse(savedDemo) as Profile;
-              setUser({ id: parsed.id, email: parsed.email });
-              setProfile(parsed);
+              if (parsed.id?.startsWith("demo-")) {
+                localStorage.removeItem(DEMO_STORAGE_KEY);
+              } else {
+                setUser({ id: parsed.id, email: parsed.email });
+                setProfile(parsed);
+              }
             } catch {
               localStorage.removeItem(DEMO_STORAGE_KEY);
             }
