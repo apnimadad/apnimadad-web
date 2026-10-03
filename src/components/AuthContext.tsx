@@ -174,11 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               password: pass,
             });
 
-            if (error) {
-              return { success: false, error: error.message };
-            }
-
-            if (data?.user) {
+            if (!error && data?.user) {
               const { data: prof } = await supabase
                 .from("profiles")
                 .select("*")
@@ -209,7 +205,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.success && res.profile) {
         setUser(res.user || null);
         setProfile(res.profile);
-        if (!isSupabaseConfigured()) {
+        if (isSupabaseConfigured()) {
+          const supabase = createClient();
+          if (supabase) {
+            try {
+              await supabase.auth.signInWithPassword({
+                email: cleanEmail,
+                password: pass,
+              });
+            } catch {
+              // Session cookie already set on server
+            }
+          }
+        } else {
           localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(res.profile));
         }
         return { success: true, role: res.profile.role, profile: res.profile };
@@ -235,7 +243,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.success && res.profile) {
         setUser(res.user || null);
         setProfile(res.profile);
-        if (!isSupabaseConfigured()) {
+        if (isSupabaseConfigured()) {
+          const supabase = createClient();
+          if (supabase) {
+            try {
+              await supabase.auth.signInWithPassword({
+                email: payload.email.trim().toLowerCase(),
+                password: payload.password,
+              });
+            } catch (clientErr) {
+              console.warn("Client session setup notice:", clientErr);
+            }
+          }
+        } else {
           localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(res.profile));
         }
         return { success: true };

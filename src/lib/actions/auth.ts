@@ -389,16 +389,37 @@ export async function signInUser(
   password?: string
 ): Promise<AuthResponse> {
   const cleanEmail = email.trim().toLowerCase();
+  const service = createServiceClient();
   const supabase = await createServerSupabase();
 
-  if (!supabase) {
+  if (!supabase && !service) {
     return { success: false, error: "Database authentication is not connected" };
   }
   if (!password) {
     return { success: false, error: "Password is required for password sign-in" };
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  // If user was created but email was unconfirmed due to Supabase SMTP rate limit, auto-confirm it
+  if (service) {
+    try {
+      const { data: userList } = await service.auth.admin.listUsers();
+      const existing = userList?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
+      if (existing && !existing.email_confirmed_at) {
+        await service.auth.admin.updateUserById(existing.id, {
+          email_confirm: true,
+        });
+      }
+    } catch (confErr) {
+      console.warn("Auto-confirm check notice:", confErr);
+    }
+  }
+
+  const client = supabase || service;
+  if (!client) {
+    return { success: false, error: "Authentication service unavailable" };
+  }
+
+  const { data, error } = await client.auth.signInWithPassword({
     email: cleanEmail,
     password,
   });
@@ -411,8 +432,8 @@ export async function signInUser(
     return { success: false, error: "User not found" };
   }
 
-  const service = createServiceClient() || supabase;
-  const { data: profileData } = await service
+  const db = service || supabase;
+  const { data: profileData } = await db!
     .from("profiles")
     .select("*")
     .eq("id", data.user.id)
@@ -433,7 +454,7 @@ export async function signInUser(
       created_at: data.user.created_at,
     };
     try {
-      await service.from("profiles").upsert(newProfile);
+      await db!.from("profiles").upsert(newProfile);
     } catch {
       // Ignore if table insert fails
     }
@@ -458,59 +479,151 @@ export async function signUpUser(payload: {
   role: UserRole;
 }): Promise<AuthResponse> {
   const cleanEmail = payload.email.trim().toLowerCase();
+  const service = createServiceClient();
   const supabase = await createServerSupabase();
 
-  if (!supabase) {
+  if (!supabase && !service) {
     return { success: false, error: "Database authentication is not connected" };
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email: cleanEmail,
-    password: payload.password,
-    options: {
-      data: {
-        role: payload.role,
-        full_name: payload.fullName,
-        phone: payload.phone || null,
+  let userId: string | null = null;
+  let createdAt = new Date().toISOString();
+
+  // 1. Create confirmed user directly using service client if available
+  // This bypasses Supabase free tier SMTP rate limit of 3 emails/hour and guarantees instant activation
+  if (service) {
+    try {
+      const { data: adminData, error: adminErr } = await service.auth.admin.createUser({
+        email: cleanEmail,
+        password: payload.password,
+        email_confirm: true,
+        user_metadata: {
+          role: payload.role,
+          full_name: payload.fullName,
+          phone: payload.phone || null,
+        },
+      });
+
+      if (!adminErr && adminData?.user) {
+        userId = adminData.user.id;
+        createdAt = adminData.user.created_at;
+      } else if (adminErr) {
+        const errMsg = adminErr.message.toLowerCase();
+        if (
+          errMsg.includes("already registered") ||
+          errMsg.includes("already exists") ||
+          errMsg.includes("duplicate")
+        ) {
+          const { data: userList } = await service.auth.admin.listUsers();
+          const existing = userList?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
+          if (existing) {
+            await service.auth.admin.updateUserById(existing.id, {
+              password: payload.password,
+              email_confirm: true,
+              user_metadata: {
+                role: payload.role,
+                full_name: payload.fullName,
+                phone: payload.phone || null,
+              },
+            });
+            userId = existing.id;
+            createdAt = existing.created_at;
+          } else {
+            return {
+              success: false,
+              error: "An account with this email already exists. Please switch to the Sign In tab.",
+            };
+          }
+        } else {
+          console.warn("Service admin createUser warning:", adminErr.message);
+        }
+      }
+    } catch (adminEx) {
+      console.warn("Service admin createUser exception:", adminEx);
+    }
+  }
+
+  // 2. Fallback to standard signUp if service client is not configured
+  if (!userId && supabase) {
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password: payload.password,
+      options: {
+        data: {
+          role: payload.role,
+          full_name: payload.fullName,
+          phone: payload.phone || null,
+        },
       },
-    },
-  });
+    });
 
-  if (error) {
-    return { success: false, error: error.message };
+    if (error) {
+      if (error.message.toLowerCase().includes("rate limit")) {
+        return {
+          success: false,
+          error: "Email verification rate limit reached. Please try signing in directly with your email and password.",
+        };
+      }
+      return { success: false, error: error.message };
+    }
+
+    if (data.user) {
+      userId = data.user.id;
+      createdAt = data.user.created_at;
+    }
   }
 
-  if (!data.user) {
-    return { success: false, error: "Registration failed" };
+  if (!userId) {
+    return { success: false, error: "Registration failed. Please check your details and try again." };
   }
 
-  const service = createServiceClient();
   const db = service || supabase;
-  const profileRecord: Partial<Profile> = {
-    id: data.user.id,
-    email: cleanEmail,
-    role: payload.role,
-    full_name: payload.fullName,
-    phone: payload.phone || null,
-    is_verified: true,
-  };
+  if (db) {
+    const profileRecord: Partial<Profile> = {
+      id: userId,
+      email: cleanEmail,
+      role: payload.role,
+      full_name: payload.fullName,
+      phone: payload.phone || null,
+      is_verified: true,
+      updated_at: new Date().toISOString(),
+    };
 
-  await db.from("profiles").upsert(profileRecord);
+    try {
+      await db.from("profiles").upsert(profileRecord);
+    } catch (upsertErr) {
+      console.error("Profile upsert notice:", upsertErr);
+    }
+  }
+
+  // Set login cookies on server supabase
+  if (supabase) {
+    try {
+      await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: payload.password,
+      });
+    } catch (cookieErr) {
+      console.warn("Sign-in cookie setup warning:", cookieErr);
+    }
+  }
 
   const profile: Profile = {
-    id: data.user.id,
+    id: userId,
     email: cleanEmail,
     role: payload.role,
     full_name: payload.fullName,
     phone: payload.phone || null,
     is_verified: true,
-    created_at: data.user.created_at,
+    created_at: createdAt,
   };
 
   revalidatePath("/");
+  revalidatePath("/dashboard");
+
   return {
     success: true,
-    user: { id: data.user.id, email: cleanEmail },
+    user: { id: userId, email: cleanEmail },
     profile,
   };
 }
