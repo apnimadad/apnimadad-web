@@ -59,7 +59,23 @@ export default function NotificationBell() {
         userId: user?.id,
         role: role || "all",
       });
-      setNotifications(data || []);
+
+      let localReadIds = new Set<string>();
+      try {
+        const stored = typeof window !== "undefined" ? localStorage.getItem("apni_madad_read_notifs") : null;
+        if (stored) {
+          localReadIds = new Set(JSON.parse(stored));
+        }
+      } catch {
+        // ignore JSON parse error
+      }
+
+      const merged = (data || []).map((n) => ({
+        ...n,
+        is_read: n.is_read || localReadIds.has(n.id),
+      }));
+
+      setNotifications(merged);
     } catch (err) {
       console.error("Failed to load notifications:", err);
     }
@@ -90,17 +106,48 @@ export default function NotificationBell() {
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    await markNotificationAsRead(id);
+
+    // 1. Save to local storage for instant persistent read state
+    try {
+      const stored = localStorage.getItem("apni_madad_read_notifs");
+      const readSet = new Set(stored ? JSON.parse(stored) : []);
+      readSet.add(id);
+      localStorage.setItem("apni_madad_read_notifs", JSON.stringify(Array.from(readSet).slice(-200)));
+    } catch (err) {
+      console.warn("localStorage error:", err);
+    }
+
+    // 2. Optimistic UI update
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
+
+    // 3. Database update
+    await markNotificationAsRead(id);
   };
 
   const handleMarkAllRead = async () => {
     setLoading(true);
+    const allIds = notifications.map((n) => n.id);
+
+    // 1. Immediately store in localStorage so any page refresh keeps them read
     try {
-      await markAllNotificationsAsRead(user?.id);
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      const stored = localStorage.getItem("apni_madad_read_notifs");
+      const readSet = new Set(stored ? JSON.parse(stored) : []);
+      allIds.forEach((id) => readSet.add(id));
+      localStorage.setItem("apni_madad_read_notifs", JSON.stringify(Array.from(readSet).slice(-200)));
+    } catch (err) {
+      console.warn("localStorage error:", err);
+    }
+
+    // 2. Optimistically mark all in state
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+
+    // 3. Persist to Supabase database
+    try {
+      await markAllNotificationsAsRead(user?.id, role || "all", allIds);
+    } catch (err) {
+      console.error("Failed to mark all as read in DB:", err);
     } finally {
       setLoading(false);
     }
@@ -109,8 +156,12 @@ export default function NotificationBell() {
   const handleClearAll = async () => {
     if (!confirm("Clear all notifications?")) return;
     setLoading(true);
+    const allIds = notifications.map((n) => n.id);
     try {
-      await clearAllNotifications(user?.id, role || "all");
+      await clearAllNotifications(user?.id, role || "all", allIds);
+      try {
+        localStorage.removeItem("apni_madad_read_notifs");
+      } catch {}
       setNotifications([]);
     } finally {
       setLoading(false);
