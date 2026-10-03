@@ -86,27 +86,21 @@ export default function DashboardPage() {
     }
   }, [role, router]);
 
-  // Portal Mode: "beneficiary" (needy person / patient) or "donor" (philanthropist)
-  const [portalMode, setPortalMode] = useState<"beneficiary" | "donor">("donor");
-
-  // Sync default portalMode with user role
-  useEffect(() => {
-    if (role === "beneficiary") {
-      setPortalMode("beneficiary");
-    } else {
-      setPortalMode("donor");
-    }
-  }, [role]);
+  // Role determination: if registered as beneficiary, show beneficiary application dashboard; otherwise dedicated donor portal
+  const isBeneficiary = (profile?.role || role) === "beneficiary";
 
   // Beneficiary sub-tabs
   const [beneficiaryTab, setBeneficiaryTab] = useState<
     "my_cases" | "apply_appeal" | "aid_ledger"
   >("my_cases");
 
-  // Donor sub-tabs
+  // Donor sub-tabs: 1. "cases" (Verified Needy Cases & Direct Giving), 2. "donations" (My Direct Transfers & Receipts), 3. "updates" (Patient Recovery Updates)
   const [donorTab, setDonorTab] = useState<
-    "donations" | "updates" | "urgent"
-  >("donations");
+    "cases" | "donations" | "updates"
+  >("cases");
+
+  const [donorSearch, setDonorSearch] = useState("");
+  const [donorCategory, setDonorCategory] = useState<string>("all");
 
   // Data states
   const [userDonations, setUserDonations] = useState<UserDonationItem[]>([]);
@@ -272,6 +266,20 @@ export default function DashboardPage() {
         d.amount.toString().includes(q)
     );
   }, [userDonations, donationSearch]);
+
+  const filteredDonorCases = useMemo(() => {
+    return allCases.filter((c) => {
+      const matchCat = donorCategory === "all" || c.category === donorCategory;
+      const q = donorSearch.trim().toLowerCase();
+      const matchSearch =
+        !q ||
+        c.title.toLowerCase().includes(q) ||
+        c.patient_name.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        (c.hospital_name && c.hospital_name.toLowerCase().includes(q));
+      return matchCat && matchSearch;
+    });
+  }, [allCases, donorCategory, donorSearch]);
 
   const urgentCases = useMemo(() => {
     return allCases.filter((c) => c.status === "approved").slice(0, 4);
@@ -635,14 +643,18 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                  {profile?.full_name || "Member Account"}
+                  {profile?.full_name || (isBeneficiary ? "Beneficiary Account" : "Donor Account")}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  {portalMode === "beneficiary" ? "Beneficiary / Needy Person" : "Philanthropic Donor"}
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                  isBeneficiary
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                    : "bg-blue-500/20 text-blue-300 border border-blue-400/30"
+                }`}>
+                  {isBeneficiary ? "Beneficiary / Needy Person" : "Philanthropic Donor"}
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                  Direct Transfer Active
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  100% Direct Peer-to-Peer
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1 flex items-center gap-3 flex-wrap">
@@ -664,35 +676,27 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Portal Switcher & Logout */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-            {/* Seamless Toggle between Beneficiary and Donor modes */}
-            <div className="bg-slate-800/80 p-1 rounded-2xl border border-white/10 flex items-center shadow-inner">
+          {/* Top Actions: Record Transfer (for donor) / Apply for Relief (for beneficiary) + Sign Out */}
+          <div className="flex items-center gap-2.5">
+            {!isBeneficiary ? (
               <button
                 type="button"
-                onClick={() => setPortalMode("beneficiary")}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
-                  portalMode === "beneficiary"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
+                onClick={() => setRecordModal(true)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm"
               >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Beneficiary Mode</span>
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Record a Transfer</span>
               </button>
+            ) : (
               <button
                 type="button"
-                onClick={() => setPortalMode("donor")}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
-                  portalMode === "donor"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
+                onClick={() => setBeneficiaryTab("apply_appeal")}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm"
               >
-                <Heart className="w-3.5 h-3.5" />
-                <span>Donor Mode</span>
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Apply for Relief</span>
               </button>
-            </div>
+            )}
 
             <button
               onClick={() => signOut()}
@@ -708,9 +712,9 @@ export default function DashboardPage() {
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* ========================================================================= */}
-        {/* PORTAL MODE 1: USER / BENEFICIARY (NEEDY PERSON APPLYING FOR AID) */}
+        {/* VIEW 1: USER / BENEFICIARY (NEEDY PERSON APPLYING FOR AID) */}
         {/* ========================================================================= */}
-        {portalMode === "beneficiary" && (
+        {isBeneficiary && (
           <div className="space-y-6">
             {/* Beneficiary Impact & Aid Status Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -2009,76 +2013,165 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Donor Sub-Tab 3: Urgent Verified Appeals */}
-            {donorTab === "urgent" && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
+            {/* Donor Sub-Tab 1: Verified Needy Cases (See Needy & Donate Directly) */}
+            {donorTab === "cases" && (
+              <div className="space-y-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900">Urgent Cases Needing Immediate Transfer</h2>
-                    <p className="text-xs text-slate-500">
-                      Critical medical emergencies verified with 4-pillar physical and doctor audit.
+                    <h2 className="text-base sm:text-lg font-black text-slate-900">
+                      Verified Needy Cases Awaiting Direct Aid
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      100% of your transfer goes straight to the patient&apos;s UPI or hospital. Zero middleman cuts.
                     </p>
                   </div>
-                  <Link
-                    href="/cases"
-                    className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1"
-                  >
-                    <span>View All Cases</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <div className="relative w-full sm:w-64">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search patient, hospital, city..."
+                        value={donorSearch}
+                        onChange={(e) => setDonorSearch(e.target.value)}
+                        className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {urgentCases.map((c) => (
-                    <div
-                      key={c.id}
-                      className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4 flex flex-col justify-between"
+                {/* Category Pills */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+                  {[
+                    { id: "all", label: "All Categories" },
+                    { id: "medical", label: "Medical Emergency" },
+                    { id: "child", label: "Child Care & Pediatric" },
+                    { id: "cancer", label: "Cancer Care" },
+                    { id: "accident", label: "Accident / Trauma" },
+                    { id: "education", label: "Education Relief" },
+                    { id: "women", label: "Women & Family" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setDonorCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition text-xs ${
+                        donorCategory === cat.id
+                          ? "bg-blue-700 text-white shadow-xs"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
-                          {c.photo_url ? (
-                            <Image
-                              src={c.photo_url}
-                              alt={c.patient_name}
-                              width={64}
-                              height={64}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Heart className="w-6 h-6 text-blue-600 m-auto" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="bg-rose-50 text-rose-700 border border-rose-100 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                            Emergency Critical
-                          </span>
-                          <h3 className="font-bold text-slate-900 text-sm mt-1 truncate">
-                            {c.title}
-                          </h3>
-                          <p className="text-xs text-slate-500">
-                            {c.patient_name} ({c.city})
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
-                          onClick={() => setQrModal(c)}
-                          className="flex-1 py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
-                        >
-                          <QrCode className="w-4 h-4" />
-                          <span>Donate via Direct UPI</span>
-                        </button>
-                        <Link
-                          href={`/cases/${c.id}`}
-                          className="py-2 px-3 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition"
-                        >
-                          Details
-                        </Link>
-                      </div>
-                    </div>
+                      {cat.label}
+                    </button>
                   ))}
                 </div>
+
+                {/* Cases Grid */}
+                {dataLoading ? (
+                  <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center bg-white rounded-2xl border border-slate-200">
+                    <Loader2 className="w-7 h-7 animate-spin text-blue-600 mb-2" />
+                    <p className="text-xs font-medium">Loading verified needy cases...</p>
+                  </div>
+                ) : filteredDonorCases.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs">
+                    <div className="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Heart className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800">No cases found matching your criteria</h3>
+                    <p className="text-xs text-slate-500 mt-1">Try resetting the search or category filter.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredDonorCases.map((c) => {
+                      const pct = getProgress(c.amount_raised, c.amount_needed);
+                      return (
+                        <div
+                          key={c.id}
+                          className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition flex flex-col justify-between"
+                        >
+                          <div>
+                            {/* Card Image Banner */}
+                            <div className="h-44 w-full bg-slate-100 relative overflow-hidden">
+                              {c.photo_url ? (
+                                <Image
+                                  src={c.photo_url}
+                                  alt={c.patient_name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                                  <Heart className="w-12 h-12 text-slate-300" />
+                                </div>
+                              )}
+                              <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
+                                <span className="bg-blue-900/80 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                  {c.category}
+                                </span>
+                                {c.urgency === "high" && (
+                                  <span className="bg-rose-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                    Urgent Critical
+                                  </span>
+                                )}
+                              </div>
+                              <div className="absolute bottom-2 right-2 bg-emerald-950/80 backdrop-blur-xs text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                                <span>Verified UPI</span>
+                              </div>
+                            </div>
+
+                            {/* Card Info */}
+                            <div className="p-4 sm:p-5 space-y-3">
+                              <div>
+                                <h3 className="font-extrabold text-slate-900 text-base line-clamp-1">
+                                  {c.title}
+                                </h3>
+                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-semibold text-slate-700">{c.patient_name}</span>
+                                  {c.city && <span>• {c.city}</span>}
+                                  {c.hospital_name && <span className="text-blue-700">• {c.hospital_name}</span>}
+                                </p>
+                              </div>
+
+                              {/* Progress bar */}
+                              <div className="space-y-1.5">
+                                <div className="flex justify-between text-xs font-bold">
+                                  <span className="text-emerald-700">{formatINR(c.amount_raised)} raised</span>
+                                  <span className="text-slate-500">Goal: {formatINR(c.amount_needed)}</span>
+                                </div>
+                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full transition-all duration-500"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <div className="text-[11px] text-slate-400 text-right">{pct}% funded</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="p-4 sm:p-5 pt-0 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setQrModal(c)}
+                              className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+                            >
+                              <QrCode className="w-4 h-4" />
+                              <span>Donate via Direct UPI</span>
+                            </button>
+                            <Link
+                              href={`/cases/${c.id}`}
+                              className="py-2.5 px-3 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition text-center"
+                            >
+                              Details
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
