@@ -53,10 +53,10 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, markAll, userId } = body;
+    const { id, markAll, userId, role, notificationIds } = body;
 
     if (markAll) {
-      const res = await markAllNotificationsAsRead(userId);
+      const res = await markAllNotificationsAsRead(userId, role, notificationIds);
       return NextResponse.json(res);
     }
 
@@ -71,6 +71,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(res);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to update notification";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId") || undefined;
+    const role = (searchParams.get("role") as UserRole) || "all";
+    const res = await clearAllNotifications(userId, role);
+    return NextResponse.json(res);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to delete notifications";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
