@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/cases";
 import { submitVerificationReview } from "@/lib/actions/verification";
 import { useSiteSettings } from "@/components/SiteSettingsContext";
+import { useLanguage } from "@/components/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -44,6 +45,7 @@ import {
   MessageCircle,
   AlertTriangle,
   UserCheck,
+  Globe,
 } from "lucide-react";
 
 type AdminCase = Case & {
@@ -93,11 +95,13 @@ export default function AdminPage() {
     updateSettings,
   } = useSiteSettings();
 
+  const { lang, setLang } = useLanguage();
+
   const [adminSection, setAdminSection] = useState<"cases" | "confidential" | "website">("cases");
   const [cases, setCases] = useState<AdminCase[]>([]);
   const [selected, setSelected] = useState<AdminCase | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "funded" | "rejected" | "all">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "funded" | "rejected" | "all">("all");
   const [search, setSearch] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [newCaseModal, setNewCaseModal] = useState(false);
@@ -331,7 +335,11 @@ export default function AdminPage() {
     if (selectedConfidential && selectedConfidential.id === id) {
       setSelectedConfidential((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
-    showToast(`स्थिति अपडेट की गई: ${newStatus}`);
+    showToast(
+      lang === "hi"
+        ? `स्थिति अपडेट की गई: ${newStatus}`
+        : `Status updated: ${newStatus}`
+    );
   };
 
   const handleAddCounselorNote = (id: string, note: string) => {
@@ -357,7 +365,11 @@ export default function AdminPage() {
       );
     }
     setCounselorNoteInput("");
-    showToast("काउंसलर नोट सुरक्षित किया गया।");
+    showToast(
+      lang === "hi"
+        ? "काउंसलर नोट सुरक्षित किया गया।"
+        : "Counselor internal note saved."
+    );
   };
 
   const handleApprove = async (id: string) => {
@@ -510,32 +522,74 @@ export default function AdminPage() {
       )}
 
       {/* Admin Top Header */}
-      {/* Admin Top Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-7">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-bold mb-2">
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
-                <span>Foundation Administrator Access</span>
+                <span>
+                  {lang === "hi"
+                    ? "फाउंडेशन एडमिनिस्ट्रेटर एक्सेस"
+                    : "Foundation Administrator Access"}
+                </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 {adminSection === "cases"
-                  ? "Admin Verification Dashboard"
+                  ? (lang === "hi"
+                      ? "केस व चिकित्सा सत्यापन डैशबोर्ड"
+                      : "Admin Verification Dashboard")
                   : adminSection === "confidential"
-                  ? "गोपनीय सहायता केंद्र (Woman Help & सट्टा मुक्त)"
-                  : "Live Donors & Website Control Center"}
+                  ? (lang === "hi"
+                      ? "गोपनीय सहायता केंद्र (Woman Help व सट्टा मुक्त)"
+                      : "Confidential Support Desk (Women Help & De-Addiction)")
+                  : (lang === "hi"
+                      ? "लाइव दानकर्ता व वेबसाइट नियंत्रण केंद्र"
+                      : "Live Donors & Website Control Center")}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 {adminSection === "cases"
-                  ? "Verify beneficiary hospital documents, authorize zero-commission cases, and update target amounts."
+                  ? (lang === "hi"
+                      ? "लाभार्थियों के अस्पताल दस्तावेजों का सत्यापन करें, शून्य-कमीशन मामलों को स्वीकृति दें।"
+                      : "Verify beneficiary hospital documents, authorize zero-commission cases, and update target amounts.")
                   : adminSection === "confidential"
-                  ? "100% गोपनीय व सुरक्षित सहायता - महिला सुरक्षा और सट्टा मुक्ति परामर्श की आंतरिक निगरानी (पब्लिक ऑडियंस से पूरी तरह गुप्त)।"
-                  : "Full administrative control to edit the live generous donors marquee ticker, emergency alert banners, and official helplines."}
+                  ? (lang === "hi"
+                      ? "100% गोपनीय व सुरक्षित सहायता - महिला सुरक्षा और सट्टा मुक्ति परामर्श की आंतरिक निगरानी (पब्लिक ऑडियंस से पूरी तरह गुप्त)।"
+                      : "100% confidential and secure assistance: internal monitoring of women help & de-addiction requests (isolated from public view).")
+                  : (lang === "hi"
+                      ? "लाइव दानकर्ता सूची, आपातकालीन अलर्ट बैनर और आधिकारिक हेल्पलाइन का पूर्ण नियंत्रण।"
+                      : "Full administrative control to edit the live generous donors marquee ticker, emergency alert banners, and official helplines.")}
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Language Switcher Pill */}
+              <div className="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+                <Globe className="w-3.5 h-3.5 text-slate-500 ml-1.5 mr-1" />
+                <button
+                  type="button"
+                  onClick={() => setLang("en")}
+                  className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                    lang === "en"
+                      ? "bg-white text-slate-900 font-bold shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLang("hi")}
+                  className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                    lang === "hi"
+                      ? "bg-white text-blue-900 font-bold shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  हिंदी
+                </button>
+              </div>
+
               {adminSection === "cases" ? (
                 <button
                   type="button"
@@ -543,19 +597,27 @@ export default function AdminPage() {
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs hover:shadow transition"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>Create Verified Case</span>
+                  <span>
+                    {lang === "hi" ? "नया सत्यापित केस जोड़ें" : "Create Verified Case"}
+                  </span>
                 </button>
               ) : adminSection === "confidential" ? (
                 <button
                   type="button"
                   onClick={() => {
                     loadConfidential();
-                    showToast("गोपनीय सहायता डेटा रिफ्रेश हो गया है।");
+                    showToast(
+                      lang === "hi"
+                        ? "गोपनीय सहायता डेटा रिफ्रेश हो गया है।"
+                        : "Confidential support data refreshed."
+                    );
                   }}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>रिफ्रेश गोपनीय केस</span>
+                  <span>
+                    {lang === "hi" ? "रिफ्रेश गोपनीय केस" : "Refresh Confidential Cases"}
+                  </span>
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
@@ -565,21 +627,33 @@ export default function AdminPage() {
                     className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs hover:shadow transition"
                   >
                     <UserPlus className="w-4 h-4" />
-                    <span>Add Generous Donor</span>
+                    <span>{lang === "hi" ? "दानकर्ता जोड़ें" : "Add Generous Donor"}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm("Reset live donors marquee to default list?")) {
+                      if (
+                        confirm(
+                          lang === "hi"
+                            ? "दानकर्ता सूची को डिफ़ॉल्ट पर रीसेट करें?"
+                            : "Reset live donors marquee to default list?"
+                        )
+                      ) {
                         resetDonors();
-                        showToast("Live donors marquee restored to defaults.");
+                        showToast(
+                          lang === "hi"
+                            ? "दानकर्ता सूची रीसेट हो गई।"
+                            : "Live donors marquee restored to defaults."
+                        );
                       }
                     }}
                     className="inline-flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
-                    title="Reset to Defaults"
+                    title={lang === "hi" ? "डिफ़ॉल्ट पर रीसेट करें" : "Reset to Defaults"}
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Reset Defaults</span>
+                    <span className="hidden sm:inline">
+                      {lang === "hi" ? "रीसेट" : "Reset Defaults"}
+                    </span>
                   </button>
                 </div>
               )}
@@ -598,7 +672,9 @@ export default function AdminPage() {
               }`}
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Cases & Medical Verifications</span>
+              <span>
+                {lang === "hi" ? "केस व चिकित्सा सत्यापन" : "Cases & Medical Verifications"}
+              </span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
                   adminSection === "cases"
@@ -606,7 +682,7 @@ export default function AdminPage() {
                     : "bg-amber-100 text-amber-900"
                 }`}
               >
-                {pendingCount} Pending
+                {pendingCount} {lang === "hi" ? "लंबित" : "Pending"}
               </span>
             </button>
 
@@ -620,7 +696,11 @@ export default function AdminPage() {
               }`}
             >
               <Lock className="w-4 h-4 text-amber-300" />
-              <span>गोपनीय सहायता (Women Help & सट्टा मुक्त)</span>
+              <span>
+                {lang === "hi"
+                  ? "गोपनीय सहायता (महिला सुरक्षा व सट्टा मुक्ति)"
+                  : "Confidential Support (Women & De-Addiction)"}
+              </span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
                   adminSection === "confidential"
@@ -628,7 +708,7 @@ export default function AdminPage() {
                     : "bg-purple-100 text-purple-900"
                 }`}
               >
-                {confidentialCases.length} Confidential
+                {confidentialCases.length} {lang === "hi" ? "गोपनीय" : "Confidential"}
               </span>
             </button>
 
@@ -642,7 +722,11 @@ export default function AdminPage() {
               }`}
             >
               <Sliders className="w-4 h-4 text-amber-400" />
-              <span>Live Donors & Website Control</span>
+              <span>
+                {lang === "hi"
+                  ? "लाइव दानकर्ता व वेबसाइट नियंत्रण"
+                  : "Live Donors & Website Control"}
+              </span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
                   adminSection === "website"
@@ -650,7 +734,7 @@ export default function AdminPage() {
                     : "bg-slate-200 text-slate-700"
                 }`}
               >
-                {donors.length} Donors
+                {donors.length} {lang === "hi" ? "दानकर्ता" : "Donors"}
               </span>
             </button>
           </div>
@@ -664,48 +748,86 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Pending Review</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "समीक्षा लंबित" : "Pending Review"}
+              </span>
               <Clock className="w-4 h-4 text-amber-500" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">{pendingCount}</div>
-            <p className="text-[11px] text-slate-400 mt-1">Requires document verification</p>
+            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
+              {pendingCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi"
+                ? "दस्तावेज सत्यापन आवश्यक"
+                : "Requires document verification"}
+            </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Active Verified</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "सक्रिय सत्यापित" : "Active Verified"}
+              </span>
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-blue-900">{approvedCount}</div>
-            <p className="text-[11px] text-slate-400 mt-1">Accepting direct UPI transfers</p>
+            <div className="text-2xl sm:text-3xl font-extrabold text-blue-900">
+              {approvedCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi"
+                ? "सीधे UPI भुगतान स्वीकार्य"
+                : "Accepting direct UPI transfers"}
+            </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Fully Funded</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "पूर्णतः पोषित" : "Fully Funded"}
+              </span>
               <Sparkles className="w-4 h-4 text-amber-500" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">{fundedCount}</div>
-            <p className="text-[11px] text-slate-400 mt-1">Goals met directly</p>
+            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
+              {fundedCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi" ? "लक्ष्य सीधे पूरे हुए" : "Goals met directly"}
+            </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Direct Aid Transferred</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "सीधी सहायता हस्तांतरित" : "Direct Aid Transferred"}
+              </span>
               <TrendingUp className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl sm:text-2xl font-extrabold text-emerald-700 truncate">
               {formatINR(totalRaised)}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">₹0 commission retained</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi" ? "₹0 कमीशन कटौती" : "₹0 commission retained"}
+            </p>
           </div>
         </div>
 
         {/* Tabbed Navigation + Search Controls */}
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden mb-8">
           <div className="p-4 sm:p-5 border-b border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Tabs */}
+            {/* Tabs: ALL IS FIRST */}
             <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab("all")}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                  activeTab === "all"
+                    ? "bg-slate-800 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <span>{lang === "hi" ? `सभी (${cases.length})` : `All (${cases.length})`}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setActiveTab("pending")}
@@ -715,7 +837,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                <span>Pending ({pendingCount})</span>
+                <span>{lang === "hi" ? `लंबित (${pendingCount})` : `Pending (${pendingCount})`}</span>
               </button>
 
               <button
@@ -727,7 +849,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                <span>Active ({approvedCount})</span>
+                <span>{lang === "hi" ? `सक्रिय (${approvedCount})` : `Active (${approvedCount})`}</span>
               </button>
 
               <button
@@ -739,7 +861,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                <span>Funded ({fundedCount})</span>
+                <span>{lang === "hi" ? `पोषित (${fundedCount})` : `Funded (${fundedCount})`}</span>
               </button>
 
               <button
@@ -751,19 +873,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                <span>Rejected ({rejectedCount})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("all")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-                  activeTab === "all"
-                    ? "bg-slate-800 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <span>All ({cases.length})</span>
+                <span>{lang === "hi" ? `अस्वीकृत (${rejectedCount})` : `Rejected (${rejectedCount})`}</span>
               </button>
             </div>
 
@@ -772,7 +882,11 @@ export default function AdminPage() {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="search"
-                placeholder="Search patient, title or city..."
+                placeholder={
+                  lang === "hi"
+                    ? "मरीज, शीर्षक या शहर खोजें..."
+                    : "Search patient, title or city..."
+                }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
@@ -785,18 +899,30 @@ export default function AdminPage() {
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
                 <tr>
-                  <th className="px-4 py-3.5">Case & Beneficiary</th>
-                  <th className="px-4 py-3.5">Category & City</th>
-                  <th className="px-4 py-3.5">Raised / Needed</th>
-                  <th className="px-4 py-3.5">Verification</th>
-                  <th className="px-4 py-3.5 text-right">Actions</th>
+                  <th className="px-4 py-3.5">
+                    {lang === "hi" ? "केस व लाभार्थी" : "Case & Beneficiary"}
+                  </th>
+                  <th className="px-4 py-3.5">
+                    {lang === "hi" ? "श्रेणी व शहर" : "Category & City"}
+                  </th>
+                  <th className="px-4 py-3.5">
+                    {lang === "hi" ? "एकत्रित / आवश्यक" : "Raised / Needed"}
+                  </th>
+                  <th className="px-4 py-3.5">
+                    {lang === "hi" ? "सत्यापन स्थिति" : "Verification"}
+                  </th>
+                  <th className="px-4 py-3.5 text-right">
+                    {lang === "hi" ? "कार्यवाही" : "Actions"}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredCases.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-500">
-                      No cases found matching your criteria.
+                      {lang === "hi"
+                        ? "आपकी खोज के अनुसार कोई केस नहीं मिला।"
+                        : "No cases found matching your criteria."}
                     </td>
                   </tr>
                 ) : (
@@ -829,7 +955,7 @@ export default function AdminPage() {
                             {formatINR(c.amountRaised)}
                           </div>
                           <div className="text-[11px] text-slate-500">
-                            Target: {formatINR(c.amountNeeded)} ({prog}%)
+                            {lang === "hi" ? "लक्ष्य:" : "Target:"} {formatINR(c.amountNeeded)} ({prog}%)
                           </div>
                           <div className="w-24 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
                             <div
@@ -854,7 +980,15 @@ export default function AdminPage() {
                             {c.status === "approved" && <ShieldCheck className="w-3.5 h-3.5" />}
                             {c.status === "pending" && <Clock className="w-3.5 h-3.5" />}
                             {c.status === "funded" && <Sparkles className="w-3.5 h-3.5" />}
-                            <span className="capitalize">{c.status}</span>
+                            <span className="capitalize">
+                              {c.status === "approved"
+                                ? (lang === "hi" ? "सत्यापित" : "Approved")
+                                : c.status === "pending"
+                                ? (lang === "hi" ? "लंबित" : "Pending")
+                                : c.status === "funded"
+                                ? (lang === "hi" ? "पोषित" : "Funded")
+                                : (lang === "hi" ? "अस्वीकृत" : "Rejected")}
+                            </span>
                           </span>
                         </td>
 
@@ -867,7 +1001,7 @@ export default function AdminPage() {
                                 setEditMode(false);
                               }}
                               className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition"
-                              title="Review Case"
+                              title={lang === "hi" ? "केस समीक्षा" : "Review Case"}
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
@@ -876,7 +1010,7 @@ export default function AdminPage() {
                               type="button"
                               onClick={() => openEdit(c)}
                               className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg transition"
-                              title="Edit Details"
+                              title={lang === "hi" ? "विवरण संपादित करें" : "Edit Details"}
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
@@ -887,7 +1021,7 @@ export default function AdminPage() {
                                   type="button"
                                   onClick={() => handleApprove(c.id)}
                                   className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition"
-                                  title="Approve & Verify"
+                                  title={lang === "hi" ? "स्वीकृत व सत्यापित करें" : "Approve & Verify"}
                                 >
                                   <CheckCircle className="w-3.5 h-3.5" />
                                 </button>
@@ -895,7 +1029,7 @@ export default function AdminPage() {
                                   type="button"
                                   onClick={() => handleReject(c.id)}
                                   className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition"
-                                  title="Reject Case"
+                                  title={lang === "hi" ? "केस अस्वीकृत करें" : "Reject Case"}
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
                                 </button>
@@ -906,7 +1040,7 @@ export default function AdminPage() {
                               href={`/cases/${c.id}`}
                               target="_blank"
                               className="px-2 py-1.5 text-slate-400 hover:text-slate-700 transition"
-                              title="View Public Page"
+                              title={lang === "hi" ? "सार्वजनिक पेज देखें" : "View Public Page"}
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </Link>
@@ -935,17 +1069,21 @@ export default function AdminPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    100% Confidential Guarantee
+                    {lang === "hi" ? "100% गोपनीय गारंटी" : "100% Confidential Guarantee"}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Privacy Isolated from Public
+                    {lang === "hi" ? "पब्लिक से पूर्णतः अलग" : "Privacy Isolated from Public"}
                   </span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black mt-2 text-white">
-                  गोपनीय सहायता केंद्र: महिला सुरक्षा व सट्टा मुक्ति अभियान
+                  {lang === "hi"
+                    ? "गोपनीय सहायता केंद्र: महिला सुरक्षा व सट्टा मुक्ति अभियान"
+                    : "Confidential Support Desk: Women Safety & De-Addiction Drive"}
                 </h2>
                 <p className="text-xs sm:text-sm text-purple-200/90 mt-1 max-w-3xl leading-relaxed">
-                  यह डेटाबेस सार्वजनिक ऑडियंस से पूरी तरह अलग रखा गया है। एडमिन द्वारा स्थिति स्वीकृत होने के बाद भी यह केस मुख्य वेबसाइट, केस लिस्टिंग, या सर्च इंजन पर <strong>कभी नहीं दिखेगा</strong>। वास्तविक नाम व फोन नंबर केवल अधिकृत महिला काउंसलर व NGO सत्यापन टीम के आंतरिक उपयोग के लिए है।
+                  {lang === "hi"
+                    ? "यह डेटाबेस सार्वजनिक ऑडियंस से पूरी तरह अलग रखा गया है। एडमिन द्वारा स्थिति स्वीकृत होने के बाद भी यह केस मुख्य वेबसाइट, केस लिस्टिंग, या सर्च इंजन पर कभी नहीं दिखेगा। वास्तविक नाम व फोन नंबर केवल अधिकृत महिला काउंसलर व NGO सत्यापन टीम के आंतरिक उपयोग के लिए है।"
+                    : "This database is completely isolated from the public audience. Even after status review, these requests will never appear on public listings or search engines. Real names and phone numbers are strictly accessible by authorized NGO counselors."}
                 </p>
               </div>
             </div>
@@ -956,7 +1094,7 @@ export default function AdminPage() {
                 target="_blank"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition"
               >
-                <span>Live Woman Help Form</span>
+                <span>{lang === "hi" ? "लाइव महिला सहायता फॉर्म" : "Live Woman Help Form"}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
               <Link
@@ -964,7 +1102,7 @@ export default function AdminPage() {
                 target="_blank"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition"
               >
-                <span>Live सट्टा मुक्ति Form</span>
+                <span>{lang === "hi" ? "लाइव सट्टा मुक्ति फॉर्म" : "Live De-Addiction Form"}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -975,46 +1113,62 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Total Confidential Cases</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "कुल गोपनीय अनुरोध" : "Total Confidential Cases"}
+              </span>
               <Lock className="w-4 h-4 text-purple-600" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-purple-700">
               {confidentialCases.length}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">100% Zero Public Exposure</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi" ? "100% शून्य पब्लिक प्रसार" : "100% Zero Public Exposure"}
+            </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">महिला सहायता (Woman Help)</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "महिला सहायता" : "Women Help"}
+              </span>
               <ShieldAlert className="w-4 h-4 text-rose-500" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">
               {womenCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">सुरक्षित आश्रय व कानूनी मदद</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi" ? "सुरक्षित आश्रय व कानूनी मदद" : "Safe shelter & legal guidance"}
+            </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">सट्टा मुक्ति अभियान</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "सट्टा मुक्ति अभियान" : "De-Addiction Drive"}
+              </span>
               <AlertTriangle className="w-4 h-4 text-amber-500" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
               {sattaCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">मनोवैज्ञानिक व ऋण मार्गदर्शन</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi" ? "मनोवैज्ञानिक व ऋण मार्गदर्शन" : "Psychological & debt guidance"}
+            </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">सुरक्षित कॉल पेंडिंग</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {lang === "hi" ? "सुरक्षित कॉल लंबित" : "Pending Safe Calls"}
+              </span>
               <Clock className="w-4 h-4 text-blue-500" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-blue-600">
               {pendingCallsCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">दिए गए सुरक्षित समय पर संपर्क करें</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {lang === "hi" ? "दिए गए सुरक्षित समय पर संपर्क करें" : "Contact during selected safe windows"}
+            </p>
           </div>
         </div>
 
@@ -1032,7 +1186,9 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                सभी गोपनीय अनुरोध ({confidentialCases.length})
+                {lang === "hi"
+                  ? `सभी गोपनीय अनुरोध (${confidentialCases.length})`
+                  : `All Confidential Requests (${confidentialCases.length})`}
               </button>
               <button
                 type="button"
@@ -1043,7 +1199,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                महिला सहायता ({womenCount})
+                {lang === "hi" ? `महिला सहायता (${womenCount})` : `Women Help (${womenCount})`}
               </button>
               <button
                 type="button"
@@ -1054,7 +1210,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                सट्टा मुक्त अभियान ({sattaCount})
+                {lang === "hi" ? `सट्टा मुक्त अभियान (${sattaCount})` : `De-Addiction Drive (${sattaCount})`}
               </button>
               <button
                 type="button"
@@ -1065,7 +1221,7 @@ export default function AdminPage() {
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                कॉल पेंडिंग ({pendingCallsCount})
+                {lang === "hi" ? `कॉल पेंडिंग (${pendingCallsCount})` : `Calls Pending (${pendingCallsCount})`}
               </button>
             </div>
 
@@ -1074,7 +1230,7 @@ export default function AdminPage() {
               <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="नाम, शहर, या फोन से खोजें..."
+                placeholder={lang === "hi" ? "नाम, शहर, या फोन से खोजें..." : "Search name, city or phone..."}
                 value={confidentialSearch}
                 onChange={(e) => setConfidentialSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-purple-600"
@@ -1087,18 +1243,28 @@ export default function AdminPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                  <th className="py-3 px-4 sm:px-6">कैटेगरी व प्रदर्शित नाम (Alias)</th>
-                  <th className="py-3 px-4 sm:px-6">संपर्क का सुरक्षित समय</th>
-                  <th className="py-3 px-4 sm:px-6">असली नाम व फोन (NGO Eyes Only)</th>
-                  <th className="py-3 px-4 sm:px-6">शहर व स्थिति</th>
-                  <th className="py-3 px-4 sm:px-6 text-right">सुरक्षित संपर्क व कार्यवाही</th>
+                  <th className="py-3 px-4 sm:px-6">
+                    {lang === "hi" ? "कैटेगरी व प्रदर्शित नाम (Alias)" : "Category & Display Name (Alias)"}
+                  </th>
+                  <th className="py-3 px-4 sm:px-6">
+                    {lang === "hi" ? "संपर्क का सुरक्षित समय" : "Safe Call Window"}
+                  </th>
+                  <th className="py-3 px-4 sm:px-6">
+                    {lang === "hi" ? "असली नाम व फोन (NGO Eyes Only)" : "Real Name & Phone (NGO Only)"}
+                  </th>
+                  <th className="py-3 px-4 sm:px-6">
+                    {lang === "hi" ? "शहर व स्थिति" : "City & Status"}
+                  </th>
+                  <th className="py-3 px-4 sm:px-6 text-right">
+                    {lang === "hi" ? "सुरक्षित संपर्क व कार्यवाही" : "Safe Contact & Action"}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
                 {filteredConfidential.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-400 text-xs">
-                      कोई गोपनीय अनुरोध नहीं मिला।
+                      {lang === "hi" ? "कोई गोपनीय अनुरोध नहीं मिला।" : "No confidential requests found."}
                     </td>
                   </tr>
                 ) : (
@@ -1125,7 +1291,9 @@ export default function AdminPage() {
                                       : "bg-amber-100 text-amber-800"
                                   }`}
                                 >
-                                  {isWomen ? "महिला सहायता (Safe)" : "सट्टा मुक्ति (Secure)"}
+                                  {isWomen
+                                    ? (lang === "hi" ? "महिला सहायता (Safe)" : "Women Help (Safe)")
+                                    : (lang === "hi" ? "सट्टा मुक्ति (Secure)" : "De-Addiction (Secure)")}
                                 </span>
                                 <span className="text-[11px] font-mono text-slate-400">
                                   #{item.id?.slice(0, 8)}
@@ -1145,10 +1313,10 @@ export default function AdminPage() {
                         <td className="py-4 px-4 sm:px-6">
                           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-semibold">
                             <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            <span>{item.safeContactTime || "Direct Safe Contact"}</span>
+                            <span>{item.safeContactTime || (lang === "hi" ? "दिन में किसी भी समय" : "Direct Safe Contact")}</span>
                           </div>
                           <div className="text-[10px] text-slate-400 mt-1">
-                            (ससुराल/घर में एकांत का समय)
+                            {lang === "hi" ? "(ससुराल/घर में एकांत का समय)" : "(Strict privacy safe window)"}
                           </div>
                         </td>
 
@@ -1156,7 +1324,7 @@ export default function AdminPage() {
                           <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80 inline-block">
                             <div className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
                               <Lock className="w-3 h-3 text-purple-700" />
-                              <span>असली: {item.realName || item.patient_name}</span>
+                              <span>{lang === "hi" ? "असली: " : "Real: "}{item.realName || item.patient_name}</span>
                             </div>
                             <div className="font-mono text-xs font-bold text-slate-800 mt-0.5">
                               {item.contactPhone || item.phone || "Phone Provided"}
@@ -1165,7 +1333,7 @@ export default function AdminPage() {
                         </td>
 
                         <td className="py-4 px-4 sm:px-6">
-                          <div className="text-slate-800 font-medium">{item.city || "भारत"}</div>
+                          <div className="text-slate-800 font-medium">{item.city || (lang === "hi" ? "भारत" : "India")}</div>
                           <span
                             className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase mt-1 ${
                               item.status === "contacted"
@@ -1176,10 +1344,10 @@ export default function AdminPage() {
                             }`}
                           >
                             {item.status === "contacted"
-                              ? "संपर्क किया गया"
+                              ? (lang === "hi" ? "संपर्क किया गया" : "Contacted")
                               : item.status === "resolved"
-                              ? "समाधान पूर्ण"
-                              : "कॉल पेंडिंग"}
+                              ? (lang === "hi" ? "समाधान पूर्ण" : "Resolved")
+                              : (lang === "hi" ? "कॉल पेंडिंग" : "Pending Call")}
                           </span>
                         </td>
 
@@ -1190,20 +1358,20 @@ export default function AdminPage() {
                                 <a
                                   href={`tel:${item.contactPhone}`}
                                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs transition border border-blue-200"
-                                  title="Safe Direct Call"
+                                  title={lang === "hi" ? "सुरक्षित कॉल करें" : "Safe Direct Call"}
                                 >
                                   <PhoneCall className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Call</span>
+                                  <span className="hidden sm:inline">{lang === "hi" ? "कॉल" : "Call"}</span>
                                 </a>
                                 <a
                                   href={`https://wa.me/${item.contactPhone.replace(/\D/g, "")}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg text-xs transition border border-emerald-200"
-                                  title="Safe WhatsApp Message"
+                                  title={lang === "hi" ? "सुरक्षित व्हाट्सएप संदेश" : "Safe WhatsApp Message"}
                                 >
                                   <MessageCircle className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">WhatsApp</span>
+                                  <span className="hidden sm:inline">{lang === "hi" ? "व्हाट्सएप" : "WhatsApp"}</span>
                                 </a>
                               </>
                             )}
@@ -1213,7 +1381,7 @@ export default function AdminPage() {
                               onClick={() => setSelectedConfidential(item)}
                               className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg text-xs transition shadow-xs"
                             >
-                              विवरण व नोट्स
+                              {lang === "hi" ? "विवरण व नोट्स" : "Details & Notes"}
                             </button>
                           </div>
                         </td>
@@ -2208,8 +2376,8 @@ export default function AdminPage() {
                 >
                   {selectedConfidential.category === "women_help" ||
                   selectedConfidential.confidentialCategory === "women_help"
-                    ? "Woman Help (Safe & Secure)"
-                    : "सट्टा मुक्त अभियान (De-Addiction)"}
+                    ? (lang === "hi" ? "महिला सहायता (सुरक्षित व गोपनीय)" : "Woman Help (Safe & Secure)")
+                    : (lang === "hi" ? "सट्टा मुक्त अभियान (परामर्श)" : "De-Addiction Drive (Guidance)")}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
                   #{selectedConfidential.id}
@@ -2222,13 +2390,13 @@ export default function AdminPage() {
                 </h2>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500">
                   <span>
-                    दर्ज:{" "}
+                    {lang === "hi" ? "दर्ज: " : "Filed: "}
                     {selectedConfidential.created_at
-                      ? new Date(selectedConfidential.created_at).toLocaleString("hi-IN")
-                      : "अभी हाल ही में"}
+                      ? new Date(selectedConfidential.created_at).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN")
+                      : (lang === "hi" ? "अभी हाल ही में" : "Recently")}
                   </span>
                   <span>·</span>
-                  <span>स्थान: {selectedConfidential.city || "भारत"}</span>
+                  <span>{lang === "hi" ? "स्थान: " : "Location: "}{selectedConfidential.city || (lang === "hi" ? "भारत" : "India")}</span>
                 </div>
               </div>
 
@@ -2237,13 +2405,15 @@ export default function AdminPage() {
                 <Clock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs font-bold text-amber-950 uppercase tracking-wide">
-                    संपर्क का सुरक्षित समय (Strict Safe Call Window)
+                    {lang === "hi" ? "संपर्क का सुरक्षित समय (कॉल विंडो)" : "Strict Safe Call Window"}
                   </div>
                   <div className="text-sm font-extrabold text-amber-900 mt-0.5">
-                    {selectedConfidential.safeContactTime || "Direct Safe Contact"}
+                    {selectedConfidential.safeContactTime || (lang === "hi" ? "सीधा संपर्क" : "Direct Safe Contact")}
                   </div>
                   <p className="text-[11px] text-amber-800/90 mt-1">
-                    आवेदक ने यह समय इसलिए चुना है ताकि घर या ससुराल में कोई आसपास न हो। कृपया केवल इसी निर्धारित समय पर ही कॉल करें।
+                    {lang === "hi"
+                      ? "आवेदक ने यह समय इसलिए चुना है ताकि घर या ससुराल में कोई आसपास न हो। कृपया केवल इसी निर्धारित समय पर ही कॉल करें।"
+                      : "The applicant chose this timeframe for strict privacy. Please contact only during this scheduled safe window."}
                   </p>
                 </div>
               </div>
@@ -2252,7 +2422,7 @@ export default function AdminPage() {
               <div className="grid sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                 <div>
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    प्रदर्शित नाम (Alias/Display Name)
+                    {lang === "hi" ? "प्रदर्शित नाम (Alias/Display Name)" : "Display Name (Alias)"}
                   </span>
                   <span className="text-sm font-bold text-purple-900 flex items-center gap-1.5 mt-0.5">
                     <EyeOff className="w-4 h-4 text-purple-600" />
@@ -2263,7 +2433,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    वास्तविक नाम (Internal Real Name)
+                    {lang === "hi" ? "वास्तविक नाम (Internal Real Name)" : "Internal Real Name"}
                   </span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">
                     {selectedConfidential.realName || selectedConfidential.patient_name}
@@ -2271,7 +2441,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    संपर्क फोन / WhatsApp
+                    {lang === "hi" ? "संपर्क फोन / WhatsApp" : "Contact Phone / WhatsApp"}
                   </span>
                   <span className="text-sm font-bold font-mono text-slate-900 mt-0.5 block">
                     {selectedConfidential.contactPhone ||
@@ -2281,10 +2451,10 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    सहायता प्रकार
+                    {lang === "hi" ? "सहायता प्रकार" : "Assistance Type"}
                   </span>
                   <span className="text-sm font-semibold text-slate-800 mt-0.5 block">
-                    {selectedConfidential.supportType || "गोपनीय परामर्श व मार्गदर्शन"}
+                    {selectedConfidential.supportType || (lang === "hi" ? "गोपनीय परामर्श व मार्गदर्शन" : "Confidential Support & Guidance")}
                   </span>
                 </div>
               </div>
@@ -2292,7 +2462,7 @@ export default function AdminPage() {
               {/* Case Description */}
               <div>
                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  समस्या व अनुरोध का विवरण
+                  {lang === "hi" ? "समस्या व अनुरोध का विवरण" : "Problem & Request Details"}
                 </h4>
                 <div className="p-4 bg-white rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed max-h-48 overflow-y-auto">
                   {selectedConfidential.description}
@@ -2304,7 +2474,7 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-purple-950 uppercase tracking-wider flex items-center gap-1.5">
                     <UserCheck className="w-4 h-4 text-purple-700" />
-                    <span>काउंसलर आंतरिक नोट्स व कार्यवाही</span>
+                    <span>{lang === "hi" ? "काउंसलर आंतरिक नोट्स व कार्यवाही" : "Counselor Internal Notes & Actions"}</span>
                   </h4>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -2314,7 +2484,7 @@ export default function AdminPage() {
                       }
                       className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
                     >
-                      मार्क: संपर्क हुआ
+                      {lang === "hi" ? "मार्क: संपर्क हुआ" : "Mark: Contacted"}
                     </button>
                     <button
                       type="button"
@@ -2323,21 +2493,25 @@ export default function AdminPage() {
                       }
                       className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition"
                     >
-                      मार्क: समाधान पूर्ण
+                      {lang === "hi" ? "मार्क: समाधान पूर्ण" : "Mark: Resolved"}
                     </button>
                   </div>
                 </div>
 
                 {selectedConfidential.counselorNotes && (
                   <div className="p-3 bg-white rounded-xl border border-purple-200 text-xs text-slate-700 leading-relaxed">
-                    <strong>अद्यतन नोट्स:</strong> {selectedConfidential.counselorNotes}
+                    <strong>{lang === "hi" ? "अद्यतन नोट्स:" : "Updated Notes:"}</strong> {selectedConfidential.counselorNotes}
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="नया काउंसलर नोट लिखें (उदा. कॉल की गई, कानूनी वकील से समय तय हुआ)..."
+                    placeholder={
+                      lang === "hi"
+                        ? "नया काउंसलर नोट लिखें (उदा. कॉल की गई, कानूनी वकील से समय तय हुआ)..."
+                        : "Write counselor note (e.g. call completed, lawyer consultation set)..."
+                    }
                     value={counselorNoteInput}
                     onChange={(e) => setCounselorNoteInput(e.target.value)}
                     className="flex-1 px-3.5 py-2 bg-white border border-purple-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-600"
@@ -2349,7 +2523,7 @@ export default function AdminPage() {
                     }
                     className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition shadow-xs shrink-0"
                   >
-                    नोट जोड़ें
+                    {lang === "hi" ? "नोट जोड़ें" : "Add Note"}
                   </button>
                 </div>
               </div>
@@ -2358,7 +2532,11 @@ export default function AdminPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
                 <div className="text-[11px] text-slate-500 flex items-center gap-1">
                   <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>पब्लिक से 100% पृथक · सुरक्षित एन्क्रिप्शन सक्रिय</span>
+                  <span>
+                    {lang === "hi"
+                      ? "पब्लिक से 100% पृथक · सुरक्षित एन्क्रिप्शन सक्रिय"
+                      : "100% Isolated from Public · Strict Encryption Active"}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -2369,7 +2547,7 @@ export default function AdminPage() {
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition shadow-xs"
                       >
                         <PhoneCall className="w-3.5 h-3.5" />
-                        <span>Direct Safe Call</span>
+                        <span>{lang === "hi" ? "सुरक्षित कॉल करें" : "Direct Safe Call"}</span>
                       </a>
                       <a
                         href={`https://wa.me/${selectedConfidential.contactPhone.replace(/\D/g, "")}`}
@@ -2378,7 +2556,7 @@ export default function AdminPage() {
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition shadow-xs"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
-                        <span>WhatsApp Helpline</span>
+                        <span>{lang === "hi" ? "व्हाट्सएप हेल्पलाइन" : "WhatsApp Helpline"}</span>
                       </a>
                     </>
                   )}
@@ -2387,7 +2565,7 @@ export default function AdminPage() {
                     onClick={() => setSelectedConfidential(null)}
                     className="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
                   >
-                    बंद करें
+                    {lang === "hi" ? "बंद करें" : "Close"}
                   </button>
                 </div>
               </div>
