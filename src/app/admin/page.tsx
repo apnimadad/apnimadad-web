@@ -9,6 +9,9 @@ import {
   updateCase,
   approveCase,
   rejectCase,
+  deleteCase,
+  deleteCasesBulk,
+  updateCasesBulk,
   getConfidentialCases,
 } from "@/lib/actions/cases";
 import { submitVerificationReview } from "@/lib/actions/verification";
@@ -46,6 +49,9 @@ import {
   AlertTriangle,
   UserCheck,
   Globe,
+  Upload,
+  Paperclip,
+  FileUp,
 } from "lucide-react";
 
 type AdminCase = Case & {
@@ -170,20 +176,38 @@ export default function AdminPage() {
     urgency: "medium" as Case["urgency"],
   });
 
-  // New Case form state
+  // Case selection and bulk operations state
+  const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  // New Case form state with all needy details and direct uploads
   const [newCaseForm, setNewCaseForm] = useState({
     title: "",
+    title_hi: "",
     patientName: "",
     age: "",
+    gender: "male" as "male" | "female" | "other",
+    phone: "",
     city: "",
+    state: "Madhya Pradesh",
     category: "medical" as Case["category"],
+    urgency: "high" as Case["urgency"],
     amountNeeded: "",
+    hospitalName: "",
+    doctorName: "",
+    hospitalContact: "",
     upiId: "",
     bankAccount: "",
     ifsc: "",
     description: "",
-    urgency: "high" as Case["urgency"],
+    description_hi: "",
+    photoUrl: "",
+    documents: [] as { name: string; type: string; url: string }[],
   });
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [docCategory, setDocCategory] = useState<string>("Hospital Estimation Bill");
 
   const [verificationChecklist, setVerificationChecklist] = useState({
     idVerified: true,
@@ -472,19 +496,225 @@ export default function AdminPage() {
     showToast("Case details and payment accounts updated successfully in Supabase!");
   };
 
+  // Photo & Document Upload handlers for Admin Case creation
+  const handleUploadBeneficiaryPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-photos");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setNewCaseForm((prev) => ({ ...prev, photoUrl: data.url }));
+        showToast(lang === "hi" ? "मरीज का फोटो सफलतापूर्वक अपलोड हो गया!" : "Beneficiary photo uploaded successfully!");
+      } else {
+        showToast(`Photo upload error: ${data.error || "Failed"}`);
+      }
+    } catch (err: unknown) {
+      showToast(`Upload failed: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingDoc(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-docs");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        const docItem = {
+          name: file.name,
+          type: docCategory,
+          url: data.url,
+        };
+        setNewCaseForm((prev) => ({
+          ...prev,
+          documents: [...prev.documents, docItem],
+        }));
+        showToast(
+          lang === "hi"
+            ? `${docCategory} दस्तावेज अपलोड हो गया!`
+            : `${docCategory} uploaded successfully!`
+        );
+        e.target.value = "";
+      } else {
+        showToast(`Document upload error: ${data.error || "Failed"}`);
+      }
+    } catch (err: unknown) {
+      showToast(`Upload failed: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleRemoveDoc = (index: number) => {
+    setNewCaseForm((prev) => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Case Selection and Bulk Actions Handlers
+  const handleSelectAll = () => {
+    if (selectedCaseIds.length === filteredCases.length && filteredCases.length > 0) {
+      setSelectedCaseIds([]);
+    } else {
+      setSelectedCaseIds(filteredCases.map((c) => c.id));
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedCaseIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSingle = async (c: AdminCase) => {
+    const confirmMsg =
+      lang === "hi"
+        ? `क्या आप वास्तव में "${c.title}" केस को स्थायी रूप से हटाना चाहते हैं?`
+        : `Are you sure you want to permanently delete case "${c.title}"?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    const res = await deleteCase(c.id);
+    if (res.success) {
+      setCases((prev) => prev.filter((item) => item.id !== c.id));
+      setSelectedCaseIds((prev) => prev.filter((id) => id !== c.id));
+      if (selected?.id === c.id) setSelected(null);
+      showToast(
+        lang === "hi"
+          ? "केस को स्थायी रूप से हटा दिया गया।"
+          : "Case permanently deleted from database."
+      );
+    } else {
+      showToast(`Delete failed: ${res.error || "Unknown error"}`);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedCaseIds.length === 0) return;
+    const count = selectedCaseIds.length;
+    const confirmMsg =
+      lang === "hi"
+        ? `क्या आप चयनित ${count} मामलों को स्थायी रूप से हटाना चाहते हैं? यह क्रिया वापस नहीं ली जा सकती।`
+        : `Are you sure you want to permanently delete ${count} selected case(s)? This cannot be undone.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsBulkProcessing(true);
+    try {
+      const res = await deleteCasesBulk(selectedCaseIds);
+      if (res.success) {
+        setCases((prev) => prev.filter((c) => !selectedCaseIds.includes(c.id)));
+        if (selected && selectedCaseIds.includes(selected.id)) setSelected(null);
+        setSelectedCaseIds([]);
+        showToast(
+          lang === "hi"
+            ? `${count} केस सफलतापूर्वक हटा दिए गए।`
+            : `${count} case(s) permanently deleted.`
+        );
+      } else {
+        showToast(`Bulk delete error: ${res.error || "Failed"}`);
+      }
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedCaseIds.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      const res = await updateCasesBulk(selectedCaseIds, "approved");
+      if (res.success) {
+        setCases((prev) =>
+          prev.map((c) =>
+            selectedCaseIds.includes(c.id) ? { ...c, status: "approved", verified: true } : c
+          )
+        );
+        setSelectedCaseIds([]);
+        showToast(
+          lang === "hi"
+            ? "चयनित मामलों को सत्यापित व स्वीकृत कर दिया गया।"
+            : `${selectedCaseIds.length} case(s) marked as Approved.`
+        );
+      } else {
+        showToast(`Bulk approve error: ${res.error || "Failed"}`);
+      }
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedCaseIds.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      const res = await updateCasesBulk(selectedCaseIds, "rejected");
+      if (res.success) {
+        setCases((prev) =>
+          prev.map((c) =>
+            selectedCaseIds.includes(c.id) ? { ...c, status: "rejected", verified: false } : c
+          )
+        );
+        setSelectedCaseIds([]);
+        showToast(
+          lang === "hi"
+            ? "चयनित मामलों को अस्वीकृत कर दिया गया।"
+            : `${selectedCaseIds.length} case(s) marked as Rejected.`
+        );
+      } else {
+        showToast(`Bulk reject error: ${res.error || "Failed"}`);
+      }
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const handleCreateCase = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newCaseForm.title.trim() || !newCaseForm.patientName.trim()) {
+      showToast(lang === "hi" ? "कृपया शीर्षक और लाभार्थी का नाम दर्ज करें।" : "Please enter title and beneficiary name.");
+      return;
+    }
+    if (!newCaseForm.amountNeeded || Number(newCaseForm.amountNeeded) <= 0) {
+      showToast(lang === "hi" ? "कृपया मान्य सहायता राशि दर्ज करें।" : "Please enter a valid target amount.");
+      return;
+    }
+
     const res = await submitCase({
       title: newCaseForm.title,
+      title_hi: newCaseForm.title_hi || undefined,
       description: newCaseForm.description,
+      description_hi: newCaseForm.description_hi || undefined,
       patient_name: newCaseForm.patientName,
-      age: Number(newCaseForm.age),
-      city: newCaseForm.city,
+      age: newCaseForm.age ? Number(newCaseForm.age) : undefined,
+      city: newCaseForm.city || undefined,
       category: newCaseForm.category,
       amount_needed: Number(newCaseForm.amountNeeded),
-      upi_id: newCaseForm.upiId,
-      bank_account: newCaseForm.bankAccount,
-      ifsc: newCaseForm.ifsc,
+      upi_id: newCaseForm.upiId || undefined,
+      bank_account: newCaseForm.bankAccount || undefined,
+      ifsc: newCaseForm.ifsc || undefined,
+      phone: newCaseForm.phone || undefined,
+      hospital_name: newCaseForm.hospitalName || undefined,
+      doctor_name: newCaseForm.doctorName || undefined,
+      hospital_contact: newCaseForm.hospitalContact || undefined,
+      photo_url: newCaseForm.photoUrl || undefined,
+      documents: newCaseForm.documents,
       urgency: newCaseForm.urgency,
     });
 
@@ -492,19 +722,33 @@ export default function AdminPage() {
       await approveCase(res.id);
       await loadAdminCases();
       setNewCaseModal(false);
-      showToast("New case created, verified, and published live in Supabase!");
+      showToast(
+        lang === "hi"
+          ? "नया केस सफलतापूर्वक बनाया गया, दस्तावेज सहेजे गए और लाइव प्रकाशित हुआ!"
+          : "New verified case published live with all uploaded documents!"
+      );
       setNewCaseForm({
         title: "",
+        title_hi: "",
         patientName: "",
         age: "",
+        gender: "male",
+        phone: "",
         city: "",
+        state: "Madhya Pradesh",
         category: "medical",
+        urgency: "high",
         amountNeeded: "",
+        hospitalName: "",
+        doctorName: "",
+        hospitalContact: "",
         upiId: "",
         bankAccount: "",
         ifsc: "",
         description: "",
-        urgency: "high",
+        description_hi: "",
+        photoUrl: "",
+        documents: [],
       });
     } else {
       showToast(`Error creating case: ${res.error || "Failed"}`);
@@ -895,10 +1139,22 @@ export default function AdminPage() {
           </div>
 
           {/* Cases Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
                 <tr>
+                  <th className="px-3 py-3.5 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredCases.length > 0 &&
+                        selectedCaseIds.length === filteredCases.length
+                      }
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      title={lang === "hi" ? "सभी चुनें" : "Select All"}
+                    />
+                  </th>
                   <th className="px-4 py-3.5">
                     {lang === "hi" ? "केस व लाभार्थी" : "Case & Beneficiary"}
                   </th>
@@ -919,7 +1175,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-slate-100">
                 {filteredCases.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-500">
+                    <td colSpan={6} className="py-12 text-center text-slate-500">
                       {lang === "hi"
                         ? "आपकी खोज के अनुसार कोई केस नहीं मिला।"
                         : "No cases found matching your criteria."}
@@ -928,8 +1184,23 @@ export default function AdminPage() {
                 ) : (
                   filteredCases.map((c) => {
                     const prog = getProgress(c.amountRaised, c.amountNeeded);
+                    const isChecked = selectedCaseIds.includes(c.id);
                     return (
-                      <tr key={c.id} className="hover:bg-slate-50/80 transition group">
+                      <tr
+                        key={c.id}
+                        className={`hover:bg-slate-50/80 transition group ${
+                          isChecked ? "bg-blue-50/50" : ""
+                        }`}
+                      >
+                        <td className="px-3 py-3.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleSelect(c.id)}
+                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
+
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
@@ -1036,6 +1307,15 @@ export default function AdminPage() {
                               </>
                             )}
 
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSingle(c)}
+                              className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg transition"
+                              title={lang === "hi" ? "केस स्थायी रूप से हटाएं" : "Permanently Delete Case"}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            </button>
+
                             <Link
                               href={`/cases/${c.id}`}
                               target="_blank"
@@ -1053,6 +1333,56 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Floating Bulk Action Bar */}
+          {selectedCaseIds.length > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-modal border border-slate-700">
+              <span className="text-xs sm:text-sm font-bold bg-blue-600 text-white px-2.5 py-1 rounded-full">
+                {selectedCaseIds.length} {lang === "hi" ? "चयनित" : "selected"}
+              </span>
+
+              <div className="h-4 w-px bg-slate-700 mx-1" />
+
+              <button
+                type="button"
+                disabled={isBulkProcessing}
+                onClick={handleBulkDelete}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{lang === "hi" ? "चयनित हटाएं" : "Delete Selected"}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isBulkProcessing}
+                onClick={handleBulkApprove}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>{lang === "hi" ? "स्वीकृत करें" : "Approve Selected"}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isBulkProcessing}
+                onClick={handleBulkReject}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>{lang === "hi" ? "अस्वीकृत करें" : "Reject Selected"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCaseIds([])}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition"
+                title={lang === "hi" ? "चयन रद्द करें" : "Deselect All"}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </>
     ) : adminSection === "confidential" ? (
@@ -1942,6 +2272,18 @@ export default function AdminPage() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
+                      onClick={() => {
+                        if (selected) handleDeleteSingle(selected);
+                      }}
+                      className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs sm:text-sm flex items-center gap-1.5 border border-rose-200 transition cursor-pointer"
+                      title={lang === "hi" ? "केस स्थायी रूप से हटाएं" : "Permanently Delete Case"}
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-600" />
+                      <span>{lang === "hi" ? "केस हटाएं" : "Delete Case"}</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => openEdit(selected)}
                       className="px-4 py-2 bg-blue-800 hover:bg-blue-900 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center gap-1.5"
                     >
@@ -2062,8 +2404,8 @@ export default function AdminPage() {
 
       {/* Direct Add New Case Modal */}
       {newCaseModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-7 shadow-2xl animate-modal relative">
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-7 shadow-2xl animate-modal relative">
             <button
               onClick={() => setNewCaseModal(false)}
               className="absolute top-5 right-5 p-1.5 hover:bg-slate-100 rounded-full transition text-slate-400"
@@ -2071,147 +2413,448 @@ export default function AdminPage() {
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-bold text-slate-900 mb-1">Publish New Verified Case</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                {lang === "hi" ? "सीधा एडमिन प्रकाशन" : "Direct Admin Publishing"}
+              </span>
+              <span className="bg-blue-100 text-blue-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                {lang === "hi" ? "100% सत्यापित" : "Auto-Verified"}
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">
+              {lang === "hi" ? "नया सत्यापित केस प्रकाशित करें" : "Publish New Verified Case"}
+            </h3>
             <p className="text-xs text-slate-500 mb-5">
-              Add a case verified directly by field audit. It will be published immediately to the public directory.
+              {lang === "hi"
+                ? "जरूरतमंद व्यक्ति के सभी दस्तावेज, फोन नंबर, अस्पताल विवरण और फोटो सीधे अपलोड करें। यह तुरंत लाइव प्रकाशित होगा।"
+                : "Upload all beneficiary documents, contact phone, hospital details, and photos directly. Will be verified and published live immediately."}
             </p>
 
-            <form onSubmit={handleCreateCase} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Case Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Urgent heart surgery for 6yo child"
-                  value={newCaseForm.title}
-                  onChange={(e) => setNewCaseForm({ ...newCaseForm, title: e.target.value })}
-                  className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                />
+            <form onSubmit={handleCreateCase} className="space-y-4">
+              {/* Beneficiary Details Section */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                  {lang === "hi" ? "1. जरूरतमंद / मरीज का विवरण" : "1. Beneficiary / Patient Details"}
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "मरीज / जरूरतमंद का नाम *" : "Beneficiary / Patient Name *"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ramesh Kumar"
+                      value={newCaseForm.patientName}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, patientName: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "आयु *" : "Age *"}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="e.g. 35"
+                      value={newCaseForm.age}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, age: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "लिंग" : "Gender"}
+                    </label>
+                    <select
+                      value={newCaseForm.gender}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, gender: e.target.value as "male" | "female" | "other" })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    >
+                      <option value="male">{lang === "hi" ? "पुरुष (Male)" : "Male"}</option>
+                      <option value="female">{lang === "hi" ? "महिला (Female)" : "Female"}</option>
+                      <option value="other">{lang === "hi" ? "अन्य (Other)" : "Other"}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "फोन / व्हाट्सएप नंबर *" : "Contact Phone / WhatsApp *"}
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 9876543210"
+                      value={newCaseForm.phone}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, phone: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "शहर *" : "City *"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Indore"
+                      value={newCaseForm.city}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, city: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Patient / Beneficiary Name</label>
+              {/* Beneficiary Photo Upload Direct Section */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Upload className="w-3.5 h-3.5 text-blue-600" />
+                  {lang === "hi" ? "2. मरीज की तस्वीर अपलोड करें" : "2. Beneficiary Photo (Direct Upload)"}
+                </h4>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 bg-white overflow-hidden flex items-center justify-center shrink-0 relative shadow-xs">
+                    {newCaseForm.photoUrl ? (
+                      <>
+                        <Image
+                          src={newCaseForm.photoUrl}
+                          alt="Beneficiary"
+                          width={96}
+                          height={96}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNewCaseForm({ ...newCaseForm, photoUrl: "" })}
+                          className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full shadow-md hover:bg-red-700"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center p-2 text-slate-400">
+                        <Upload className="w-6 h-6 mx-auto mb-1 text-slate-300" />
+                        <span className="text-[10px] block">No Photo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-2">
+                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:border-blue-600 text-slate-700 hover:text-blue-700 rounded-xl text-xs font-bold cursor-pointer transition shadow-xs">
+                      <FileUp className="w-4 h-4 text-blue-600" />
+                      <span>{uploadingPhoto ? "Uploading Photo..." : "Choose Beneficiary Photo"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleUploadBeneficiaryPhoto}
+                        disabled={uploadingPhoto}
+                      />
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Upload clear photo of the patient or beneficiary (JPG, PNG). Stored securely on Supabase Storage.
+                    </p>
+                    {newCaseForm.photoUrl && (
+                      <p className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> Photo uploaded and attached!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Case Title and Medical Details */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                  {lang === "hi" ? "3. केस व बीमारी / सहायता शीर्षक" : "3. Case Title & Medical Details"}
+                </h4>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    {lang === "hi" ? "केस शीर्षक (English) *" : "Case Title (English) *"}
+                  </label>
                   <input
                     type="text"
                     required
-                    value={newCaseForm.patientName}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, patientName: e.target.value })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
+                    placeholder="e.g. Urgent Open Heart Surgery for Master Aarav"
+                    value={newCaseForm.title}
+                    onChange={(e) => setNewCaseForm({ ...newCaseForm, title: e.target.value })}
+                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "केस श्रेणी *" : "Category *"}
+                    </label>
+                    <select
+                      value={newCaseForm.category}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, category: e.target.value as Case["category"] })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    >
+                      <option value="medical">Medical (चिकित्सा)</option>
+                      <option value="education">Education (शिक्षा)</option>
+                      <option value="accident">Accident (दुर्घटना)</option>
+                      <option value="disability">Disability (दिव्यांगता)</option>
+                      <option value="family">Family Emergency (पारिवारिक)</option>
+                      <option value="other">Other (अन्य)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "प्राथमिकता स्तर" : "Urgency Level"}
+                    </label>
+                    <select
+                      value={newCaseForm.urgency}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, urgency: e.target.value as Case["urgency"] })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    >
+                      <option value="critical">Critical (अति गंभीर / Urgent)</option>
+                      <option value="high">High (उच्च)</option>
+                      <option value="medium">Medium (सामान्य)</option>
+                      <option value="low">Low (कम)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "अस्पताल का नाम" : "Hospital Name"}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. AIIMS Delhi / CHL Hospital"
+                      value={newCaseForm.hospitalName}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, hospitalName: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "डॉक्टर का नाम" : "Doctor Name"}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dr. K. Sharma"
+                      value={newCaseForm.doctorName}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, doctorName: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "अस्पताल हेल्पलाइन" : "Hospital Contact"}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 0731-2555555"
+                      value={newCaseForm.hospitalContact}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, hospitalContact: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Age</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    {lang === "hi" ? "विस्तृत विवरण व मेडिकल रिपोर्ट *" : "Full Description & Medical Diagnosis *"}
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Provide patient medical diagnosis, hospital quote, and family background story..."
+                    value={newCaseForm.description}
+                    onChange={(e) => setNewCaseForm({ ...newCaseForm, description: e.target.value })}
+                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Direct UPI and Bank Account Section */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <QrCode className="w-3.5 h-3.5 text-blue-600" />
+                  {lang === "hi" ? "4. सहायता राशि व सीधा बैंक/UPI खाता" : "4. Target Amount & Direct Bank / UPI"}
+                </h4>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    {lang === "hi" ? "आवश्यक सहायता राशि (₹) *" : "Target Amount Needed (₹) *"}
+                  </label>
                   <input
                     type="number"
                     required
-                    value={newCaseForm.age}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, age: e.target.value })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
+                    placeholder="e.g. 250000"
+                    value={newCaseForm.amountNeeded}
+                    onChange={(e) => setNewCaseForm({ ...newCaseForm, amountNeeded: e.target.value })}
+                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white font-bold"
                   />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "सीधा UPI ID (QR के लिए) *" : "Direct Beneficiary UPI ID *"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="name@okaxis"
+                      value={newCaseForm.upiId}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, upiId: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm font-mono border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "बैंक खाता संख्या" : "Bank Account Number"}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 987654321098"
+                      value={newCaseForm.bankAccount}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, bankAccount: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm font-mono border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      {lang === "hi" ? "IFSC कोड" : "IFSC Code"}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. SBIN0001234"
+                      value={newCaseForm.ifsc}
+                      onChange={(e) => setNewCaseForm({ ...newCaseForm, ifsc: e.target.value })}
+                      className="w-full px-3 py-2 text-xs sm:text-sm font-mono uppercase border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={newCaseForm.city}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, city: e.target.value })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                  />
+              {/* Direct Documents Upload Section */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5 text-blue-600" />
+                    {lang === "hi" ? "5. प्रमाण व दस्तावेज अपलोड करें" : "5. Beneficiary Documents & Proofs (Direct Upload)"}
+                  </h4>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {newCaseForm.documents.length} attached
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
-                  <select
-                    value={newCaseForm.category}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, category: e.target.value as Case["category"] })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
+                <p className="text-[11px] text-slate-500">
+                  {lang === "hi"
+                    ? "अस्पताल का बिल, आधार कार्ड, डॉक्टर पर्ची या बैंक पासबुक सीधे अपलोड करें। सभी दस्तावेज सार्वजनिक रूप से पारदर्शी सत्यापन के लिए उपलब्ध होंगे।"
+                    : "Upload hospital bills, Aadhaar card, doctor prescriptions, or passbook. Available for transparent donor audit."}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center bg-white p-3 rounded-xl border border-slate-200">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                      {lang === "hi" ? "दस्तावेज का प्रकार चुनें" : "Select Document Type"}
+                    </label>
+                    <select
+                      value={docCategory}
+                      onChange={(e) => setDocCategory(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <option value="Hospital Estimation Bill">Hospital Estimation Bill (अस्पताल बिल)</option>
+                      <option value="Aadhaar / Government ID Card">Aadhaar / Govt ID (पहचान पत्र)</option>
+                      <option value="Medical Report / Prescription">Medical Report / Prescription (जांच रिपोर्ट)</option>
+                      <option value="Bank Passbook / Cheque">Bank Passbook / Cheque (बैंक पासबुक)</option>
+                      <option value="Other Proof">Other Proof (अन्य दस्तावेज)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                      {lang === "hi" ? "फाइल चुनें (PDF या Image)" : "Choose File (PDF or Image)"}
+                    </label>
+                    <label className="inline-flex w-full items-center justify-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-lg text-xs font-bold cursor-pointer transition">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingDoc ? "Uploading..." : `Upload ${docCategory}`}</span>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        className="hidden"
+                        onChange={handleUploadDocument}
+                        disabled={uploadingDoc}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Uploaded Documents List */}
+                {newCaseForm.documents.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-[10px] font-bold text-slate-600 uppercase">Attached Files:</p>
+                    {newCaseForm.documents.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                          <span className="font-semibold text-slate-800 truncate">{doc.name}</span>
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono shrink-0">
+                            {doc.type}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-[11px] font-semibold flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" /> View
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDoc(idx)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded-md hover:bg-red-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-[11px] text-slate-500">
+                  {lang === "hi"
+                    ? "स्वीकृत करते ही यह केस वेबसाइट पर तुरंत लाइव हो जाएगा।"
+                    : "Published cases immediately appear on the home page and cases directory."}
+                </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setNewCaseModal(false)}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
                   >
-                    <option value="medical">Medical</option>
-                    <option value="education">Education</option>
-                    <option value="accident">Accident</option>
-                    <option value="disability">Disability</option>
-                    <option value="family">Family Emergency</option>
-                    <option value="other">Other</option>
-                  </select>
+                    {lang === "hi" ? "रद्द करें" : "Cancel"}
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-md shadow-blue-900/20 flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>{lang === "hi" ? "सत्यापित केस प्रकाशित करें" : "Publish Verified Case"}</span>
+                  </button>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Target Amount Needed (₹)</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="e.g. 250000"
-                  value={newCaseForm.amountNeeded}
-                  onChange={(e) => setNewCaseForm({ ...newCaseForm, amountNeeded: e.target.value })}
-                  className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Beneficiary UPI ID</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="name@okaxis"
-                    value={newCaseForm.upiId}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, upiId: e.target.value })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm font-mono border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Bank A/C No.</label>
-                  <input
-                    type="text"
-                    required
-                    value={newCaseForm.bankAccount}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, bankAccount: e.target.value })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm font-mono border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">IFSC Code</label>
-                  <input
-                    type="text"
-                    required
-                    value={newCaseForm.ifsc}
-                    onChange={(e) => setNewCaseForm({ ...newCaseForm, ifsc: e.target.value })}
-                    className="w-full px-3 py-2 text-xs sm:text-sm font-mono border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Full Description & Medical Diagnosis</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="Provide background, doctor diagnosis, hospital name, and family financial condition..."
-                  value={newCaseForm.description}
-                  onChange={(e) => setNewCaseForm({ ...newCaseForm, description: e.target.value })}
-                  className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setNewCaseModal(false)}
-                  className="px-4 py-2 border rounded-xl text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs sm:text-sm font-bold"
-                >
-                  Publish Verified Case
-                </button>
               </div>
             </form>
           </div>

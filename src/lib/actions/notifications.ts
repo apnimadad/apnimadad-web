@@ -128,3 +128,29 @@ export async function markAllNotificationsAsRead(userId?: string): Promise<{ suc
   revalidatePath("/");
   return { success: true };
 }
+
+export async function clearAllNotifications(
+  userId?: string,
+  role?: UserRole | "all"
+): Promise<{ success: boolean }> {
+  const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    sessionNotifications = [];
+    return { success: true };
+  }
+
+  let query = supabase.from("notifications").delete();
+  if (role && role !== "all") {
+    query = query.eq("recipient_role", role);
+  } else if (userId) {
+    query = query.eq("user_id", userId);
+  } else {
+    query = query.neq("id", "00000000-0000-0000-0000-000000000000");
+  }
+
+  await query;
+  revalidatePath("/");
+  return { success: true };
+}
+

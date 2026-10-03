@@ -496,3 +496,106 @@ export async function getRecentDonorsList(): Promise<Record<string, unknown>[]> 
     };
   });
 }
+
+/**
+ * Admin: Delete a single case by ID
+ */
+export async function deleteCase(id: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return { success: false, error: "Database not connected" };
+
+  try {
+    await supabase.from("verification_reviews").delete().eq("case_id", id);
+  } catch (err) {
+    console.warn("verification_reviews cleanup notice:", err);
+  }
+
+  try {
+    await supabase.from("donations").delete().eq("case_id", id);
+  } catch (err) {
+    console.warn("donations cleanup notice:", err);
+  }
+
+  const { error } = await supabase.from("cases").delete().eq("id", id);
+  if (error) {
+    console.error("deleteCase error:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/cases");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * Admin: Bulk delete cases by IDs
+ */
+export async function deleteCasesBulk(
+  ids: string[]
+): Promise<{ success: boolean; count?: number; error?: string }> {
+  if (!ids || ids.length === 0) return { success: true, count: 0 };
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return { success: false, error: "Database not connected" };
+
+  try {
+    await supabase.from("verification_reviews").delete().in("case_id", ids);
+  } catch (err) {
+    console.warn("bulk verification_reviews cleanup notice:", err);
+  }
+
+  try {
+    await supabase.from("donations").delete().in("case_id", ids);
+  } catch (err) {
+    console.warn("bulk donations cleanup notice:", err);
+  }
+
+  const { error } = await supabase.from("cases").delete().in("id", ids);
+  if (error) {
+    console.error("deleteCasesBulk error:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/cases");
+  revalidatePath("/");
+  return { success: true, count: ids.length };
+}
+
+/**
+ * Admin: Bulk update case status
+ */
+export async function updateCasesBulk(
+  ids: string[],
+  status: Case["status"]
+): Promise<{ success: boolean; error?: string }> {
+  if (!ids || ids.length === 0) return { success: true };
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return { success: false, error: "Database not connected" };
+
+  const { error } = await supabase
+    .from("cases")
+    .update({
+      status,
+      verified: status === "approved",
+      verification_stage:
+        status === "approved"
+          ? "verified"
+          : status === "rejected"
+          ? "rejected"
+          : "submitted",
+      updated_at: new Date().toISOString(),
+    })
+    .in("id", ids);
+
+  if (error) {
+    console.error("updateCasesBulk error:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/cases");
+  revalidatePath("/");
+  return { success: true };
+}
+
