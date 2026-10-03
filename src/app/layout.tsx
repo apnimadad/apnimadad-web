@@ -48,18 +48,69 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                if (typeof window !== 'undefined') {
-                  var origError = console.error;
-                  console.error = function() {
-                    for (var i = 0; i < arguments.length; i++) {
-                      var str = String(arguments[i] || '');
-                      if (str.indexOf('bis_skin_checked') !== -1) {
-                        return;
+                if (typeof window === 'undefined') return;
+
+                function cleanAttributes() {
+                  try {
+                    var els = document.querySelectorAll('[bis_skin_checked]');
+                    for (var i = 0; i < els.length; i++) {
+                      els[i].removeAttribute('bis_skin_checked');
+                    }
+                  } catch (e) {}
+                }
+                cleanAttributes();
+
+                try {
+                  var observer = new MutationObserver(function(mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                      var m = mutations[i];
+                      if (m.type === 'attributes' && m.attributeName === 'bis_skin_checked' && m.target && m.target.removeAttribute) {
+                        m.target.removeAttribute('bis_skin_checked');
+                      } else if (m.addedNodes) {
+                        for (var j = 0; j < m.addedNodes.length; j++) {
+                          var node = m.addedNodes[j];
+                          if (node && node.nodeType === 1) {
+                            if (node.hasAttribute && node.hasAttribute('bis_skin_checked')) {
+                              node.removeAttribute('bis_skin_checked');
+                            }
+                            if (node.querySelectorAll) {
+                              var children = node.querySelectorAll('[bis_skin_checked]');
+                              for (var k = 0; k < children.length; k++) {
+                                children[k].removeAttribute('bis_skin_checked');
+                              }
+                            }
+                          }
+                        }
                       }
                     }
-                    origError.apply(console, arguments);
-                  };
-                }
+                  });
+                  observer.observe(document.documentElement, {
+                    attributes: true,
+                    subtree: true,
+                    childList: true,
+                    attributeFilter: ['bis_skin_checked']
+                  });
+                } catch (e) {}
+
+                var origError = console.error;
+                console.error = function() {
+                  var msg = '';
+                  for (var i = 0; i < arguments.length; i++) {
+                    var arg = arguments[i];
+                    msg += ' ' + String(arg && arg.message ? arg.message : arg || '');
+                  }
+                  if (msg.indexOf('bis_skin_checked') !== -1 || (msg.indexOf('Hydration') !== -1 && msg.indexOf('bis_skin') !== -1)) {
+                    return;
+                  }
+                  origError.apply(console, arguments);
+                };
+
+                window.addEventListener('error', function(event) {
+                  if (event && event.message && event.message.indexOf('bis_skin_checked') !== -1) {
+                    event.stopImmediatePropagation();
+                    event.preventDefault();
+                  }
+                }, true);
               })();
             `,
           }}
