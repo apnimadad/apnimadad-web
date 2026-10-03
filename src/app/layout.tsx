@@ -48,7 +48,7 @@ export default function RootLayout({
           <LanguageProvider>
             <SiteSettingsProvider>
               <Header />
-              <main className="flex-1">{children}</main>
+              <main suppressHydrationWarning className="flex-1">{children}</main>
               <Footer />
             </SiteSettingsProvider>
           </LanguageProvider>

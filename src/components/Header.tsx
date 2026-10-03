@@ -40,7 +40,7 @@ export default function Header() {
     <>
       {/* Top micro-announcement banner */}
       {announcement?.enabled && (
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white text-xs py-2 px-4">
+        <div suppressHydrationWarning className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white text-xs py-2 px-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2 font-medium">
               <span className="flex h-2 w-2 relative">
@@ -77,27 +77,33 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-18">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative">
+            {/* Logo */}
+            <Link
+              href="/"
+              suppressHydrationWarning
+              className="flex items-center gap-3 group"
+            >
+              <span suppressHydrationWarning className="relative block shrink-0">
                 <Image
                   src="/logo.jpeg"
                   alt="Apni Madad Foundation Logo"
                   width={46}
                   height={46}
+                  priority
                   className="rounded-full border-2 border-amber-400 shadow-sm group-hover:scale-105 transition duration-200"
                 />
                 <span className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-0.5 rounded-full ring-2 ring-white">
                   <ShieldCheck className="w-3 h-3" />
                 </span>
-              </div>
-              <div>
-                <div className="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight tracking-tight group-hover:text-blue-700 transition">
+              </span>
+              <span suppressHydrationWarning className="block">
+                <span className="block font-extrabold text-lg sm:text-xl text-slate-900 leading-tight tracking-tight group-hover:text-blue-700 transition">
                   Apni Madad
-                </div>
-                <div className="text-[10px] sm:text-xs text-amber-600 font-bold tracking-wider uppercase">
+                </span>
+                <span className="block text-[10px] sm:text-xs text-amber-600 font-bold tracking-wider uppercase">
                   FOUNDATION · अपनी मदद
-                </div>
-              </div>
+                </span>
+              </span>
             </Link>
 
             {/* Desktop Navigation: Unique & Amazing Custom Styled Buttons */}
