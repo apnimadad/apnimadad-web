@@ -311,10 +311,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const handleSignOut = async () => {
-    await signOutUser();
-    setUser(null);
-    setProfile(null);
-    localStorage.removeItem(DEMO_STORAGE_KEY);
+    try {
+      await signOutUser();
+    } catch (err) {
+      console.error("Sign out error:", err);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      localStorage.removeItem(DEMO_STORAGE_KEY);
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    }
   };
 
   return (
