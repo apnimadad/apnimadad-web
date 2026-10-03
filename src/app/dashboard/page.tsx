@@ -1638,9 +1638,9 @@ export default function DashboardPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* PORTAL MODE 2: PHILANTHROPIC DONOR VIEW (GIVING AID & TAX SAVINGS) */}
+        {/* DEDICATED DONOR DASHBOARD (SEE NEEDY CASES, DONATE DIRECTLY & TRACK) */}
         {/* ========================================================================= */}
-        {portalMode === "donor" && (
+        {!isBeneficiary && (
           <div className="space-y-6">
             {/* Donor Impact Metric Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
