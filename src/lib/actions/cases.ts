@@ -231,6 +231,7 @@ export async function getAllCasesAdmin(): Promise<Case[]> {
 export async function recordDonation(params: {
   case_id: string;
   amount: number;
+  donor_id?: string;
   donor_name?: string;
   payment_ref?: string;
   notes?: string;
@@ -238,13 +239,15 @@ export async function recordDonation(params: {
   const supabase = createServiceClient() || (await createServerSupabase());
   if (!supabase) return { success: false, error: "Database not connected" };
 
-  const authClient = await createServerSupabase();
-  let donorId: string | null = null;
-  if (authClient) {
-    const {
-      data: { user },
-    } = await authClient.auth.getUser();
-    donorId = user?.id || null;
+  let donorId: string | null = params.donor_id || null;
+  if (!donorId) {
+    const authClient = await createServerSupabase();
+    if (authClient) {
+      const {
+        data: { user },
+      } = await authClient.auth.getUser();
+      donorId = user?.id || null;
+    }
   }
 
   const { error: donError } = await supabase.from("donations").insert({
@@ -450,7 +453,7 @@ export async function getUserDonations(donorId?: string): Promise<Record<string,
 
   let query = supabase
     .from("donations")
-    .select("*, cases(title, title_hi, patient_name, upi_id)")
+    .select("*, cases(id, title, title_hi, patient_name, upi_id, hospital_name, category, amount_needed, amount_raised, status, photo_url, city)")
     .order("created_at", { ascending: false });
 
   if (donorId) {
