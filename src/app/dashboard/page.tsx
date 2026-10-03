@@ -22,7 +22,6 @@ import {
   CheckCircle,
   AlertCircle,
   QrCode,
-  LogOut,
   PlusCircle,
   Phone,
   Mail,
@@ -76,7 +75,7 @@ interface UserDonationItem {
 }
 
 export default function DashboardPage() {
-  const { user, profile, role, loading: authLoading, signOut, loginAsDemo } = useAuth();
+  const { user, profile, role, loading: authLoading, loginAsDemo } = useAuth();
   const router = useRouter();
 
   // Redirect admin directly to admin panel
@@ -697,14 +696,6 @@ export default function DashboardPage() {
                 <span>Apply for Relief</span>
               </button>
             )}
-
-            <button
-              onClick={() => signOut()}
-              className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-medium text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-white/15"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
           </div>
         </div>
       </div>
