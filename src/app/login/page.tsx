@@ -18,11 +18,13 @@ import {
   KeyRound
 } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
+import { useLanguage } from "@/components/LanguageContext";
 import { UserRole } from "@/types/database";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { lang } = useLanguage();
   const { signIn, signUp, requestOtp, verifyOtp } = useAuth();
 
   // Role: "donor" | "beneficiary" | "admin"
@@ -73,38 +75,157 @@ function LoginForm() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  // Role configuration metadata
-  const roleConfig = {
-    donor: {
-      title: "दानदाता पोर्टल",
-      titleEn: "Donor Portal",
-      desc: "सीधे जरूरतमंदों को दान करें, प्रभाव ट्रैक करें व 80G टैक्स रसीद प्राप्त करें।",
-      badgeColor: "bg-blue-100 text-blue-900 border-blue-200",
-      accentColor: "border-blue-600",
-      btnColor: "bg-blue-600 hover:bg-blue-700",
-      icon: Heart,
+  const ui = {
+    en: {
+      selectRole: "Select Account Type",
+      donorRole: "Donor",
+      beneficiaryRole: "User",
+      adminRole: "Admin",
+      roles: {
+        donor: {
+          title: "Donor Portal",
+          desc: "Donate directly to verified cases, track your impact, and receive receipts.",
+          badgeColor: "bg-blue-100 text-blue-900 border-blue-200",
+          btnColor: "bg-blue-600 hover:bg-blue-700",
+          icon: Heart,
+        },
+        beneficiary: {
+          title: "User / Beneficiary Portal",
+          desc: "Apply for medical or emergency relief, upload hospital bills, and track verification status.",
+          badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-200",
+          btnColor: "bg-emerald-600 hover:bg-emerald-700",
+          icon: User,
+        },
+        admin: {
+          title: "Admin Desk",
+          desc: "NGO management, 4-pillar verification, case approvals, and confidential support desk.",
+          badgeColor: "bg-amber-100 text-amber-950 border-amber-200",
+          btnColor: "bg-slate-900 hover:bg-slate-800",
+          icon: LayoutDashboard,
+        },
+      },
+      signInTab: "Sign In",
+      signUpTab: "Create Account",
+      emailLabel: "Email Address",
+      emailPlaceholder: "your.email@example.com",
+      passwordLabel: "Password",
+      confirmPasswordLabel: "Confirm Password",
+      fullNameLabel: "Full Name",
+      fullNamePlaceholder: "Your full name",
+      phoneLabel: "Mobile / WhatsApp",
+      phonePlaceholder: "9876543210 (Optional)",
+      createPasswordLabel: "Create Password (min 6 chars)",
+      signInWithOtp: "Sign in with OTP",
+      signInWithPassword: "Sign in with Password",
+      signInBtn: "Sign In",
+      signingInBtn: "Signing In...",
+      signUpBtn: "Create Account",
+      creatingAccountBtn: "Creating Account...",
+      enterEmailForOtp: "Enter Email for Verification Code",
+      otpHelpText: "We will send a 6-digit secure verification code to your email address.",
+      getCodeBtn: "Get Verification Code",
+      sendingCodeBtn: "Sending Code...",
+      enterCodeLabel: "Enter 6-digit Code",
+      codeSentTo: "Code sent to",
+      verifyCodeBtn: "Verify Code & Proceed",
+      verifyingBtn: "Verifying...",
+      changeEmailBtn: "Change Email",
+      resendCodeBtn: "Resend Code",
+      resendIn: "Resend in",
+      securityBadge: "Protected with 256-bit encrypted authentication",
+      errors: {
+        validEmail: "Please enter a valid email address.",
+        enterPassword: "Please enter your password.",
+        signInFailed: "Sign in failed. Please check your email and password.",
+        sendOtpFailed: "Failed to send verification code. Please try again.",
+        otpSentSuccess: "A 6-digit verification code has been sent to",
+        enterFullCode: "Please enter the complete 6-digit verification code.",
+        verifyFailed: "Invalid or expired code. Please try again.",
+        verifySuccess: "Email verified! Opening your portal...",
+        nameRequired: "Please enter your full name.",
+        passMinLength: "Password must be at least 6 characters.",
+        passMismatch: "Passwords do not match.",
+        signUpFailed: "Registration failed. Please check your details.",
+        signUpSuccess: "Account created successfully! Opening your portal...",
+      },
     },
-    beneficiary: {
-      title: "सहायता प्रार्थी / यूजर",
-      titleEn: "User / Beneficiary",
-      desc: "चिकित्सा या शिक्षा सहायता हेतु आवेदन करें, अस्पताल बिल अपलोड करें व स्थिति देखें।",
-      badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-200",
-      accentColor: "border-emerald-600",
-      btnColor: "bg-emerald-600 hover:bg-emerald-700",
-      icon: User,
-    },
-    admin: {
-      title: "व्यवस्थापक डेस्क",
-      titleEn: "Admin Desk",
-      desc: "एनजीओ प्रबंधन, फील्ड सत्यापन, केस अप्रूवल व गोपनीय सहायता पोर्टल।",
-      badgeColor: "bg-amber-100 text-amber-950 border-amber-200",
-      accentColor: "border-amber-600",
-      btnColor: "bg-slate-900 hover:bg-slate-800",
-      icon: LayoutDashboard,
+    hi: {
+      selectRole: "खाते का प्रकार चुनें",
+      donorRole: "दानदाता",
+      beneficiaryRole: "यूजर",
+      adminRole: "व्यवस्थापक",
+      roles: {
+        donor: {
+          title: "दानदाता पोर्टल",
+          desc: "सीधे जरूरतमंदों को दान करें, प्रभाव ट्रैक करें व 80G टैक्स रसीद प्राप्त करें।",
+          badgeColor: "bg-blue-100 text-blue-900 border-blue-200",
+          btnColor: "bg-blue-600 hover:bg-blue-700",
+          icon: Heart,
+        },
+        beneficiary: {
+          title: "सहायता प्रार्थी / यूजर पोर्टल",
+          desc: "चिकित्सा या शिक्षा सहायता हेतु आवेदन करें, अस्पताल बिल अपलोड करें व स्थिति देखें।",
+          badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-200",
+          btnColor: "bg-emerald-600 hover:bg-emerald-700",
+          icon: User,
+        },
+        admin: {
+          title: "व्यवस्थापक डेस्क",
+          desc: "एनजीओ प्रबंधन, 4-स्तंभ सत्यापन, केस अप्रूवल व गोपनीय सहायता पोर्टल।",
+          badgeColor: "bg-amber-100 text-amber-950 border-amber-200",
+          btnColor: "bg-slate-900 hover:bg-slate-800",
+          icon: LayoutDashboard,
+        },
+      },
+      signInTab: "साइन इन करें",
+      signUpTab: "नया खाता बनाएं",
+      emailLabel: "ईमेल पता",
+      emailPlaceholder: "your.email@example.com",
+      passwordLabel: "पासवर्ड",
+      confirmPasswordLabel: "पासवर्ड की पुष्टि",
+      fullNameLabel: "पूरा नाम",
+      fullNamePlaceholder: "आपका पूरा नाम",
+      phoneLabel: "मोबाइल नंबर / WhatsApp",
+      phonePlaceholder: "9876543210 (वैकल्पिक)",
+      createPasswordLabel: "पासवर्ड बनाएं (कम से कम 6 अक्षर)",
+      signInWithOtp: "OTP से लॉगिन करें",
+      signInWithPassword: "पासवर्ड से लॉगिन करें",
+      signInBtn: "साइन इन करें",
+      signingInBtn: "सत्यापित हो रहा है...",
+      signUpBtn: "नया खाता बनाएं",
+      creatingAccountBtn: "खाता बनाया जा रहा है...",
+      enterEmailForOtp: "OTP हेतु अपना ईमेल दर्ज करें",
+      otpHelpText: "हम आपके ईमेल पर 6-अंकों का सुरक्षित सत्यापन कोड भेजेंगे।",
+      getCodeBtn: "सत्यापन कोड प्राप्त करें",
+      sendingCodeBtn: "कोड भेजा जा रहा है...",
+      enterCodeLabel: "6-अंकों का कोड दर्ज करें",
+      codeSentTo: "कोड भेजा गया",
+      verifyCodeBtn: "कोड सत्यापित करें व आगे बढ़ें",
+      verifyingBtn: "सत्यापित हो रहा है...",
+      changeEmailBtn: "ईमेल बदलें",
+      resendCodeBtn: "पुनः कोड भेजें",
+      resendIn: "पुनः भेजें",
+      securityBadge: "सुरक्षित 256-बिट एन्क्रिप्टेड प्रमाणीकरण प्रणाली",
+      errors: {
+        validEmail: "कृपया मान्य ईमेल पता दर्ज करें।",
+        enterPassword: "कृपया अपना पासवर्ड दर्ज करें।",
+        signInFailed: "लॉगिन विफल। कृपया ईमेल व पासवर्ड जांचें।",
+        sendOtpFailed: "सत्यापन कोड भेजने में विफल।",
+        otpSentSuccess: "6-अंकों का सत्यापन कोड भेजा गया है:",
+        enterFullCode: "कृपया पूरा 6-अंकों का कोड दर्ज करें।",
+        verifyFailed: "अमान्य या समाप्त कोड। पुनः प्रयास करें।",
+        verifySuccess: "ईमेल सत्यापित! पोर्टल खोला जा रहा है...",
+        nameRequired: "कृपया अपना पूरा नाम दर्ज करें।",
+        passMinLength: "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
+        passMismatch: "दोनों पासवर्ड मेल नहीं खाते।",
+        signUpFailed: "पंजीकरण विफल। कृपया विवरण जांचें।",
+        signUpSuccess: "खाता सफलतापूर्वक बन गया! पोर्टल खोला जा रहा है...",
+      },
     },
   };
 
-  const currentRole = roleConfig[role];
+  const t = lang === "hi" ? ui.hi : ui.en;
+  const currentRole = t.roles[role];
 
   // Route after login
   const handleRedirect = () => {
@@ -121,11 +242,11 @@ function LoginForm() {
   const handlePasswordSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
-      setMessage({ type: "error", text: "कृपया मान्य ईमेल पता दर्ज करें।" });
+      setMessage({ type: "error", text: t.errors.validEmail });
       return;
     }
     if (!password) {
-      setMessage({ type: "error", text: "कृपया अपना पासवर्ड दर्ज करें।" });
+      setMessage({ type: "error", text: t.errors.enterPassword });
       return;
     }
 
@@ -135,36 +256,35 @@ function LoginForm() {
     try {
       const res = await signIn(email.trim().toLowerCase(), password);
       if (!res.success) {
-        setMessage({ type: "error", text: res.error || "लॉगिन विफल। कृपया ईमेल व पासवर्ड जांचें।" });
+        setMessage({ type: "error", text: res.error || t.errors.signInFailed });
         return;
       }
 
-      setMessage({ type: "success", text: "लॉगिन सफल! पोर्टल खोला जा रहा है..." });
-      setTimeout(handleRedirect, 600);
+      handleRedirect();
     } catch (err: unknown) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "लॉगिन में त्रुटि हुई।" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.signInFailed });
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Sign Up (Create Account)
+  // 2. Password Sign Up
   const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
-      setMessage({ type: "error", text: "कृपया अपना पूरा नाम दर्ज करें।" });
+      setMessage({ type: "error", text: t.errors.nameRequired });
       return;
     }
     if (!email || !email.includes("@")) {
-      setMessage({ type: "error", text: "कृपया मान्य ईमेल पता दर्ज करें।" });
+      setMessage({ type: "error", text: t.errors.validEmail });
       return;
     }
     if (password.length < 6) {
-      setMessage({ type: "error", text: "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।" });
+      setMessage({ type: "error", text: t.errors.passMinLength });
       return;
     }
     if (password !== confirmPassword) {
-      setMessage({ type: "error", text: "पासवर्ड और पुष्टि पासवर्ड मेल नहीं खाते।" });
+      setMessage({ type: "error", text: t.errors.passMismatch });
       return;
     }
 
@@ -181,24 +301,24 @@ function LoginForm() {
       });
 
       if (!res.success) {
-        setMessage({ type: "error", text: res.error || "पंजीकरण विफल रहा। कृपया पुनः प्रयास करें।" });
+        setMessage({ type: "error", text: res.error || t.errors.signUpFailed });
         return;
       }
 
-      setMessage({ type: "success", text: "खाता सफलतापूर्वक बन गया! पोर्टल खोला जा रहा है..." });
-      setTimeout(handleRedirect, 700);
+      setMessage({ type: "success", text: t.errors.signUpSuccess });
+      setTimeout(handleRedirect, 800);
     } catch (err: unknown) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "पंजीकरण में त्रुटि हुई।" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.signUpFailed });
     } finally {
       setLoading(false);
     }
   };
 
-  // 3. Send Email OTP
+  // 3. Request Email OTP
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
-      setMessage({ type: "error", text: "कृपया मान्य ईमेल पता दर्ज करें।" });
+      setMessage({ type: "error", text: t.errors.validEmail });
       return;
     }
 
@@ -215,7 +335,7 @@ function LoginForm() {
       });
 
       if (!res.success) {
-        setMessage({ type: "error", text: res.error || "सत्यापन कोड भेजने में विफल।" });
+        setMessage({ type: "error", text: res.error || t.errors.sendOtpFailed });
         return;
       }
 
@@ -223,10 +343,10 @@ function LoginForm() {
       setResendTimer(45);
       setMessage({
         type: "success",
-        text: `6-अंकों का सत्यापन कोड ${email} पर भेजा गया है।`,
+        text: `${t.errors.otpSentSuccess} ${email}`,
       });
     } catch (err: unknown) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "कोड भेजने में विफल।" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.sendOtpFailed });
     } finally {
       setLoading(false);
     }
@@ -236,7 +356,7 @@ function LoginForm() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otpCode || otpCode.trim().length < 6) {
-      setMessage({ type: "error", text: "कृपया पूरा 6-अंकों का कोड दर्ज करें।" });
+      setMessage({ type: "error", text: t.errors.enterFullCode });
       return;
     }
 
@@ -254,14 +374,14 @@ function LoginForm() {
       });
 
       if (!res.success) {
-        setMessage({ type: "error", text: res.error || "अमान्य या समाप्त कोड। पुनः प्रयास करें।" });
+        setMessage({ type: "error", text: res.error || t.errors.verifyFailed });
         return;
       }
 
-      setMessage({ type: "success", text: "ईमेल सत्यापित! पोर्टल खोला जा रहा है..." });
+      setMessage({ type: "success", text: t.errors.verifySuccess });
       setTimeout(handleRedirect, 600);
     } catch (err: unknown) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "सत्यापन विफल।" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.verifyFailed });
     } finally {
       setLoading(false);
     }
@@ -274,7 +394,7 @@ function LoginForm() {
         {/* Role Selection Tabs */}
         <div className="mb-6">
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            खाते का प्रकार चुनें / Select Role:
+            {t.selectRole}
           </label>
           <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl">
             <button
@@ -290,7 +410,7 @@ function LoginForm() {
               }`}
             >
               <Heart className="w-3.5 h-3.5" />
-              <span>दानदाता</span>
+              <span>{t.donorRole}</span>
             </button>
 
             <button
@@ -306,7 +426,7 @@ function LoginForm() {
               }`}
             >
               <User className="w-3.5 h-3.5" />
-              <span>यूजर</span>
+              <span>{t.beneficiaryRole}</span>
             </button>
 
             <button
@@ -323,16 +443,16 @@ function LoginForm() {
               }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>व्यवस्थापक</span>
+              <span>{t.adminRole}</span>
             </button>
           </div>
         </div>
 
         {/* Selected Role Header Info */}
         <div className="mb-6 pb-4 border-b border-slate-100 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-2 border ${currentRole.badgeColor}">
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-2 border ${currentRole.badgeColor}`}>
             <currentRole.icon className="w-3.5 h-3.5" />
-            <span>{currentRole.title} ({currentRole.titleEn})</span>
+            <span>{currentRole.title}</span>
           </div>
           <p className="text-xs text-slate-500">
             {currentRole.desc}
@@ -355,7 +475,7 @@ function LoginForm() {
                   : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
-              साइन इन (Sign In)
+              {t.signInTab}
             </button>
             <button
               type="button"
@@ -370,7 +490,7 @@ function LoginForm() {
                   : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
-              नया खाता बनाएं (Sign Up)
+              {t.signUpTab}
             </button>
           </div>
         )}
@@ -398,7 +518,7 @@ function LoginForm() {
           <form onSubmit={handlePasswordSignIn} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                ईमेल पता (Email Address)
+                {t.emailLabel}
               </label>
               <div className="relative">
                 <input
@@ -406,7 +526,7 @@ function LoginForm() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder={t.emailPlaceholder}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -416,7 +536,7 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-bold text-slate-700">
-                  पासवर्ड (Password)
+                  {t.passwordLabel}
                 </label>
                 <button
                   type="button"
@@ -427,7 +547,7 @@ function LoginForm() {
                   }}
                   className="text-xs text-blue-600 hover:underline font-semibold"
                 >
-                  OTP से लॉगिन करें
+                  {t.signInWithOtp}
                 </button>
               </div>
               <div className="relative">
@@ -456,10 +576,10 @@ function LoginForm() {
               className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor}`}
             >
               {loading ? (
-                <span>सत्यापित हो रहा है...</span>
+                <span>{t.signingInBtn}</span>
               ) : (
                 <>
-                  <span>साइन इन करें</span>
+                  <span>{t.signInBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -474,7 +594,7 @@ function LoginForm() {
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    अपना ईमेल दर्ज करें (Enter Email for OTP)
+                    {t.enterEmailForOtp}
                   </label>
                   <div className="relative">
                     <input
@@ -482,13 +602,13 @@ function LoginForm() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your.email@example.com"
+                      placeholder={t.emailPlaceholder}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                     />
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    हम आपके ईमेल पर 6-अंकों का सुरक्षित सत्यापन कोड भेजेंगे।
+                    {t.otpHelpText}
                   </p>
                 </div>
 
@@ -498,10 +618,10 @@ function LoginForm() {
                   className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor}`}
                 >
                   {loading ? (
-                    <span>कोड भेजा जा रहा है...</span>
+                    <span>{t.sendingCodeBtn}</span>
                   ) : (
                     <>
-                      <span>सत्यापन कोड प्राप्त करें</span>
+                      <span>{t.getCodeBtn}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -516,7 +636,7 @@ function LoginForm() {
                     }}
                     className="text-xs text-slate-500 hover:text-slate-800 font-semibold"
                   >
-                    ← पासवर्ड से लॉगिन करें
+                    ← {t.signInWithPassword}
                   </button>
                 </div>
               </form>
@@ -524,7 +644,7 @@ function LoginForm() {
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    6-अंकों का कोड दर्ज करें (Enter 6-digit Code)
+                    {t.enterCodeLabel}
                   </label>
                   <div className="relative">
                     <input
@@ -539,7 +659,7 @@ function LoginForm() {
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1 text-center">
-                    कोड भेजा गया: <strong>{email}</strong>
+                    {t.codeSentTo}: <strong>{email}</strong>
                   </p>
                 </div>
 
@@ -549,10 +669,10 @@ function LoginForm() {
                   className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor}`}
                 >
                   {loading ? (
-                    <span>सत्यापित हो रहा है...</span>
+                    <span>{t.verifyingBtn}</span>
                   ) : (
                     <>
-                      <span>कोड सत्यापित करें व आगे बढ़ें</span>
+                      <span>{t.verifyCodeBtn}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -564,7 +684,7 @@ function LoginForm() {
                     onClick={() => setOtpStep("email")}
                     className="text-slate-500 hover:text-slate-800 font-semibold"
                   >
-                    ← ईमेल बदलें
+                    ← {t.changeEmailBtn}
                   </button>
 
                   <button
@@ -573,7 +693,7 @@ function LoginForm() {
                     onClick={handleSendOtp}
                     className="text-blue-600 hover:underline font-bold disabled:text-slate-400"
                   >
-                    {resendTimer > 0 ? `पुनः भेजें (${resendTimer}s)` : "पुनः कोड भेजें"}
+                    {resendTimer > 0 ? `${t.resendIn} (${resendTimer}s)` : t.resendCodeBtn}
                   </button>
                 </div>
               </form>
@@ -586,7 +706,7 @@ function LoginForm() {
           <form onSubmit={handleSignUpSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                पूरा नाम (Full Name)
+                {t.fullNameLabel}
               </label>
               <div className="relative">
                 <input
@@ -594,7 +714,7 @@ function LoginForm() {
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="आपका पूरा नाम"
+                  placeholder={t.fullNamePlaceholder}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                 />
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -603,7 +723,7 @@ function LoginForm() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                ईमेल पता (Email Address)
+                {t.emailLabel}
               </label>
               <div className="relative">
                 <input
@@ -611,7 +731,7 @@ function LoginForm() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder={t.emailPlaceholder}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -620,14 +740,14 @@ function LoginForm() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                मोबाइल नंबर (Mobile / WhatsApp)
+                {t.phoneLabel}
               </label>
               <div className="relative">
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="9876543210 (वैकल्पिक)"
+                  placeholder={t.phonePlaceholder}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                 />
                 <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -636,7 +756,7 @@ function LoginForm() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                पासवर्ड बनाएं (Create Password - min 6 chars)
+                {t.createPasswordLabel}
               </label>
               <div className="relative">
                 <input
@@ -661,7 +781,7 @@ function LoginForm() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                पासवर्ड की पुष्टि (Confirm Password)
+                {t.confirmPasswordLabel}
               </label>
               <div className="relative">
                 <input
@@ -683,10 +803,10 @@ function LoginForm() {
               className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor}`}
             >
               {loading ? (
-                <span>खाता बनाया जा रहा है...</span>
+                <span>{t.creatingAccountBtn}</span>
               ) : (
                 <>
-                  <span>नया खाता बनाएं</span>
+                  <span>{t.signUpBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -697,7 +817,7 @@ function LoginForm() {
         {/* Footer Security Note */}
         <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>सुरक्षित 256-बिट एन्क्रिप्टेड प्रमाणीकरण प्रणाली</span>
+          <span>{t.securityBadge}</span>
         </div>
       </div>
     </div>
