@@ -11,26 +11,40 @@ import {
   CheckCircle2,
   Brain,
   MapPin,
+  Globe,
 } from "lucide-react";
 import { submitConfidentialCase } from "@/lib/actions/cases";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function SattaMuktPage() {
+  const { lang, setLang } = useLanguage();
+
   const [aliasName, setAliasName] = useState("");
   const [realName, setRealName] = useState("");
   const [phone, setPhone] = useState("");
   const [safeContactTime, setSafeContactTime] = useState(
-    "शाम 7:00 से रात 9:00 (काम के बाद एकांत समय)"
+    lang === "hi"
+      ? "शाम 7:00 से रात 9:00 (काम के बाद एकांत समय)"
+      : "Evening 7:00 PM to 9:00 PM (Quiet time after work)"
   );
   const [customSafeTime, setCustomSafeTime] = useState("");
   const [city, setCity] = useState("");
-  const [bettingType, setBettingType] = useState("ऑनलाइन सट्टा ऐप्स (क्रिकेट, कसीनो, गेमिंग ऐप्स)");
-  const [supportArea, setSupportArea] = useState("सट्टे की लत छुड़ाने हेतु मनोवैज्ञानिक काउंसलिंग");
+  const [bettingType, setBettingType] = useState(
+    lang === "hi"
+      ? "ऑनलाइन सट्टा ऐप्स (क्रिकेट, कसीनो, गेमिंग ऐप्स)"
+      : "Online Betting Apps (Cricket, Casino, Gaming Apps)"
+  );
+  const [supportArea, setSupportArea] = useState(
+    lang === "hi"
+      ? "सट्टे की लत छुड़ाने हेतु मनोवैज्ञानिक काउंसलिंग"
+      : "Psychological Counseling to Overcome Addiction"
+  );
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const safeTimeOptions = [
+  const safeTimeOptionsHi = [
     "शाम 7:00 से रात 9:00 (काम के बाद एकांत समय)",
     "दोपहर 1:00 से 3:00 (लंच / फुर्सत का समय)",
     "सुबह 9:00 से 11:00 (दिन की शुरुआत में)",
@@ -38,32 +52,54 @@ export default function SattaMuktPage() {
     "अन्य सुरक्षित समय (कस्टम चुनें)",
   ];
 
+  const safeTimeOptionsEn = [
+    "Evening 7:00 PM to 9:00 PM (Quiet time after work)",
+    "Afternoon 1:00 PM to 3:00 PM (Lunch / leisure hours)",
+    "Morning 9:00 AM to 11:00 AM (Start of day)",
+    "Only WhatsApp Message (Do not place direct phone calls)",
+    "Other Safe Time (Custom Specified)",
+  ];
+
+  const safeTimeOptions = lang === "hi" ? safeTimeOptionsHi : safeTimeOptionsEn;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
     if (!aliasName.trim()) {
-      setErrorMsg("कृपया अपना प्रदर्शित नाम (Alias Name) दर्ज करें।");
+      setErrorMsg(
+        lang === "hi"
+          ? "कृपया अपना प्रदर्शित नाम (Alias Name) दर्ज करें।"
+          : "Please enter your display/alias name."
+      );
       return;
     }
 
     const cleanPhone = phone.replace(/\D/g, "");
     if (!cleanPhone || cleanPhone.length < 10) {
-      setErrorMsg("कृपया संपर्क के लिए सही 10-अंकों का मोबाइल नंबर दर्ज करें।");
+      setErrorMsg(
+        lang === "hi"
+          ? "कृपया संपर्क के लिए सही 10-अंकों का मोबाइल नंबर दर्ज करें।"
+          : "Please enter a valid 10-digit mobile number for contact."
+      );
       return;
     }
 
     if (!details.trim()) {
-      setErrorMsg("कृपया अपनी समस्या या स्थिति का संक्षिप्त विवरण लिखें।");
+      setErrorMsg(
+        lang === "hi"
+          ? "कृपया अपनी समस्या या स्थिति का संक्षिप्त विवरण लिखें।"
+          : "Please write a brief description of your situation or struggle."
+      );
       return;
     }
 
     const finalSafeTime =
-      safeContactTime === "अन्य सुरक्षित समय (कस्टम चुनें)"
-        ? customSafeTime.trim() || "User custom safe time"
+      safeContactTime.includes("कस्टम") || safeContactTime.includes("Custom")
+        ? customSafeTime.trim() || (lang === "hi" ? "कस्टम सुरक्षित समय" : "User custom safe time")
         : safeContactTime;
 
-    const fullDetails = `[सट्टे का प्रकार]: ${bettingType}\n[सहायता का क्षेत्र]: ${supportArea}\n[विवरण]: ${details.trim()}`;
+    const fullDetails = `[Betting Medium]: ${bettingType}\n[Assistance Area]: ${supportArea}\n[Details]: ${details.trim()}`;
 
     setSubmitting(true);
     try {
@@ -73,7 +109,7 @@ export default function SattaMuktPage() {
         realName: realName.trim() || undefined,
         phone: cleanPhone,
         safeContactTime: finalSafeTime,
-        city: city.trim() || "India",
+        city: city.trim() || (lang === "hi" ? "भारत" : "India"),
         supportType: supportArea,
         details: fullDetails,
         urgency: "high",
@@ -82,10 +118,21 @@ export default function SattaMuktPage() {
       if (res.success) {
         setSubmitted(true);
       } else {
-        setErrorMsg(res.error || "अनुरोध भेजने में त्रुटि हुई। कृपया पुनः प्रयास करें।");
+        setErrorMsg(
+          res.error ||
+            (lang === "hi"
+              ? "अनुरोध भेजने में त्रुटि हुई। कृपया पुनः प्रयास करें।"
+              : "Failed to send request. Please try again.")
+        );
       }
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "अनपेक्षित त्रुटि हुई।");
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : lang === "hi"
+          ? "अनपेक्षित त्रुटि हुई।"
+          : "An unexpected error occurred."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -94,38 +141,78 @@ export default function SattaMuktPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50/60 via-slate-50 to-white pb-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-10">
-        {/* Header Breadcrumb & Status */}
+        {/* Header Breadcrumb & Status & Language Switcher */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-100/80 border border-amber-300 text-amber-950 rounded-full text-xs font-bold shadow-2xs">
             <ShieldCheck className="w-4 h-4 text-amber-700" />
-            <span>100% गोपनीय व सुरक्षित अभियान (Secure De-Addiction)</span>
+            <span>
+              {lang === "hi"
+                ? "100% गोपनीय व सुरक्षित अभियान (Secure De-Addiction)"
+                : "100% Confidential & Secure Mission (De-Addiction & Support)"}
+            </span>
           </div>
-          <Link
-            href="/"
-            className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
-          >
-            होम पेज पर वापस जाएं
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {/* Language Switcher Pill */}
+            <div className="inline-flex items-center bg-white p-1 rounded-xl border border-amber-200 shadow-2xs text-xs font-semibold">
+              <Globe className="w-3.5 h-3.5 text-amber-600 ml-1.5 mr-1" />
+              <button
+                type="button"
+                onClick={() => setLang("en")}
+                className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                  lang === "en"
+                    ? "bg-amber-600 text-white font-bold shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang("hi")}
+                className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                  lang === "hi"
+                    ? "bg-amber-600 text-white font-bold shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                हिंदी
+              </button>
+            </div>
+
+            <Link
+              href="/"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+            >
+              {lang === "hi" ? "होम पेज पर वापस जाएं" : "Back to Home"}
+            </Link>
+          </div>
         </div>
 
         {/* Hero Banner */}
         <div className="bg-white rounded-3xl p-6 sm:p-10 border border-amber-200/90 shadow-md mb-8">
           <div className="max-w-2xl">
             <span className="text-xs font-extrabold text-amber-700 uppercase tracking-widest">
-              Apni Madad Foundation · Life Restoration Mission
+              {lang === "hi"
+                ? "अपनी मदद फाउंडेशन · जीवन पुनर्वास अभियान"
+                : "Apni Madad Foundation · Life Restoration Mission"}
             </span>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mt-2 mb-4 leading-tight">
-              सट्टा मुक्त अभियान{" "}
-              <span className="text-amber-700">(Secure & 100% Confidential)</span>
+              {lang === "hi" ? "सट्टा मुक्त अभियान" : "De-Addiction Support Desk"}{" "}
+              <span className="text-amber-700">
+                {lang === "hi"
+                  ? "(Secure & 100% Confidential)"
+                  : "(Secure & 100% Confidential)"}
+              </span>
             </h1>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-              सट्टे और जुए की लत ने अनगिनत परिवारों को कर्ज, मानसिक अवसाद और कानूनी संकट में डाला है।
-              अपनी मदद फाउंडेशन आपको बिना किसी सामाजिक कलंक या सार्वजनिक खुलासे के इस दलदल से
-              सम्मानपूर्वक बाहर निकलने का एक सुरक्षित रास्ता प्रदान करता है।
+              {lang === "hi"
+                ? "सट्टे और जुए की लत ने अनगिनत परिवारों को कर्ज, मानसिक अवसाद और कानूनी संकट में डाला है। अपनी मदद फाउंडेशन आपको बिना किसी सामाजिक कलंक या सार्वजनिक खुलासे के इस दलदल से सम्मानपूर्वक बाहर निकलने का एक सुरक्षित रास्ता प्रदान करता है।"
+                : "Betting and gambling addiction trap individuals in crippling debt, emotional stress, and family turmoil. Apni Madad Foundation provides a safe, completely private, and stigma-free path toward recovery and dignity."}
             </p>
           </div>
 
-          {/* 2 Core Highlights requested by User */}
+          {/* 2 Core Highlights */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-8 pt-6 border-t border-slate-100">
             <div className="bg-amber-50/60 rounded-2xl p-5 border border-amber-200/70 flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -133,11 +220,14 @@ export default function SattaMuktPage() {
               </div>
               <div>
                 <h2 className="text-sm font-black text-slate-900">
-                  गोपनीयता (100% Confidential)
+                  {lang === "hi"
+                    ? "गोपनीयता (100% Confidential)"
+                    : "100% Confidentiality Guarantee"}
                 </h2>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  मदद मांगने वाले व्यक्ति या उसके परिवार का नाम, फोन नंबर और पहचान पूरी तरह गुप्त रखी जाएगी।
-                  यह जानकारी किसी सार्वजनिक मंच या दानदाता को कभी नहीं दिखाई जाएगी।
+                  {lang === "hi"
+                    ? "मदद मांगने वाले व्यक्ति या उसके परिवार का नाम, फोन नंबर और पहचान पूरी तरह गुप्त रखी जाएगी। यह जानकारी किसी सार्वजनिक मंच या दानदाता को कभी नहीं दिखाई जाएगी।"
+                    : "Your personal details, phone number, and location are protected with strict secrecy. Never published or visible to anyone outside certified NGO counselors."}
                 </p>
               </div>
             </div>
@@ -148,11 +238,14 @@ export default function SattaMuktPage() {
               </div>
               <div>
                 <h2 className="text-sm font-black text-slate-900">
-                  काउंसलिंग व मार्गदर्शन
+                  {lang === "hi"
+                    ? "काउंसलिंग व मार्गदर्शन"
+                    : "Counseling & Financial Guidance"}
                 </h2>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  सट्टे की लत छुड़ाने के लिए मनोवैज्ञानिक सलाह और कर्ज से निपटने के लिए कानूनी/आर्थिक
-                  मार्गदर्शन उपलब्ध कराया जाएगा।
+                  {lang === "hi"
+                    ? "सट्टे की लत छुड़ाने के लिए मनोवैज्ञानिक सलाह और कर्ज से निपटने के लिए कानूनी/आर्थिक मार्गदर्शन उपलब्ध कराया जाएगा।"
+                    : "Psychological counseling to break addictive urges, combined with practical advice for debt management and family stress relief."}
                 </p>
               </div>
             </div>
@@ -167,29 +260,43 @@ export default function SattaMuktPage() {
             </div>
             <div className="space-y-2 max-w-lg mx-auto">
               <h2 className="text-2xl font-black text-slate-900">
-                आपका गोपनीय परामर्श अनुरोध सुरक्षित दर्ज हुआ 🙏
+                {lang === "hi"
+                  ? "आपका गोपनीय परामर्श अनुरोध सुरक्षित दर्ज हुआ 🙏"
+                  : "Your Confidential Consultation Request Recorded Safely 🙏"}
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                प्रिय <strong className="text-slate-900">{aliasName}</strong>, आपकी पहचान पूरी तरह
-                सुरक्षित है। हमारे विशेषज्ञ काउंसलर आपके चुने हुए समय (<strong>{safeContactTime}</strong>) पर
-                अत्यंत सावधानी से संपर्क करेंगे।
+                {lang === "hi" ? (
+                  <>
+                    प्रिय <strong className="text-slate-900">{aliasName}</strong>, आपकी पहचान पूरी तरह
+                    सुरक्षित है। हमारे विशेषज्ञ काउंसलर आपके चुने हुए समय (<strong>{safeContactTime}</strong>) पर
+                    अत्यंत सावधानी से संपर्क करेंगे।
+                  </>
+                ) : (
+                  <>
+                    Dear <strong className="text-slate-900">{aliasName}</strong>, your request is safely
+                    encrypted. Our certified counselor will discreetly reach out during your chosen window
+                    (<strong>{safeContactTime}</strong>).
+                  </>
+                )}
               </p>
             </div>
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl max-w-md mx-auto text-xs text-slate-500">
-              यह केस वेबसाइट या किसी बाहरी दर्शक को कभी प्रदर्शित नहीं किया जाएगा। यह केवल आंतरिक परामर्श व मार्गदर्शन के लिए है।
+              {lang === "hi"
+                ? "यह केस वेबसाइट या किसी बाहरी दर्शक को कभी प्रदर्शित नहीं किया जाएगा। यह केवल आंतरिक परामर्श व मार्गदर्शन के लिए है।"
+                : "This inquiry will never be displayed on public pages or search engines. It is handled exclusively by verified counselors."}
             </div>
             <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => setSubmitted(false)}
                 className="px-6 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
               >
-                नया अनुरोध भरें
+                {lang === "hi" ? "नया अनुरोध भरें" : "Submit Another Request"}
               </button>
               <Link
                 href="/"
                 className="px-6 py-2.5 rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 transition"
               >
-                मुख्य पृष्ठ पर जाएं
+                {lang === "hi" ? "मुख्य पृष्ठ पर जाएं" : "Go to Homepage"}
               </Link>
             </div>
           </div>
@@ -198,10 +305,16 @@ export default function SattaMuktPage() {
             <div className="mb-8 pb-6 border-b border-slate-100">
               <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
                 <Lock className="w-5 h-5 text-amber-700" />
-                <span>गोपनीय परामर्श फॉर्म (100% Confidential Request)</span>
+                <span>
+                  {lang === "hi"
+                    ? "गोपनीय परामर्श फॉर्म (100% Confidential Request)"
+                    : "Confidential Consultation Form (100% Private)"}
+                </span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                अपनी असली पहचान छिपाने के लिए आप कोई भी उपनाम या काल्पनिक नाम (Alias) चुन सकते हैं।
+                {lang === "hi"
+                  ? "अपनी असली पहचान छिपाने के लिए आप कोई भी उपनाम या काल्पनिक नाम (Alias) चुन सकते हैं।"
+                  : "You can choose any alias or pseudonym to keep your identity completely private."}
               </p>
             </div>
 
@@ -217,33 +330,46 @@ export default function SattaMuktPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-extrabold text-slate-900">
-                    प्रदर्शित नाम (Alias/Display Name) <span className="text-rose-600">*</span>
+                    {lang === "hi"
+                      ? "प्रदर्शित नाम (Alias/Display Name)"
+                      : "Display / Alias Name"}{" "}
+                    <span className="text-rose-600">*</span>
                   </label>
                   <p className="text-[11px] text-slate-500 leading-tight">
-                    काल्पनिक नाम चुनें ताकि आपकी असली पहचान किसी को न दिखे।
+                    {lang === "hi"
+                      ? "काल्पनिक नाम चुनें ताकि आपकी असली पहचान किसी को न दिखे।"
+                      : "Choose a pseudonym (e.g. Brother R, Sahil) so your real name stays secret."}
                   </p>
                   <input
                     type="text"
                     required
                     value={aliasName}
                     onChange={(e) => setAliasName(e.target.value)}
-                    placeholder="उदा. भाई R, साहिल, आजाद"
+                    placeholder={
+                      lang === "hi" ? "उदा. भाई R, साहिल, आजाद" : "e.g. Brother R, Sahil, Azad"
+                    }
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm font-semibold text-slate-900 transition bg-amber-50/20"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700">
-                    असली नाम (वैकल्पिक / Optional)
+                    {lang === "hi"
+                      ? "असली नाम (वैकल्पिक / Optional)"
+                      : "Real Name (Optional)"}
                   </label>
                   <p className="text-[11px] text-slate-500 leading-tight">
-                    केवल NGO के आंतरिक रिकॉर्ड के लिए (पूरी तरह गोपनीय)।
+                    {lang === "hi"
+                      ? "केवल NGO के आंतरिक रिकॉर्ड के लिए (पूरी तरह गोपनीय)।"
+                      : "Strictly for NGO internal record (100% confidential)."}
                   </p>
                   <input
                     type="text"
                     value={realName}
                     onChange={(e) => setRealName(e.target.value)}
-                    placeholder="यदि साझा करना चाहें तो लिखें"
+                    placeholder={
+                      lang === "hi" ? "यदि साझा करना चाहें तो लिखें" : "Write here if you wish to share"
+                    }
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm text-slate-900 transition"
                   />
                 </div>
@@ -253,10 +379,15 @@ export default function SattaMuktPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-extrabold text-slate-900">
-                    संपर्क का सुरक्षित समय (Safe Contact Time) <span className="text-rose-600">*</span>
+                    {lang === "hi"
+                      ? "संपर्क का सुरक्षित समय (Safe Contact Time)"
+                      : "Strict Safe Call Window"}{" "}
+                    <span className="text-rose-600">*</span>
                   </label>
                   <p className="text-[11px] text-slate-500 leading-tight">
-                    चुनें कि टीम आपको कब कॉल करे ताकि परिवार या ऑफिस में कोई पास न हो।
+                    {lang === "hi"
+                      ? "चुनें कि टीम आपको कब कॉल करे ताकि परिवार या ऑफिस में कोई पास न हो।"
+                      : "Select when you will be alone without family or colleagues around."}
                   </p>
                   <select
                     value={safeContactTime}
@@ -270,10 +401,14 @@ export default function SattaMuktPage() {
                     ))}
                   </select>
 
-                  {safeContactTime === "अन्य सुरक्षित समय (कस्टम चुनें)" && (
+                  {(safeContactTime.includes("कस्टम") || safeContactTime.includes("Custom")) && (
                     <input
                       type="text"
-                      placeholder="उदा. रात 10 बजे के बाद, या दोपहर 1:30 बजे"
+                      placeholder={
+                        lang === "hi"
+                          ? "उदा. रात 10 बजे के बाद, या दोपहर 1:30 बजे"
+                          : "e.g. After 10:00 PM, or around 1:30 PM lunch"
+                      }
                       value={customSafeTime}
                       onChange={(e) => setCustomSafeTime(e.target.value)}
                       className="w-full mt-2 px-4 py-2.5 rounded-xl border border-amber-300 focus:border-amber-500 text-xs font-medium text-slate-900"
@@ -283,10 +418,15 @@ export default function SattaMuktPage() {
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-extrabold text-slate-900">
-                    सुरक्षित मोबाइल नंबर / WhatsApp <span className="text-rose-600">*</span>
+                    {lang === "hi"
+                      ? "सुरक्षित मोबाइल नंबर / WhatsApp"
+                      : "Safe Mobile / WhatsApp Number"}{" "}
+                    <span className="text-rose-600">*</span>
                   </label>
                   <p className="text-[11px] text-slate-500 leading-tight">
-                    वह नंबर जिस पर सिर्फ आप ही संदेश या कॉल देख सकें।
+                    {lang === "hi"
+                      ? "वह नंबर जिस पर सिर्फ आप ही संदेश या कॉल देख सकें।"
+                      : "A private number where only you can access incoming calls or messages."}
                   </p>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -295,7 +435,11 @@ export default function SattaMuktPage() {
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="10-अंकों का सुरक्षित मोबाइल नंबर"
+                      placeholder={
+                        lang === "hi"
+                          ? "10-अंकों का सुरक्षित मोबाइल नंबर"
+                          : "10-digit private mobile number"
+                      }
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm font-semibold text-slate-900 transition"
                     />
                   </div>
@@ -306,44 +450,60 @@ export default function SattaMuktPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-extrabold text-slate-900">
-                    सट्टे या जुए का मुख्य माध्यम
+                    {lang === "hi" ? "सट्टे या जुए का मुख्य माध्यम" : "Primary Gambling / Betting Medium"}
                   </label>
                   <select
                     value={bettingType}
                     onChange={(e) => setBettingType(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm font-semibold text-slate-900 transition bg-white"
                   >
-                    <option value="ऑनलाइन सट्टा ऐप्स (क्रिकेट, कसीनो, गेमिंग ऐप्स)">
-                      ऑनलाइन सट्टा ऐप्स (क्रिकेट, कसीनो, गेमिंग ऐप्स)
+                    <option value={lang === "hi" ? "ऑनलाइन सट्टा ऐप्स (क्रिकेट, कसीनो, गेमिंग ऐप्स)" : "Online Betting Apps (Cricket, Casino, Gaming)"}>
+                      {lang === "hi"
+                        ? "ऑनलाइन सट्टा ऐप्स (क्रिकेट, कसीनो, गेमिंग ऐप्स)"
+                        : "Online Betting Apps (Cricket, Casino, Gaming)"}
                     </option>
-                    <option value="स्थानीय सट्टा / मटका">स्थानीय सट्टा / मटका</option>
-                    <option value="शेयर बाजार ऑप्शंस / इंट्राडे गैंबलिंग">
-                      शेयर बाजार ऑप्शंस / इंट्राडे गैंबलिंग
+                    <option value={lang === "hi" ? "स्थानीय सट्टा / मटका" : "Local Matka / Offline Gambling"}>
+                      {lang === "hi" ? "स्थानीय सट्टा / मटका" : "Local Matka / Offline Gambling"}
                     </option>
-                    <option value="ताश के खेल / क्लब्स / अन्य जुआ">ताश के खेल / क्लब्स / अन्य जुआ</option>
+                    <option value={lang === "hi" ? "शेयर बाजार ऑप्शंस / इंट्राडे गैंबलिंग" : "Stock Market F&O / Intraday Gambling"}>
+                      {lang === "hi"
+                        ? "शेयर बाजार ऑप्शंस / इंट्राडे गैंबलिंग"
+                        : "Stock Market F&O / Intraday Gambling"}
+                    </option>
+                    <option value={lang === "hi" ? "ताश के खेल / क्लब्स / अन्य जुआ" : "Cards / Casinos / Club Gambling"}>
+                      {lang === "hi" ? "ताश के खेल / क्लब्स / अन्य जुआ" : "Cards / Casinos / Club Gambling"}
+                    </option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-extrabold text-slate-900">
-                    सहायता का मुख्य क्षेत्र
+                    {lang === "hi" ? "सहायता का मुख्य क्षेत्र" : "Primary Area of Assistance"}
                   </label>
                   <select
                     value={supportArea}
                     onChange={(e) => setSupportArea(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm font-semibold text-slate-900 transition bg-white"
                   >
-                    <option value="सट्टे की लत छुड़ाने हेतु मनोवैज्ञानिक काउंसलिंग">
-                      सट्टे की लत छुड़ाने हेतु मनोवैज्ञानिक काउंसलिंग
+                    <option value={lang === "hi" ? "सट्टे की लत छुड़ाने हेतु मनोवैज्ञानिक काउंसलिंग" : "Psychological Counseling to Overcome Addiction"}>
+                      {lang === "hi"
+                        ? "सट्टे की लत छुड़ाने हेतु मनोवैज्ञानिक काउंसलिंग"
+                        : "Psychological Counseling to Overcome Addiction"}
                     </option>
-                    <option value="कर्ज व साहूकारों से निपटने की कानूनी सलाह">
-                      कर्ज व साहूकारों से निपटने की कानूनी सलाह
+                    <option value={lang === "hi" ? "कर्ज व साहूकारों से निपटने की कानूनी सलाह" : "Legal & Debt Restructuring Guidance"}>
+                      {lang === "hi"
+                        ? "कर्ज व साहूकारों से निपटने की कानूनी सलाह"
+                        : "Legal & Debt Restructuring Guidance"}
                     </option>
-                    <option value="आर्थिक सुधार व वित्तीय बजट योजना">
-                      आर्थिक सुधार व वित्तीय बजट योजना
+                    <option value={lang === "hi" ? "आर्थिक सुधार व वित्तीय बजट योजना" : "Financial Recovery & Budget Planning"}>
+                      {lang === "hi"
+                        ? "आर्थिक सुधार व वित्तीय बजट योजना"
+                        : "Financial Recovery & Budget Planning"}
                     </option>
-                    <option value="पारिवारिक तनाव व मानसिक तनाव से मुक्ति">
-                      पारिवारिक तनाव व मानसिक तनाव से मुक्ति
+                    <option value={lang === "hi" ? "पारिवारिक तनाव व मानसिक तनाव से मुक्ति" : "Family Conflict & Mental Stress Relief"}>
+                      {lang === "hi"
+                        ? "पारिवारिक तनाव व मानसिक तनाव से मुक्ति"
+                        : "Family Conflict & Mental Stress Relief"}
                     </option>
                   </select>
                 </div>
@@ -352,7 +512,7 @@ export default function SattaMuktPage() {
               {/* City and Situation Notes */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-extrabold text-slate-900">
-                  शहर / जिला (City / District)
+                  {lang === "hi" ? "शहर / जिला (City / District)" : "City / District"}
                 </label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -360,7 +520,11 @@ export default function SattaMuktPage() {
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="उदा. इंदौर, मुंबई, अहमदाबाद, जयपुर, दिल्ली"
+                    placeholder={
+                      lang === "hi"
+                        ? "उदा. इंदौर, मुंबई, अहमदाबाद, जयपुर, दिल्ली"
+                        : "e.g. Indore, Mumbai, Ahmedabad, Jaipur, Delhi"
+                    }
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm text-slate-900 transition"
                   />
                 </div>
@@ -368,14 +532,21 @@ export default function SattaMuktPage() {
 
               <div className="space-y-1.5">
                 <label className="block text-xs font-extrabold text-slate-900">
-                  अपनी स्थिति या कर्ज/मानसिक दबाव का संक्षिप्त विवरण <span className="text-rose-600">*</span>
+                  {lang === "hi"
+                    ? "अपनी स्थिति या कर्ज/मानसिक दबाव का संक्षिप्त विवरण"
+                    : "Brief description of situation, debt, or mental stress"}{" "}
+                  <span className="text-rose-600">*</span>
                 </label>
                 <textarea
                   rows={4}
                   required
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  placeholder="कृपया अपनी स्थिति साझा करें (उदा. कितने समय से लत है, किस प्रकार का दबाव है)। आपकी हर बात 100% गुप्त रहेगी।"
+                  placeholder={
+                    lang === "hi"
+                      ? "कृपया अपनी स्थिति साझा करें (उदा. कितने समय से लत है, किस प्रकार का दबाव है)। आपकी हर बात 100% गुप्त रहेगी।"
+                      : "Please safely describe your challenge (e.g. duration of betting, debt burden). Everything remains 100% private."
+                  }
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-sm text-slate-900 transition leading-relaxed resize-none"
                 />
               </div>
@@ -384,7 +555,9 @@ export default function SattaMuktPage() {
               <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-center gap-3 shadow-xs">
                 <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
                 <p className="text-xs sm:text-sm font-bold text-emerald-950 leading-relaxed">
-                  यह फॉर्म पूरी तरह एन्क्रिप्टेड है। आपकी जानकारी केवल NGO के आंतरिक सत्यापन के लिए सुरक्षित रहेगी।
+                  {lang === "hi"
+                    ? "यह फॉर्म पूरी तरह एन्क्रिप्टेड है। आपकी जानकारी केवल NGO के आंतरिक सत्यापन के लिए सुरक्षित रहेगी।"
+                    : "This form is end-to-end encrypted. Your details remain strictly protected for internal NGO counselor verification only."}
                 </p>
               </div>
 
@@ -397,12 +570,20 @@ export default function SattaMuktPage() {
                 {submitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>सुरक्षित भेजा जा रहा है...</span>
+                    <span>
+                      {lang === "hi"
+                        ? "सुरक्षित भेजा जा रहा है..."
+                        : "Sending securely..."}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-4 h-4 text-amber-200" />
-                    <span>सुरक्षित परामर्श अनुरोध भेजें (100% Confidential)</span>
+                    <span>
+                      {lang === "hi"
+                        ? "सुरक्षित परामर्श अनुरोध भेजें (100% Confidential)"
+                        : "Submit Confidential Request (100% Private)"}
+                    </span>
                   </>
                 )}
               </button>
@@ -415,13 +596,19 @@ export default function SattaMuktPage() {
           <div className="space-y-1 text-center sm:text-left">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/20 rounded-full text-xs font-bold text-indigo-300 border border-indigo-500/30">
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>गोपनीय हेल्पलाइन चैट</span>
+              <span>
+                {lang === "hi" ? "गोपनीय हेल्पलाइन चैट" : "Confidential Helpline Chat"}
+              </span>
             </div>
             <h3 className="text-lg sm:text-xl font-black">
-              सीधे WhatsApp पर गोपनीय बात करें
+              {lang === "hi"
+                ? "सीधे WhatsApp पर गोपनीय बात करें"
+                : "Confidential Consultation via WhatsApp"}
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 max-w-lg">
-              यदि आप तत्काल गोपनीय मार्गदर्शन चाहते हैं, तो हमारे हेल्पलाइन नंबर पर WhatsApp संदेश भेज सकते हैं।
+              {lang === "hi"
+                ? "यदि आप तत्काल गोपनीय मार्गदर्शन चाहते हैं, तो हमारे हेल्पलाइन नंबर पर WhatsApp संदेश भेज सकते हैं।"
+                : "If you need immediate confidential guidance, you can message our verified helpline directly on WhatsApp."}
             </p>
           </div>
 
@@ -432,7 +619,9 @@ export default function SattaMuktPage() {
             className="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 transition-all duration-200 flex items-center gap-2 shrink-0"
           >
             <MessageCircle className="w-4 h-4 text-emerald-600 fill-emerald-600" />
-            <span>WhatsApp पर संदेश भेजें</span>
+            <span>
+              {lang === "hi" ? "WhatsApp पर संदेश भेजें" : "Message on WhatsApp"}
+            </span>
           </a>
         </div>
       </div>
