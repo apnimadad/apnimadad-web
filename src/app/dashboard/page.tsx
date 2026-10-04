@@ -268,7 +268,12 @@ export default function DashboardPage() {
 
   const filteredDonorCases = useMemo(() => {
     return allCases.filter((c) => {
-      const matchCat = donorCategory === "all" || c.category === donorCategory;
+      const matchCat =
+        donorCategory === "all"
+          ? true
+          : donorCategory === "urgent"
+          ? (c as unknown as { urgency?: string }).urgency === "high" || c.status === "approved"
+          : c.category === donorCategory;
       const q = donorSearch.trim().toLowerCase();
       const matchSearch =
         !q ||
@@ -279,10 +284,6 @@ export default function DashboardPage() {
       return matchCat && matchSearch;
     });
   }, [allCases, donorCategory, donorSearch]);
-
-  const urgentCases = useMemo(() => {
-    return allCases.filter((c) => c.status === "approved").slice(0, 4);
-  }, [allCases]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -1709,6 +1710,22 @@ export default function DashboardPage() {
             <div className="flex border-b border-slate-200 overflow-x-auto gap-2 scrollbar-none">
               <button
                 type="button"
+                onClick={() => setDonorTab("cases")}
+                className={`pb-3 px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
+                  donorTab === "cases" || (donorTab as string) === "urgent"
+                    ? "border-blue-700 text-blue-800"
+                    : "border-transparent text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <Heart className="w-4 h-4 text-rose-600" />
+                <span>Verified Needy Cases</span>
+                <span className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  {allCases.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setDonorTab("donations")}
                 className={`pb-3 px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
                   donorTab === "donations"
@@ -1734,22 +1751,6 @@ export default function DashboardPage() {
               >
                 <TrendingUp className="w-4 h-4" />
                 <span>Patient Recovery Updates</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDonorTab("urgent")}
-                className={`pb-3 px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-                  donorTab === "urgent"
-                    ? "border-blue-700 text-blue-800"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <Heart className="w-4 h-4 text-rose-600" />
-                <span>Urgent Verified Appeals</span>
-                <span className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  {urgentCases.length}
-                </span>
               </button>
             </div>
 
@@ -2005,7 +2006,7 @@ export default function DashboardPage() {
             )}
 
             {/* Donor Sub-Tab 1: Verified Needy Cases (See Needy & Donate Directly) */}
-            {donorTab === "cases" && (
+            {(donorTab === "cases" || (donorTab as string) === "urgent") && (
               <div className="space-y-5">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs">
                   <div>
@@ -2034,7 +2035,8 @@ export default function DashboardPage() {
                 {/* Category Pills */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {[
-                    { id: "all", label: "All Categories" },
+                    { id: "all", label: "All Verified Cases" },
+                    { id: "urgent", label: "Urgent Priority" },
                     { id: "medical", label: "Medical Emergency" },
                     { id: "child", label: "Child Care & Pediatric" },
                     { id: "cancer", label: "Cancer Care" },
