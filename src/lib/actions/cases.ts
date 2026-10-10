@@ -2,7 +2,7 @@
 
 import { createServerSupabase, createServiceClient } from "@/lib/supabase/server";
 import { Case, CaseInsert, CaseStatus, ConfidentialCaseItem } from "@/types/database";
-import { revalidatePath } from "next/cache";
+import { safeRevalidatePath } from "@/lib/revalidate";
 
 /**
  * Fetch all public approved/funded cases directly from Supabase
@@ -100,7 +100,7 @@ export async function getCaseById(id: string): Promise<Case | null> {
  */
 export async function submitCase(
   payload: CaseInsert
-): Promise<{ success: boolean; id?: string; error?: string }> {
+): Promise<{ success: boolean; id?: string; caseId?: string; error?: string }> {
   const supabase = createServiceClient() || (await createServerSupabase());
   if (!supabase) return { success: false, error: "Database not connected" };
 
@@ -156,9 +156,9 @@ export async function submitCase(
     console.warn("Could not insert notification:", notifErr);
   }
 
-  revalidatePath("/cases");
-  revalidatePath("/admin");
-  return { success: true, id: data.id };
+  safeRevalidatePath("/cases");
+  safeRevalidatePath("/admin");
+  return { success: true, id: data.id, caseId: data.id };
 }
 
 /**
@@ -178,9 +178,9 @@ export async function updateCase(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/cases");
-  revalidatePath(`/cases/${id}`);
-  revalidatePath("/admin");
+  safeRevalidatePath("/cases");
+  safeRevalidatePath(`/cases/${id}`);
+  safeRevalidatePath("/admin");
   return { success: true };
 }
 
@@ -229,17 +229,24 @@ export async function getAllCasesAdmin(): Promise<Case[]> {
  * Record a direct donation in Supabase
  */
 export async function recordDonation(params: {
-  case_id: string;
+  case_id?: string;
+  caseId?: string;
   amount: number;
   donor_id?: string;
+  donorId?: string;
   donor_name?: string;
+  donorName?: string;
   payment_ref?: string;
+  paymentRef?: string;
   notes?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; amountRaised?: number }> {
   const supabase = createServiceClient() || (await createServerSupabase());
   if (!supabase) return { success: false, error: "Database not connected" };
 
-  let donorId: string | null = params.donor_id || null;
+  const targetCaseId = params.case_id || params.caseId;
+  if (!targetCaseId) return { success: false, error: "Case ID is required" };
+
+  let donorId: string | null = params.donor_id || params.donorId || null;
   if (!donorId) {
     const authClient = await createServerSupabase();
     if (authClient) {
@@ -251,11 +258,11 @@ export async function recordDonation(params: {
   }
 
   const { error: donError } = await supabase.from("donations").insert({
-    case_id: params.case_id,
+    case_id: targetCaseId,
     donor_id: donorId,
-    donor_name: params.donor_name || "Generous Supporter",
+    donor_name: params.donor_name || params.donorName || "Generous Supporter",
     amount: params.amount,
-    payment_ref: params.payment_ref || null,
+    payment_ref: params.payment_ref || params.paymentRef || null,
     notes: params.notes || null,
     status: "confirmed",
   });
@@ -263,25 +270,26 @@ export async function recordDonation(params: {
   if (donError) return { success: false, error: donError.message };
 
   // Increment amount_raised on case
+  let finalRaised = params.amount;
   const { data: c } = await supabase
     .from("cases")
     .select("amount_raised, amount_needed")
-    .eq("id", params.case_id)
+    .eq("id", targetCaseId)
     .single();
 
   if (c) {
-    const newRaised = Number(c.amount_raised) + params.amount;
-    const updates: Partial<Case> = { amount_raised: newRaised };
-    if (newRaised >= Number(c.amount_needed)) {
+    finalRaised = Number(c.amount_raised) + params.amount;
+    const updates: Partial<Case> = { amount_raised: finalRaised };
+    if (finalRaised >= Number(c.amount_needed)) {
       updates.status = "funded";
     }
-    await supabase.from("cases").update(updates).eq("id", params.case_id);
+    await supabase.from("cases").update(updates).eq("id", targetCaseId);
   }
 
-  revalidatePath(`/cases/${params.case_id}`);
-  revalidatePath("/admin");
-  revalidatePath("/dashboard");
-  return { success: true };
+  safeRevalidatePath(`/cases/${targetCaseId}`);
+  safeRevalidatePath("/admin");
+  safeRevalidatePath("/dashboard");
+  return { success: true, amountRaised: finalRaised };
 }
 
 export interface ConfidentialCaseInput {
@@ -302,7 +310,7 @@ export interface ConfidentialCaseInput {
  */
 export async function submitConfidentialCase(
   payload: ConfidentialCaseInput
-): Promise<{ success: boolean; id?: string; error?: string }> {
+): Promise<{ success: boolean; id?: string; caseId?: string; error?: string }> {
   const supabase = createServiceClient() || (await createServerSupabase());
   if (!supabase) return { success: false, error: "Database not connected" };
 
@@ -368,8 +376,8 @@ export async function submitConfidentialCase(
     console.warn("Could not insert confidential notification:", e);
   }
 
-  revalidatePath("/admin");
-  return { success: true, id: data.id };
+  safeRevalidatePath("/admin");
+  return { success: true, id: data.id, caseId: data.id };
 }
 
 /**
@@ -476,9 +484,9 @@ export async function uploadAdditionalDocument(
 
   if (updateErr) return { success: false, error: updateErr.message };
 
-  revalidatePath(`/cases/${caseId}`);
-  revalidatePath("/dashboard");
-  revalidatePath("/admin");
+  safeRevalidatePath(`/cases/${caseId}`);
+  safeRevalidatePath("/dashboard");
+  safeRevalidatePath("/admin");
   return { success: true };
 }
 
@@ -563,9 +571,9 @@ export async function deleteCase(id: string): Promise<{ success: boolean; error?
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/cases");
-  revalidatePath("/");
+  safeRevalidatePath("/admin");
+  safeRevalidatePath("/cases");
+  safeRevalidatePath("/");
   return { success: true };
 }
 
@@ -597,9 +605,9 @@ export async function deleteCasesBulk(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/cases");
-  revalidatePath("/");
+  safeRevalidatePath("/admin");
+  safeRevalidatePath("/cases");
+  safeRevalidatePath("/");
   return { success: true, count: ids.length };
 }
 
@@ -634,9 +642,9 @@ export async function updateCasesBulk(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/cases");
-  revalidatePath("/");
+  safeRevalidatePath("/admin");
+  safeRevalidatePath("/cases");
+  safeRevalidatePath("/");
   return { success: true };
 }
 

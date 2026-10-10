@@ -3,7 +3,7 @@
 import { createServerSupabase, createServiceClient } from "@/lib/supabase/server";
 import { CaseVerification, VerificationChecklist } from "@/types/database";
 import { createNotification } from "@/lib/actions/notifications";
-import { revalidatePath } from "next/cache";
+import { safeRevalidatePath } from "@/lib/revalidate";
 
 // In-memory verification store for demo mode fallback
 const demoVerificationsStore: Record<string, CaseVerification> = {
@@ -93,8 +93,8 @@ export async function submitVerificationReview(params: {
       });
     }
 
-    revalidatePath(`/cases/${params.caseId}`);
-    revalidatePath("/admin");
+    safeRevalidatePath(`/cases/${params.caseId}`);
+    safeRevalidatePath("/admin");
     return { success: true };
   }
 
@@ -143,8 +143,8 @@ export async function submitVerificationReview(params: {
     return { success: false, error: caseError.message };
   }
 
-  revalidatePath(`/cases/${params.caseId}`);
-  revalidatePath("/cases");
-  revalidatePath("/admin");
+  safeRevalidatePath(`/cases/${params.caseId}`);
+  safeRevalidatePath("/cases");
+  safeRevalidatePath("/admin");
   return { success: true };
 }

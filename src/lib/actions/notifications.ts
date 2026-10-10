@@ -2,7 +2,7 @@
 
 import { createServerSupabase, createServiceClient } from "@/lib/supabase/server";
 import { Notification, NotificationType, UserRole } from "@/types/database";
-import { revalidatePath } from "next/cache";
+import { safeRevalidatePath } from "@/lib/revalidate";
 
 // Server memory store for session notifications when DB connection is not initialized
 let sessionNotifications: Notification[] = [];
@@ -87,7 +87,7 @@ export async function createNotification(payload: {
     return { success: false };
   }
 
-  revalidatePath("/");
+  safeRevalidatePath("/");
   return { success: true, id: data.id };
 }
 
@@ -111,7 +111,7 @@ export async function markNotificationAsRead(id: string): Promise<{ success: boo
     console.error("markNotificationAsRead error:", error);
     return { success: false };
   }
-  revalidatePath("/");
+  safeRevalidatePath("/");
   return { success: true };
 }
 
@@ -146,7 +146,7 @@ export async function markAllNotificationsAsRead(
     return { success: false };
   }
 
-  revalidatePath("/");
+  safeRevalidatePath("/");
   return { success: true };
 }
 
@@ -181,7 +181,7 @@ export async function clearAllNotifications(
     return { success: false };
   }
 
-  revalidatePath("/");
+  safeRevalidatePath("/");
   return { success: true };
 }
 

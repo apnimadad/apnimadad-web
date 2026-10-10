@@ -2,7 +2,7 @@
 
 import { createServerSupabase, createServiceClient } from "@/lib/supabase/server";
 import { Profile, UserRole } from "@/types/database";
-import { revalidatePath } from "next/cache";
+import { safeRevalidatePath } from "@/lib/revalidate";
 
 export interface AuthResponse {
   success: boolean;
@@ -159,8 +159,8 @@ export async function verifyEmailOtp(payload: {
         };
 
         otpStore.delete(email);
-        revalidatePath("/");
-        revalidatePath("/dashboard");
+        safeRevalidatePath("/");
+        safeRevalidatePath("/dashboard");
 
         return {
           success: true,
@@ -193,8 +193,8 @@ export async function verifyEmailOtp(payload: {
     };
 
     otpStore.delete(email);
-    revalidatePath("/");
-    revalidatePath("/dashboard");
+    safeRevalidatePath("/");
+    safeRevalidatePath("/dashboard");
 
     return {
       success: true,
@@ -336,8 +336,8 @@ export async function verifyWhatsAppCode(payload: {
       }
 
       whatsappStore.delete(phoneDigits);
-      revalidatePath("/");
-      revalidatePath("/dashboard");
+      safeRevalidatePath("/");
+      safeRevalidatePath("/dashboard");
 
       const profile: Profile = {
         id: userId,
@@ -618,8 +618,8 @@ export async function signUpUser(payload: {
     created_at: createdAt,
   };
 
-  revalidatePath("/");
-  revalidatePath("/dashboard");
+  safeRevalidatePath("/");
+  safeRevalidatePath("/dashboard");
 
   return {
     success: true,
@@ -636,7 +636,7 @@ export async function signOutUser(): Promise<{ success: boolean }> {
   if (supabase) {
     await supabase.auth.signOut();
   }
-  revalidatePath("/");
+  safeRevalidatePath("/");
   return { success: true };
 }
 
@@ -693,7 +693,7 @@ export async function updateProfile(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/dashboard");
-  revalidatePath("/admin");
+  safeRevalidatePath("/dashboard");
+  safeRevalidatePath("/admin");
   return { success: true };
 }
