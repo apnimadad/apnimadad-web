@@ -169,18 +169,6 @@ export default function DashboardPage() {
   const [submittingRecord, setSubmittingRecord] = useState(false);
   const [recordError, setRecordError] = useState<string | null>(null);
 
-  // Load donor PAN from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("apni_madad_donor_pan");
-      if (saved) {
-        setDonorPan(saved);
-        setPanSaved(true);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   // Pre-fill user details in appeal form
   useEffect(() => {
@@ -277,9 +265,9 @@ export default function DashboardPage() {
       const q = donorSearch.trim().toLowerCase();
       const matchSearch =
         !q ||
-        c.title.toLowerCase().includes(q) ||
-        c.patient_name.toLowerCase().includes(q) ||
-        c.city.toLowerCase().includes(q) ||
+        (c.title && c.title.toLowerCase().includes(q)) ||
+        (c.patient_name && c.patient_name.toLowerCase().includes(q)) ||
+        (c.city && c.city.toLowerCase().includes(q)) ||
         (c.hospital_name && c.hospital_name.toLowerCase().includes(q));
       return matchCat && matchSearch;
     });

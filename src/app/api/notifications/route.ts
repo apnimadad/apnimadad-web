@@ -4,6 +4,7 @@ import {
   createNotification,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  clearAllNotifications,
 } from "@/lib/actions/notifications";
 import { NotificationType, UserRole } from "@/types/database";
 
