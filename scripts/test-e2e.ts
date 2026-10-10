@@ -18,10 +18,10 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-import { createServiceClient } from "./src/lib/supabase/server.ts";
-import { getPublicCases, getAllCasesAdmin, submitCase, getCaseById, recordDonation, submitConfidentialCase, getConfidentialCases } from "./src/lib/actions/cases.ts";
-import { submitVerificationReview } from "./src/lib/actions/verification.ts";
-import { getNotifications, createNotification, markNotificationAsRead } from "./src/lib/actions/notifications.ts";
+import { createServiceClient } from "../src/lib/supabase/server.ts";
+import { getPublicCases, getAllCasesAdmin, submitCase, getCaseById, recordDonation, submitConfidentialCase, getConfidentialCases } from "../src/lib/actions/cases.ts";
+import { submitVerificationReview } from "../src/lib/actions/verification.ts";
+import { getNotifications, createNotification, markNotificationAsRead } from "../src/lib/actions/notifications.ts";
 
 async function runEndToEndTests() {
   console.log("=== STARTING FULL END-TO-END SYSTEM TEST ===");

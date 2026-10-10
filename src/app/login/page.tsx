@@ -822,8 +822,82 @@ function LoginForm() {
           </form>
         )}
 
+        {/* Verified Quick-Fill Credentials Box */}
+        <div className="mt-6 pt-5 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <KeyRound className="w-3.5 h-3.5 text-blue-600" />
+              Verified Test Accounts (1-Click Fill)
+            </span>
+            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-semibold border border-emerald-200">
+              Backend Connected
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setRole("admin");
+                setAuthTab("signin");
+                setAuthMethod("password");
+                setEmail("aapnimadad@proton.me");
+                setPassword("Admin@ApniMadad2026!");
+                setMessage({ type: "success", text: "Admin credentials loaded! Click Sign In to open Admin Desk." });
+              }}
+              className="p-2 rounded-xl border border-slate-200 hover:border-slate-800 bg-slate-50/80 hover:bg-slate-100/80 text-left transition flex flex-col justify-between group"
+            >
+              <div className="text-[11px] font-bold text-slate-900 flex items-center justify-between">
+                <span>Admin</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
+              </div>
+              <div className="text-[10px] text-slate-500 truncate mt-1">aapnimadad@...</div>
+              <div className="text-[9px] text-slate-400 group-hover:text-blue-600 font-mono mt-0.5">Admin@2026!</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setRole("donor");
+                setAuthTab("signin");
+                setAuthMethod("password");
+                setEmail("donor@apnimadad.org");
+                setPassword("Donor@ApniMadad2026!");
+                setMessage({ type: "success", text: "Donor credentials loaded! Click Sign In to open Donor Portal." });
+              }}
+              className="p-2 rounded-xl border border-blue-200 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-100/50 text-left transition flex flex-col justify-between group"
+            >
+              <div className="text-[11px] font-bold text-blue-900 flex items-center justify-between">
+                <span>Donor</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              </div>
+              <div className="text-[10px] text-slate-500 truncate mt-1">donor@apni...</div>
+              <div className="text-[9px] text-slate-400 group-hover:text-blue-600 font-mono mt-0.5">Donor@2026!</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setRole("beneficiary");
+                setAuthTab("signin");
+                setAuthMethod("password");
+                setEmail("user@apnimadad.org");
+                setPassword("User@ApniMadad2026!");
+                setMessage({ type: "success", text: "User credentials loaded! Click Sign In to open User Portal." });
+              }}
+              className="p-2 rounded-xl border border-emerald-200 hover:border-emerald-500 bg-emerald-50/50 hover:bg-emerald-100/50 text-left transition flex flex-col justify-between group"
+            >
+              <div className="text-[11px] font-bold text-emerald-900 flex items-center justify-between">
+                <span>User</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+              </div>
+              <div className="text-[10px] text-slate-500 truncate mt-1">user@apni...</div>
+              <div className="text-[9px] text-slate-400 group-hover:text-emerald-600 font-mono mt-0.5">User@2026!</div>
+            </button>
+          </div>
+        </div>
+
         {/* Footer Security Note */}
-        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+        <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           <span>{t.securityBadge}</span>
         </div>

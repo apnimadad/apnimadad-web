@@ -17,6 +17,7 @@ import {
 import { submitVerificationReview } from "@/lib/actions/verification";
 import { useSiteSettings } from "@/components/SiteSettingsContext";
 import { useLanguage } from "@/components/LanguageContext";
+import AdminExportCenter from "./AdminExportCenter";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -52,6 +53,7 @@ import {
   Upload,
   Paperclip,
   FileUp,
+  HardDrive,
 } from "lucide-react";
 
 type AdminCase = Case & {
@@ -103,7 +105,7 @@ export default function AdminPage() {
 
   const { lang, setLang } = useLanguage();
 
-  const [adminSection, setAdminSection] = useState<"cases" | "confidential" | "website">("cases");
+  const [adminSection, setAdminSection] = useState<"cases" | "confidential" | "exports" | "website">("cases");
   const [cases, setCases] = useState<AdminCase[]>([]);
   const [selected, setSelected] = useState<AdminCase | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -787,6 +789,10 @@ export default function AdminPage() {
                   ? (lang === "hi"
                       ? "गोपनीय सहायता केंद्र (Woman Help व सट्टा मुक्त)"
                       : "Confidential Support Desk (Women Help & De-Addiction)")
+                  : adminSection === "exports"
+                  ? (lang === "hi"
+                      ? "डेटा निर्यात व मीडिया डाउनलोड हब (CSV / MP4 / PDF)"
+                      : "Backend Data Export & Media Vault (CSV / MP4 / PDF)")
                   : (lang === "hi"
                       ? "लाइव दानकर्ता व वेबसाइट नियंत्रण केंद्र"
                       : "Live Donors & Website Control Center")}
@@ -800,6 +806,10 @@ export default function AdminPage() {
                   ? (lang === "hi"
                       ? "100% गोपनीय व सुरक्षित सहायता - महिला सुरक्षा और सट्टा मुक्ति परामर्श की आंतरिक निगरानी (पब्लिक ऑडियंस से पूरी तरह गुप्त)।"
                       : "100% confidential and secure assistance: internal monitoring of women help & de-addiction requests (isolated from public view).")
+                  : adminSection === "exports"
+                  ? (lang === "hi"
+                      ? "संपूर्ण डेटाबेस को CSV में डाउनलोड करें व अस्पताल बिल (PDF) एवं मरीज वीडियो (MP4) सीधे प्राप्त करें।"
+                      : "Download all backend data into CSV files and immediately stream/download patient PDF estimation bills and MP4 video proofs.")
                   : (lang === "hi"
                       ? "लाइव दानकर्ता सूची, आपातकालीन अलर्ट बैनर और आधिकारिक हेल्पलाइन का पूर्ण नियंत्रण।"
                       : "Full administrative control to edit the live generous donors marquee ticker, emergency alert banners, and official helplines.")}
@@ -863,6 +873,12 @@ export default function AdminPage() {
                     {lang === "hi" ? "रिफ्रेश गोपनीय केस" : "Refresh Confidential Cases"}
                   </span>
                 </button>
+              ) : adminSection === "exports" ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-emerald-800 font-bold bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                    Live Backend Data Export Active
+                  </span>
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <button
@@ -953,6 +969,32 @@ export default function AdminPage() {
                 }`}
               >
                 {confidentialCases.length} {lang === "hi" ? "गोपनीय" : "Confidential"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAdminSection("exports")}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+                adminSection === "exports"
+                  ? "bg-emerald-700 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <HardDrive className="w-4 h-4 text-emerald-300" />
+              <span>
+                {lang === "hi"
+                  ? "डेटा निर्यात व मीडिया (CSV • MP4 • PDF)"
+                  : "Export & Media Hub (CSV • MP4 • PDF)"}
+              </span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                  adminSection === "exports"
+                    ? "bg-emerald-800 text-white"
+                    : "bg-emerald-100 text-emerald-900"
+                }`}
+              >
+                All Data
               </span>
             </button>
 
@@ -1724,6 +1766,13 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+    ) : adminSection === "exports" ? (
+      <AdminExportCenter
+        cases={cases}
+        confidentialCases={confidentialCases}
+        lang={lang}
+        onShowToast={(msg) => showToast(msg)}
+      />
     ) : (
       /* Live Donors & Website Control Section */
       <div className="space-y-8">

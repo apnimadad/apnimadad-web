@@ -1,7 +1,7 @@
 "use server";
 
 import { createServerSupabase, createServiceClient } from "@/lib/supabase/server";
-import { Case, CaseInsert, CaseStatus, ConfidentialCaseItem } from "@/types/database";
+import { Case, CaseInsert, CaseStatus, ConfidentialCaseItem, Donation, Profile } from "@/types/database";
 import { safeRevalidatePath } from "@/lib/revalidate";
 
 /**
@@ -646,5 +646,39 @@ export async function updateCasesBulk(
   safeRevalidatePath("/cases");
   safeRevalidatePath("/");
   return { success: true };
+}
+
+/**
+ * Admin: Fetch all donations recorded across all cases
+ */
+export async function getAllDonationsAdmin(): Promise<Donation[]> {
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("donations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getAllDonationsAdmin error:", error);
+    return [];
+  }
+  return (data || []) as Donation[];
+}
+
+/**
+ * Admin: Fetch all registered user profiles
+ */
+export async function getAllProfilesAdmin(): Promise<Profile[]> {
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getAllProfilesAdmin error:", error);
+    return [];
+  }
+  return (data || []) as Profile[];
 }
 
