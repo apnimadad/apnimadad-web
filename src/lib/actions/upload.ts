@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createServerSupabase, createServiceClient } from "@/lib/supabase/server";
 
 /**
  * Upload a file buffer to Supabase Storage
@@ -11,7 +11,7 @@ export async function uploadToStorage(
   path: string,
   formData: FormData
 ): Promise<{ success: boolean; url?: string; error?: string }> {
-  const supabase = await createServerSupabase();
+  const supabase = createServiceClient() || (await createServerSupabase());
   if (!supabase) {
     return { success: false, error: "Supabase not configured" };
   }
