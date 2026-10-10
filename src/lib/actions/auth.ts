@@ -53,6 +53,24 @@ export async function sendEmailOtp(payload: {
     return { success: false, error: "Please enter a valid email address." };
   }
 
+  if (payload.intent === "signup") {
+    const service = createServiceClient();
+    if (service) {
+      const { data: existingProfiles } = await service
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .limit(1);
+
+      if (existingProfiles && existingProfiles.length > 0) {
+        return {
+          success: false,
+          error: "An account with this email already exists. Please switch to the Sign In tab.",
+        };
+      }
+    }
+  }
+
   // Generate a cryptographically sound 6-digit OTP
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
@@ -493,6 +511,20 @@ export async function signUpUser(payload: {
   // This bypasses Supabase free tier SMTP rate limit of 3 emails/hour and guarantees instant activation
   if (service) {
     try {
+      // Strictly prevent duplicate registrations with same email
+      const { data: existingProfiles } = await service
+        .from("profiles")
+        .select("id, email, role")
+        .eq("email", cleanEmail)
+        .limit(1);
+
+      if (existingProfiles && existingProfiles.length > 0) {
+        return {
+          success: false,
+          error: "An account with this email already exists. Please switch to the Sign In tab.",
+        };
+      }
+
       const { data: adminData, error: adminErr } = await service.auth.admin.createUser({
         email: cleanEmail,
         password: payload.password,
@@ -514,26 +546,10 @@ export async function signUpUser(payload: {
           errMsg.includes("already exists") ||
           errMsg.includes("duplicate")
         ) {
-          const { data: userList } = await service.auth.admin.listUsers();
-          const existing = userList?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
-          if (existing) {
-            await service.auth.admin.updateUserById(existing.id, {
-              password: payload.password,
-              email_confirm: true,
-              user_metadata: {
-                role: payload.role,
-                full_name: payload.fullName,
-                phone: payload.phone || null,
-              },
-            });
-            userId = existing.id;
-            createdAt = existing.created_at;
-          } else {
-            return {
-              success: false,
-              error: "An account with this email already exists. Please switch to the Sign In tab.",
-            };
-          }
+          return {
+            success: false,
+            error: "An account with this email already exists. Please switch to the Sign In tab.",
+          };
         } else {
           console.warn("Service admin createUser warning:", adminErr.message);
         }
