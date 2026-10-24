@@ -12,13 +12,17 @@ import {
   Smartphone, 
   ExternalLink, 
   Heart,
-  Sparkles
+  Sparkles,
+  ZoomIn,
+  X,
+  Download
 } from "lucide-react";
 
 export default function DirectDonationSection() {
   const { settings } = useSiteSettings();
   const { lang } = useLanguage();
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [zoomModalOpen, setZoomModalOpen] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(500);
   const [customAmount, setCustomAmount] = useState("");
 
@@ -210,32 +214,51 @@ export default function DirectDonationSection() {
               </div>
             </div>
 
-            {/* Right: PhonePe QR Code Container */}
+            {/* Right: PhonePe QR Code Container (Zoomed-in & Prominent) */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center">
-              <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-2xl border-4 border-amber-400 text-slate-900 max-w-xs w-full text-center">
-                <div className="text-[11px] font-black uppercase tracking-wider text-purple-900 mb-2 flex items-center justify-center gap-1.5">
-                  <QrCode className="w-4 h-4 text-purple-800" />
-                  <span>PhonePe Accepted Here</span>
+              <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-2xl border-4 border-amber-400 text-slate-900 max-w-sm w-full text-center">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 text-[11px] font-black uppercase tracking-wider">
+                    <QrCode className="w-3.5 h-3.5 text-purple-800" />
+                    <span>PhonePe Accepted</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setZoomModalOpen(true)}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full transition cursor-pointer"
+                    title="Click to Zoom Fullscreen"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                    <span>{lang === "hi" ? "बड़ा करें" : "Zoom"}</span>
+                  </button>
                 </div>
 
-                <div className="relative w-full aspect-[9/16] max-h-88 rounded-2xl overflow-hidden bg-black mb-3 shadow-inner">
+                {/* Big Zoomed QR Code Box */}
+                <div 
+                  onClick={() => setZoomModalOpen(true)}
+                  className="relative w-full aspect-square max-w-[280px] sm:max-w-[320px] mx-auto rounded-2xl overflow-hidden bg-black p-3.5 shadow-inner cursor-zoom-in group mb-4 border-2 border-slate-900"
+                >
                   <Image
                     src={direct.qrCodeUrl || "/foundation-qr.jpg"}
                     alt="PhonePe Accepted Here QR Code"
                     fill
                     priority
-                    className="object-contain"
-                    sizes="(max-width: 640px) 260px, 300px"
+                    className="object-contain p-2 group-hover:scale-105 transition duration-200"
+                    sizes="(max-width: 640px) 280px, 320px"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                    <ZoomIn className="w-4 h-4 text-amber-400" />
+                    <span>Click to Enlarge</span>
+                  </div>
                 </div>
 
-                <div className="text-xs font-black text-slate-900 tracking-tight">
+                <div className="text-sm font-black text-slate-950 tracking-tight">
                   {direct.accountName}
                 </div>
-                <div className="text-[11px] font-mono font-bold text-purple-800 mt-0.5">
+                <div className="text-xs font-mono font-black text-purple-900 mt-0.5 select-all">
                   {direct.upiId}
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className="text-[11px] font-medium text-slate-500 mt-1">
                   Scan &amp; Pay directly using any UPI App
                 </p>
               </div>
@@ -243,6 +266,71 @@ export default function DirectDonationSection() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen High-Resolution QR Zoom Modal */}
+      {zoomModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          onClick={() => setZoomModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-4 border-amber-400 text-slate-900 text-center relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setZoomModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-xs font-black uppercase tracking-wider text-purple-900 mb-2 flex items-center justify-center gap-1.5">
+              <QrCode className="w-4 h-4 text-purple-800" />
+              <span>Official Foundation QR Code</span>
+            </div>
+
+            <div className="relative w-full aspect-square max-w-[340px] sm:max-w-[380px] mx-auto rounded-2xl overflow-hidden bg-black p-4 mb-4 shadow-xl border-2 border-slate-900">
+              <Image
+                src={direct.qrCodeUrl || "/foundation-qr.jpg"}
+                alt="PhonePe Accepted Here QR Code Large"
+                fill
+                priority
+                className="object-contain p-2"
+                sizes="380px"
+              />
+            </div>
+
+            <div className="text-base font-black text-slate-950">
+              {direct.accountName}
+            </div>
+            <div className="text-sm font-mono font-black text-purple-900 select-all mt-0.5">
+              {direct.upiId}
+            </div>
+
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <button
+                type="button"
+                onClick={handleCopyUpi}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition"
+              >
+                {copiedUpi ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedUpi ? "Copied UPI!" : "Copy UPI ID"}</span>
+              </button>
+
+              <a
+                href={direct.qrCodeUrl || "/foundation-qr.jpg"}
+                download="foundation-qr.jpg"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition"
+              >
+                <Download className="w-4 h-4" />
+                <span>Save QR</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
