@@ -140,11 +140,11 @@ export default function SattaMuktPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50/60 via-slate-50 to-white pb-24">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10">
         {/* Header Breadcrumb & Status & Language Switcher */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-100/80 border border-amber-300 text-amber-950 rounded-full text-xs font-bold shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-amber-700" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-100/80 border border-amber-300 text-amber-950 rounded-full text-xs font-bold shadow-2xs self-start sm:self-auto">
+            <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
             <span>
               {lang === "hi"
                 ? "100% गोपनीय व सुरक्षित अभियान (Secure De-Addiction)"
@@ -152,14 +152,14 @@ export default function SattaMuktPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             {/* Language Switcher Pill */}
             <div className="inline-flex items-center bg-white p-1 rounded-xl border border-amber-200 shadow-2xs text-xs font-semibold">
               <Globe className="w-3.5 h-3.5 text-amber-600 ml-1.5 mr-1" />
               <button
                 type="button"
                 onClick={() => setLang("en")}
-                className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                className={`px-2.5 py-1 rounded-lg transition-all text-xs cursor-pointer ${
                   lang === "en"
                     ? "bg-amber-600 text-white font-bold shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
@@ -170,7 +170,7 @@ export default function SattaMuktPage() {
               <button
                 type="button"
                 onClick={() => setLang("hi")}
-                className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                className={`px-2.5 py-1 rounded-lg transition-all text-xs cursor-pointer ${
                   lang === "hi"
                     ? "bg-amber-600 text-white font-bold shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
@@ -184,13 +184,13 @@ export default function SattaMuktPage() {
               href="/"
               className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
             >
-              {lang === "hi" ? "होम पेज पर वापस जाएं" : "Back to Home"}
+              {lang === "hi" ? "होम पेज" : "Back to Home"}
             </Link>
           </div>
         </div>
 
         {/* Hero Banner */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-amber-200/90 shadow-md mb-8">
+        <div className="bg-white rounded-3xl p-5 sm:p-10 border border-amber-200/90 shadow-md mb-8">
           <div className="max-w-2xl">
             <span className="text-xs font-extrabold text-amber-700 uppercase tracking-widest">
               {lang === "hi"

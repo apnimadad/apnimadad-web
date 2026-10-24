@@ -283,12 +283,12 @@ export default function SubmitCasePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Status banner */}
       {user ? (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">
+            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
               ✓
             </div>
             <div>
@@ -302,15 +302,15 @@ export default function SubmitCasePage() {
           </div>
           <Link
             href="/dashboard"
-            className="text-xs font-bold text-emerald-800 hover:underline"
+            className="text-xs font-bold text-emerald-800 hover:underline self-start sm:self-auto"
           >
-            My Dashboard
+            My Dashboard →
           </Link>
         </div>
       ) : (
         <div className="mb-6 p-4 sm:p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-amber-100 text-amber-800 rounded-xl mt-0.5">
+            <div className="p-2 bg-amber-100 text-amber-800 rounded-xl mt-0.5 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -334,15 +334,15 @@ export default function SubmitCasePage() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">{t("needHelp")}</h1>
-      <p className="text-slate-600 mb-8">
+      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">{t("needHelp")}</h1>
+      <p className="text-xs sm:text-sm text-slate-600 mb-6 sm:mb-8 leading-relaxed">
         Fill carefully. Photos & videos are auto-compressed (approx 100 KB images, optimized 720p videos)
         directly in your browser before upload.
       </p>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6"
+        className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm space-y-6"
       >
         {/* Personal */}
         <fieldset>

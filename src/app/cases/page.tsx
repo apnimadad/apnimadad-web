@@ -175,15 +175,15 @@ export default function CasesPage() {
             </div>
           </div>
 
-          {/* Category Pill Buttons */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full no-scrollbar">
+          {/* Category Pill Buttons & Status Toggle */}
+          <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full no-scrollbar -mx-1 px-1">
               {categories.map((cat) => (
                 <button
                   key={cat.key}
                   type="button"
                   onClick={() => setCategory(cat.key)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full transition shrink-0 ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full transition shrink-0 cursor-pointer ${
                     category === cat.key
                       ? "bg-blue-800 text-white shadow-xs"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -196,13 +196,13 @@ export default function CasesPage() {
             </div>
 
             {/* Status Segmented Buttons */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-full text-xs">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-full text-xs self-start md:self-auto shrink-0 shadow-2xs">
               {(["approved", "funded", "all"] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setStatus(s)}
-                  className={`px-3 py-1 rounded-full font-bold transition ${
+                  className={`px-3 py-1.5 rounded-full font-bold transition cursor-pointer text-xs ${
                     status === s
                       ? "bg-white text-slate-900 shadow-xs"
                       : "text-slate-600 hover:text-slate-900"

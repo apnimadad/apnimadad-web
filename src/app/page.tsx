@@ -101,10 +101,10 @@ export default function HomePage() {
               </p>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-3.5 pt-2 max-w-sm sm:max-w-none mx-auto">
                 <Link
                   href="/cases"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base"
+                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base w-full sm:w-auto"
                 >
                   <HeartHandshake className="w-5 h-5" />
                   <span>{t("browseCases")}</span>
@@ -112,7 +112,7 @@ export default function HomePage() {
 
                 <Link
                   href="/submit"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold rounded-2xl transition hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold rounded-2xl transition hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base w-full sm:w-auto"
                 >
                   <PlusCircle className="w-5 h-5 text-amber-400" />
                   <span>{t("submitCase")}</span>
@@ -120,49 +120,49 @@ export default function HomePage() {
               </div>
 
               {/* Trust Indicators Pill List */}
-              <div className="pt-6 border-t border-white/10 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs text-slate-400 font-medium">
+              <div className="pt-6 border-t border-white/10 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[11px] sm:text-xs text-slate-400 font-medium">
                 <div className="flex items-center gap-1.5 text-emerald-400">
-                  <ShieldCheck className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4 shrink-0" />
                   <span>Physically Verified Cases</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-amber-300">
-                  <QrCode className="w-4 h-4" />
+                  <QrCode className="w-4 h-4 shrink-0" />
                   <span>Direct UPI / Bank Transfer</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-sky-400">
-                  <Lock className="w-4 h-4" />
+                  <Lock className="w-4 h-4 shrink-0" />
                   <span>No Middlemen Or Wallet</span>
                 </div>
               </div>
             </div>
 
             {/* Right Interactive Visual Card (5 cols) */}
-            <div className="lg:col-span-5 flex justify-center">
+            <div className="lg:col-span-5 flex justify-center w-full">
               <div className="relative w-full max-w-sm">
                 <div className="absolute -inset-2 bg-gradient-to-r from-amber-400 via-emerald-500 to-blue-500 rounded-3xl blur-xl opacity-30 animate-pulse" />
 
-                <div className="relative bg-slate-900/90 backdrop-blur-xl border border-white/15 rounded-3xl p-6 shadow-2xl text-white space-y-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="relative bg-slate-900/90 backdrop-blur-xl border border-white/15 rounded-3xl p-4 sm:p-6 shadow-2xl text-white space-y-4 sm:space-y-5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       <Image
                         src="/logo.jpeg"
                         alt="Logo"
-                        width={44}
-                        height={44}
-                        className="rounded-full border-2 border-amber-400"
+                        width={40}
+                        height={40}
+                        className="w-10 h-10 rounded-full border-2 border-amber-400 shrink-0"
                       />
-                      <div>
-                        <div className="font-extrabold text-sm text-white">Direct Transfer Preview</div>
-                        <div className="text-[11px] text-emerald-400 font-bold">100% Transparent Model</div>
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-xs sm:text-sm text-white truncate">Direct Transfer Preview</div>
+                        <div className="text-[10px] sm:text-[11px] text-emerald-400 font-bold truncate">100% Transparent Model</div>
                       </div>
                     </div>
-                    <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30">
+                    <span className="bg-emerald-500/20 text-emerald-300 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap shrink-0">
                       DIRECT TRANSFER
                     </span>
                   </div>
 
                   {/* Flow Simulation Box */}
-                  <div className="bg-slate-950/70 rounded-2xl p-4 border border-white/10 space-y-3">
+                  <div className="bg-slate-950/70 rounded-2xl p-3 sm:p-4 border border-white/10 space-y-2.5 sm:space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-400">Donor Gives</span>
                       <span className="font-bold text-white">₹1,000</span>
@@ -182,8 +182,8 @@ export default function HomePage() {
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-3">
-                    <Smartphone className="w-8 h-8 text-amber-400 shrink-0" />
-                    <div className="text-xs text-slate-300">
+                    <Smartphone className="w-7 h-7 sm:w-8 sm:h-8 text-amber-400 shrink-0" />
+                    <div className="text-[11px] sm:text-xs text-slate-300 leading-snug">
                       Open Google Pay, PhonePe, or Paytm and scan the patient&apos;s verified UPI QR directly.
                     </div>
                   </div>
@@ -198,9 +198,9 @@ export default function HomePage() {
       <TopDonorsTicker />
 
       {/* Transparency Comparison Table (Apni Madad vs Traditional Platforms) */}
-      <section className="py-16 sm:py-20 bg-white border-b border-slate-200">
+      <section className="py-14 sm:py-20 bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
             <span className="text-xs font-bold uppercase tracking-wider text-blue-800 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
               Why We Are Different
             </span>
@@ -212,44 +212,49 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[620px] bg-slate-50/70 rounded-3xl border border-slate-200 p-2 sm:p-4">
+          {/* Mobile Swipe Hint */}
+          <div className="flex sm:hidden items-center justify-center gap-1.5 text-xs text-blue-700 font-semibold mb-2 bg-blue-50/70 py-1.5 px-3 rounded-full border border-blue-200 text-center">
+            <span>← स्वाइप करके तुलना देखें / Scroll horizontally to compare →</span>
+          </div>
+
+          <div className="overflow-x-auto no-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="min-w-[560px] sm:min-w-[620px] bg-slate-50/70 rounded-2xl sm:rounded-3xl border border-slate-200 p-2 sm:p-4">
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[11px]">
-                    <th className="py-4 px-4">Feature</th>
-                    <th className="py-4 px-4 bg-blue-50/80 text-blue-900 rounded-t-2xl font-black text-sm">
+                  <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] sm:text-[11px]">
+                    <th className="py-3 sm:py-4 px-3 sm:px-4">Feature</th>
+                    <th className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/80 text-blue-900 rounded-t-2xl font-black text-xs sm:text-sm">
                       Apni Madad Foundation
                     </th>
-                    <th className="py-4 px-4 text-slate-500">Other Crowdfunding Sites</th>
+                    <th className="py-3 sm:py-4 px-3 sm:px-4 text-slate-500">Other Crowdfunding Sites</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80">
                   <tr>
-                    <td className="py-4 px-4 font-bold text-slate-800">Platform Commission</td>
-                    <td className="py-4 px-4 bg-blue-50/50 font-black text-emerald-700">₹0 (Zero Commission)</td>
-                    <td className="py-4 px-4 text-rose-600 font-bold">5% to 10% deducted</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Platform Commission</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-black text-emerald-700">₹0 (Zero Commission)</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-rose-600 font-bold">5% to 10% deducted</td>
                   </tr>
                   <tr>
-                    <td className="py-4 px-4 font-bold text-slate-800">Where Does Money Go?</td>
-                    <td className="py-4 px-4 bg-blue-50/50 font-bold text-slate-900">
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Where Does Money Go?</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-bold text-slate-900">
                       Directly into Beneficiary / Hospital Account
                     </td>
-                    <td className="py-4 px-4 text-slate-600">Held in platform escrow wallet</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-slate-600">Held in platform escrow wallet</td>
                   </tr>
                   <tr>
-                    <td className="py-4 px-4 font-bold text-slate-800">Fund Access Speed</td>
-                    <td className="py-4 px-4 bg-blue-50/50 font-bold text-emerald-700">
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Fund Access Speed</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-bold text-emerald-700">
                       Instant (Same Second via UPI)
                     </td>
-                    <td className="py-4 px-4 text-slate-600">7 to 15 days bank payout wait</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-slate-600">7 to 15 days bank payout wait</td>
                   </tr>
                   <tr>
-                    <td className="py-4 px-4 font-bold text-slate-800">Ground Physical Verification</td>
-                    <td className="py-4 px-4 bg-blue-50/50 font-bold text-slate-900">
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Ground Physical Verification</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-bold text-slate-900">
                       Audit officers visit hospital & home
                     </td>
-                    <td className="py-4 px-4 text-slate-600">Mostly automated online upload</td>
+                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-slate-600">Mostly automated online upload</td>
                   </tr>
                 </tbody>
               </table>

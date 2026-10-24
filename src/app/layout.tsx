@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageContext";
@@ -17,6 +17,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#090d16",
+};
 
 export const metadata: Metadata = {
   title: "Apni Madad Foundation | Direct Help, Zero Commission",
@@ -108,7 +115,7 @@ export default function RootLayout({
           <LanguageProvider>
             <SiteSettingsProvider>
               <Header />
-              <main suppressHydrationWarning className="flex-1">{children}</main>
+              <main suppressHydrationWarning className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
               <Footer />
             </SiteSettingsProvider>
           </LanguageProvider>

@@ -396,29 +396,29 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 bg-slate-50/60">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-sm border border-slate-200/90 p-6 sm:p-8">
+    <div className="min-h-[85vh] flex items-center justify-center py-8 sm:py-12 px-3 sm:px-6 bg-slate-50/60">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-sm border border-slate-200/90 p-5 sm:p-8">
         
         {/* Role Selection Tabs */}
         <div className="mb-6">
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
             {t.selectRole}
           </label>
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-2xl">
             <button
               type="button"
               onClick={() => {
                 setRole("donor");
                 setMessage(null);
               }}
-              className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                 role === "donor"
                   ? "bg-white text-blue-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Heart className="w-3.5 h-3.5" />
-              <span>{t.donorRole}</span>
+              <Heart className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{t.donorRole}</span>
             </button>
 
             <button
@@ -427,14 +427,14 @@ function LoginForm() {
                 setRole("beneficiary");
                 setMessage(null);
               }}
-              className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                 role === "beneficiary"
                   ? "bg-white text-emerald-800 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <User className="w-3.5 h-3.5" />
-              <span>{t.beneficiaryRole}</span>
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{t.beneficiaryRole}</span>
             </button>
 
             <button
@@ -444,14 +444,14 @@ function LoginForm() {
                 setAuthTab("signin");
                 setMessage(null);
               }}
-              className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                 role === "admin"
                   ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>{t.adminRole}</span>
+              <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{t.adminRole}</span>
             </button>
           </div>
         </div>

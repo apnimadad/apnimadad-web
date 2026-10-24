@@ -772,7 +772,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Beneficiary Tab Navigation */}
-            <div className="flex border-b border-slate-200 overflow-x-auto gap-2 scrollbar-none">
+            <div className="flex border-b border-slate-200 overflow-x-auto gap-2 no-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0">
               <button
                 type="button"
                 onClick={() => setBeneficiaryTab("my_cases")}
@@ -1695,7 +1695,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Donor Tab Navigation */}
-            <div className="flex border-b border-slate-200 overflow-x-auto gap-2 scrollbar-none">
+            <div className="flex border-b border-slate-200 overflow-x-auto gap-2 no-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0">
               <button
                 type="button"
                 onClick={() => setDonorTab("cases")}

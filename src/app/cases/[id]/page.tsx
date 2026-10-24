@@ -611,14 +611,14 @@ export default function CaseDetailPage() {
       </main>
 
       {/* Sticky Mobile Donate Bar (Visible only on mobile/tablet) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-2xl flex items-center justify-between gap-3">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 pb-safe shadow-2xl flex items-center justify-between gap-3">
         <div>
-          <div className="text-xs text-slate-500 font-medium">Goal Remaining</div>
-          <div className="text-base font-extrabold text-slate-900">{formatINR(remaining)}</div>
+          <div className="text-[11px] text-slate-500 font-medium leading-none">Goal Remaining</div>
+          <div className="text-base font-black text-slate-900 mt-0.5">{formatINR(remaining)}</div>
         </div>
         <a
           href="#donate"
-          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-sm text-xs flex items-center gap-1.5"
+          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-sm text-xs flex items-center gap-1.5 active:scale-95 transition"
         >
           <QrCode className="w-4 h-4" />
           <span>Donate Direct</span>
@@ -627,8 +627,8 @@ export default function CaseDetailPage() {
 
       {/* Document View Modal */}
       {selectedDoc && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col animate-modal">
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-modal">
             <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">

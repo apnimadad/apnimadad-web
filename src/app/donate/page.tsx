@@ -44,17 +44,17 @@ export default function DonatePage() {
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white py-12 sm:py-16">
+      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold text-emerald-400 mb-3 border border-white/15">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Zero-Commission Direct Transfer Pledge</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-3">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-3">
               {t("donate")} Directly To Beneficiaries
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-base text-slate-300 leading-relaxed">
               {lang === "hi"
                 ? "हमारी वेबसाइट पर दिए गए किसी भी सत्यापित केस को चुनें और सीधे उनके बैंक खाते या यूपीआई आईडी में दान करें। हमारा एनजीओ कोई कमीशन या कट नहीं लेता।"
                 : "Select any verified emergency below and pay directly into the patient's UPI or hospital account. 100% of your money reaches the family in need."}
@@ -63,9 +63,9 @@ export default function DonatePage() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Direct Process Callout */}
-        <div className="grid md:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 sm:mb-10">
           <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-start gap-3.5">
             <div className="p-2.5 bg-blue-50 text-blue-700 rounded-xl shrink-0">
               <QrCode className="w-5 h-5" />

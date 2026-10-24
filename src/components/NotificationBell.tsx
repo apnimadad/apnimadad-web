@@ -228,7 +228,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 sm:right-0 mt-2 w-84 sm:w-96 max-w-[calc(100vw-20px)] bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-x-2 top-20 sm:absolute sm:top-auto sm:inset-x-auto sm:right-0 mt-2 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* Header */}
           <div className="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">

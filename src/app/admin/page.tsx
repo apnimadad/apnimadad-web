@@ -921,7 +921,7 @@ export default function AdminPage() {
           </div>
 
           {/* Section Switcher Tabs */}
-          <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-4 mt-4">
+          <div className="flex items-center gap-2.5 border-t border-slate-100 pt-4 mt-4 overflow-x-auto no-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0 flex-nowrap sm:flex-wrap">
             <button
               type="button"
               onClick={() => setAdminSection("cases")}

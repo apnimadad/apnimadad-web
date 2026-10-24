@@ -139,14 +139,14 @@ export default function WomenHelpPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50/70 via-slate-50 to-white pb-24">
       {/* Quick Emergency Exit Bar */}
-      <div className="bg-rose-900 text-rose-100 py-2.5 px-4 text-xs">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-medium">
+      <div className="bg-rose-900 text-rose-100 py-2.5 px-3 sm:px-4 text-xs">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 font-medium min-w-0">
             <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0" />
-            <span>
+            <span className="truncate sm:whitespace-normal">
               {lang === "hi"
-                ? "यदि आप सुरक्षित महसूस न करें तो तुरंत बाहर निकलने के लिए Quick Exit दबाएं:"
-                : "If you feel unsafe or need to close this page immediately, tap Quick Exit:"}
+                ? "सुरक्षित बाहर निकलने के लिए Quick Exit दबाएं:"
+                : "Need to close quickly? Tap Quick Exit:"}
             </span>
           </div>
           <button
@@ -160,11 +160,11 @@ export default function WomenHelpPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10">
         {/* Header Breadcrumb & Status & Language Switch */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-rose-100/80 border border-rose-300 text-rose-900 rounded-full text-xs font-bold shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-rose-700" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-rose-100/80 border border-rose-300 text-rose-900 rounded-full text-xs font-bold shadow-2xs self-start sm:self-auto">
+            <ShieldCheck className="w-4 h-4 text-rose-700 shrink-0" />
             <span>
               {lang === "hi"
                 ? "100% गोपनीय व सुरक्षित सहायता मंच (Safe & Secure)"
@@ -172,14 +172,14 @@ export default function WomenHelpPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             {/* Language Switcher Pill */}
             <div className="inline-flex items-center bg-white p-1 rounded-xl border border-rose-200 shadow-2xs text-xs font-semibold">
               <Globe className="w-3.5 h-3.5 text-rose-500 ml-1.5 mr-1" />
               <button
                 type="button"
                 onClick={() => setLang("en")}
-                className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                className={`px-2.5 py-1 rounded-lg transition-all text-xs cursor-pointer ${
                   lang === "en"
                     ? "bg-rose-600 text-white font-bold shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
@@ -190,7 +190,7 @@ export default function WomenHelpPage() {
               <button
                 type="button"
                 onClick={() => setLang("hi")}
-                className={`px-2.5 py-1 rounded-lg transition-all text-xs ${
+                className={`px-2.5 py-1 rounded-lg transition-all text-xs cursor-pointer ${
                   lang === "hi"
                     ? "bg-rose-600 text-white font-bold shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
@@ -204,13 +204,13 @@ export default function WomenHelpPage() {
               href="/"
               className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
             >
-              {lang === "hi" ? "होम पेज पर वापस जाएं" : "Back to Home"}
+              {lang === "hi" ? "होम पेज" : "Back to Home"}
             </Link>
           </div>
         </div>
 
         {/* Hero Section */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-rose-200/80 shadow-md mb-8">
+        <div className="bg-white rounded-3xl p-5 sm:p-10 border border-rose-200/80 shadow-md mb-8">
           <div className="max-w-2xl">
             <span className="text-xs font-extrabold text-rose-600 uppercase tracking-widest">
               {lang === "hi"

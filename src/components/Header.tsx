@@ -100,27 +100,27 @@ export default function Header() {
             <Link
               href="/"
               suppressHydrationWarning
-              className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
+              className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0"
             >
               <span className="relative shrink-0 block">
                 <Image
                   src="/logo.jpeg"
                   alt="Apni Madad Foundation Logo"
-                  width={42}
-                  height={42}
+                  width={40}
+                  height={40}
                   priority
-                  className="rounded-full border border-slate-200 shadow-xs group-hover:scale-105 transition duration-200"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200 shadow-xs group-hover:scale-105 transition duration-200"
                 />
                 <span className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-0.5 rounded-full ring-2 ring-white">
-                  <ShieldCheck className="w-3 h-3" />
+                  <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </span>
               </span>
-              <span className="block leading-tight">
-                <span className="block font-black text-base sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition">
+              <span className="block leading-tight min-w-0">
+                <span className="block font-black text-sm sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition truncate">
                   Apni Madad
                 </span>
-                <span className="block text-[9px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase whitespace-nowrap">
-                  FOUNDATION · 100% DIRECT HELP
+                <span className="block text-[8px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase truncate">
+                  <span className="hidden xs:inline sm:inline">FOUNDATION · </span>100% DIRECT HELP
                 </span>
               </span>
             </Link>
@@ -192,20 +192,20 @@ export default function Header() {
             </nav>
 
             {/* 3. Right: Action Controls (Always inside screen, shrink-0) */}
-            <div className="flex items-center gap-2 xl:gap-2.5 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-2.5 shrink-0">
               {/* Notifications: ONLY visible after login */}
               {user && <NotificationBell />}
 
-              {/* Language Switcher: Compact & sleek */}
+              {/* Language Switcher: Full pill on sm+, compact toggle on mobile */}
               <div
-                className="inline-flex items-center bg-slate-100/90 p-0.5 sm:p-1 rounded-full border border-slate-200/90 text-xs font-semibold shadow-2xs whitespace-nowrap h-9"
+                className="hidden sm:inline-flex items-center bg-slate-100/90 p-0.5 sm:p-1 rounded-full border border-slate-200/90 text-xs font-semibold shadow-2xs whitespace-nowrap h-9"
                 role="group"
                 aria-label="Language selector"
               >
                 <button
                   type="button"
                   onClick={() => setLang("en")}
-                  className={`inline-flex items-center gap-1 px-2.5 h-7 rounded-full transition-all text-xs font-bold leading-none ${
+                  className={`inline-flex items-center gap-1 px-2.5 h-7 rounded-full transition-all text-xs font-bold leading-none cursor-pointer ${
                     lang === "en"
                       ? "bg-white text-blue-700 shadow-xs"
                       : "text-slate-600 hover:text-slate-900"
@@ -218,7 +218,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setLang("hi")}
-                  className={`inline-flex items-center px-2.5 h-7 rounded-full transition-all text-xs font-bold leading-none ${
+                  className={`inline-flex items-center px-2.5 h-7 rounded-full transition-all text-xs font-bold leading-none cursor-pointer ${
                     lang === "hi"
                       ? "bg-white text-blue-700 shadow-xs"
                       : "text-slate-600 hover:text-slate-900"
@@ -228,6 +228,17 @@ export default function Header() {
                   <span>हिंदी</span>
                 </button>
               </div>
+
+              {/* Mobile Quick Language Toggle (<sm only) */}
+              <button
+                type="button"
+                onClick={() => setLang(lang === "en" ? "hi" : "en")}
+                className="sm:hidden inline-flex items-center gap-1 px-2 h-8 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-extrabold text-blue-700 cursor-pointer shadow-2xs shrink-0"
+                aria-label="Toggle language"
+              >
+                <Globe className="w-3 h-3 text-blue-600" />
+                <span>{lang === "en" ? "EN" : "हिं"}</span>
+              </button>
 
               {/* Case 1: User is Logged In */}
               {user ? (
@@ -361,7 +372,7 @@ export default function Header() {
                   {/* Primary Donate CTA Button: Guaranteed inside viewport */}
                   <Link
                     href="/cases"
-                    className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 h-9 rounded-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
+                    className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 h-8 sm:h-9 rounded-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
                   >
                     <Heart className="w-3.5 h-3.5 fill-white text-white" />
                     <span>{lang === "hi" ? "दान करें" : "Donate"}</span>
@@ -369,11 +380,12 @@ export default function Header() {
                 </div>
               )}
 
-              {/* Mobile Hamburger Toggle */}
+              {/* Mobile Hamburger Toggle (44x44px accessible touch target) */}
               <button
-                className="lg:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition"
+                className="lg:hidden w-10 h-10 flex items-center justify-center text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer shrink-0"
                 onClick={() => setMobileOpen(!mobileOpen)}
-                aria-label="Open menu"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileOpen}
               >
                 {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -383,15 +395,26 @@ export default function Header() {
 
         {/* Mobile Slide-down Drawer */}
         {mobileOpen && (
-          <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-xl animate-modal">
+          <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-8 space-y-2.5 shadow-xl animate-modal max-h-[calc(100vh-5rem)] overflow-y-auto">
+            {/* Direct Donate Primary Mobile Action */}
+            <Link
+              href="/cases"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white font-bold text-sm shadow-sm"
+            >
+              <Heart className="w-4 h-4 fill-white text-white" />
+              <span>{lang === "hi" ? "दान करें (सभी केस देखें)" : "Donate (Browse Cases)"}</span>
+            </Link>
+
             {/* Mobile Verified Cases */}
             <Link
               href="/cases"
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition ${
                 pathname.startsWith("/cases") ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>{lang === "hi" ? "सत्यापित केस" : "Verified Cases"}</span>
               </span>
@@ -404,11 +427,12 @@ export default function Header() {
             {/* Mobile Woman Help */}
             <Link
               href="/women-help"
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition ${
                 pathname === "/women-help" ? "bg-rose-50 text-rose-900 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2.5">
                 <Lock className="w-4 h-4 text-rose-600" />
                 <span>{lang === "hi" ? "महिला सहायता" : "Woman Help"}</span>
               </span>
@@ -420,11 +444,12 @@ export default function Header() {
             {/* Mobile Satta Mukt */}
             <Link
               href="/satta-mukt"
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition ${
                 pathname === "/satta-mukt" ? "bg-amber-50 text-amber-950 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-amber-600" />
                 <span>{lang === "hi" ? "सट्टा मुक्त अभियान" : "De-Addiction Support"}</span>
               </span>
@@ -436,7 +461,8 @@ export default function Header() {
             {/* Mobile Need Help */}
             <Link
               href="/submit"
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition ${
                 pathname.startsWith("/submit") ? "bg-amber-50 text-amber-900 font-bold" : "text-slate-800 hover:bg-slate-50"
               }`}
             >
@@ -450,6 +476,7 @@ export default function Header() {
                 <>
                   <Link
                     href={role === "admin" ? "/admin" : "/dashboard"}
+                    onClick={() => setMobileOpen(false)}
                     className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-100 text-slate-900 font-bold text-sm"
                   >
                     <span>Dashboard ({profile?.full_name?.split(" ")[0] || "User"})</span>
@@ -459,8 +486,11 @@ export default function Header() {
                   </Link>
 
                   <button
-                    onClick={() => signOut()}
-                    className="flex items-center gap-2 px-3.5 py-2 text-rose-600 font-semibold hover:bg-rose-50 rounded-xl text-left w-full text-sm"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      signOut();
+                    }}
+                    className="flex items-center gap-2 px-3.5 py-2 text-rose-600 font-semibold hover:bg-rose-50 rounded-xl text-left w-full text-sm cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
@@ -470,18 +500,21 @@ export default function Header() {
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   <Link
                     href="/login?role=donor"
+                    onClick={() => setMobileOpen(false)}
                     className="py-2.5 px-2 rounded-xl border border-slate-200 text-slate-800 font-bold text-center text-xs hover:bg-slate-50"
                   >
                     {lang === "hi" ? "दानदाता" : "Donor"}
                   </Link>
                   <Link
                     href="/login?role=beneficiary"
+                    onClick={() => setMobileOpen(false)}
                     className="py-2.5 px-2 rounded-xl border border-slate-200 text-slate-800 font-bold text-center text-xs hover:bg-slate-50"
                   >
                     {lang === "hi" ? "यूजर" : "User"}
                   </Link>
                   <Link
                     href="/login?role=admin"
+                    onClick={() => setMobileOpen(false)}
                     className="py-2.5 px-2 rounded-xl border border-slate-200 text-slate-800 font-bold text-center text-xs hover:bg-slate-50"
                   >
                     {lang === "hi" ? "व्यवस्थापक" : "Admin"}
@@ -490,7 +523,7 @@ export default function Header() {
               )}
 
               {/* Language Switcher in Mobile Drawer */}
-              <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-200">
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 mt-1">
                 <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
                   <Globe className="w-4 h-4 text-blue-600" />
                   <span>{lang === "hi" ? "भाषा / Language" : "Language"}</span>
@@ -499,7 +532,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => setLang("en")}
-                    className={`px-3 py-1 text-xs font-bold rounded-full transition ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded-full transition cursor-pointer ${
                       lang === "en" ? "bg-blue-700 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
@@ -508,7 +541,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => setLang("hi")}
-                    className={`px-3 py-1 text-xs font-bold rounded-full transition ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded-full transition cursor-pointer ${
                       lang === "hi" ? "bg-blue-700 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
