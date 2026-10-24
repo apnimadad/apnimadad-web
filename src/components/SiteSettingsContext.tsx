@@ -42,11 +42,21 @@ export interface SiteAnnouncement {
   linkUrl?: string;
 }
 
+export interface DirectDonationOption {
+  enabled: boolean;
+  upiId: string;
+  accountName: string;
+  qrCodeUrl: string;
+  title: string;
+  subtitle: string;
+}
+
 export interface SiteSettings {
   heroBadgeText: string;
   heroTitle: string;
   heroSubtitle: string;
   announcement: SiteAnnouncement;
+  directDonation: DirectDonationOption;
   helplinePhone: string;
   whatsappHelpline: string;
   totalLivesImpacted: number;
@@ -65,6 +75,14 @@ const defaultSiteSettings: SiteSettings = {
     linkText: "View Cases",
     linkUrl: "/cases",
   },
+  directDonation: {
+    enabled: true,
+    upiId: "akkyc5@ybl",
+    accountName: "ANKIT KUMAR",
+    qrCodeUrl: "/foundation-qr.jpg",
+    title: "Direct Foundation Donation",
+    subtitle: "Scan with PhonePe, Google Pay, or Paytm to support our zero-commission medical relief mission directly.",
+  },
   helplinePhone: "+91 98765 43210",
   whatsappHelpline: "919876543210",
   totalLivesImpacted: 2450,
@@ -80,6 +98,7 @@ interface SiteSettingsContextType {
   resetDonors: () => void;
   updateSettings: (updates: Partial<SiteSettings>) => void;
   updateAnnouncement: (updates: Partial<SiteAnnouncement>) => void;
+  updateDirectDonation: (updates: Partial<DirectDonationOption>) => void;
   resetSettings: () => void;
 }
 
@@ -113,6 +132,10 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
             announcement: {
               ...prev.announcement,
               ...(parsed.announcement || {}),
+            },
+            directDonation: {
+              ...prev.directDonation,
+              ...(parsed.directDonation || {}),
             },
           }));
         }
@@ -196,6 +219,20 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
     [settings, saveSettings]
   );
 
+  const updateDirectDonation = useCallback(
+    (updates: Partial<DirectDonationOption>) => {
+      const updated: SiteSettings = {
+        ...settings,
+        directDonation: {
+          ...settings.directDonation,
+          ...updates,
+        },
+      };
+      saveSettings(updated);
+    },
+    [settings, saveSettings]
+  );
+
   const resetSettings = useCallback(() => {
     saveSettings(defaultSiteSettings);
   }, [saveSettings]);
@@ -211,6 +248,7 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         resetDonors,
         updateSettings,
         updateAnnouncement,
+        updateDirectDonation,
         resetSettings,
       }}
     >

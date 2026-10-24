@@ -286,10 +286,41 @@ export default function AdminPage() {
     }
   };
 
+  const [uploadingFoundationQr, setUploadingFoundationQr] = useState(false);
+
+  const handleUploadFoundationQr = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFoundationQr(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-photos");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setSettingsForm((prev) => ({
+          ...prev,
+          directDonation: {
+            ...prev.directDonation,
+            qrCodeUrl: data.url,
+          },
+        }));
+        showToast("Foundation QR code uploaded successfully!");
+      } else {
+        showToast(`Upload failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: unknown) {
+      showToast(`Upload error: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingFoundationQr(false);
+    }
+  };
+
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings(settingsForm);
-    showToast("Website announcements and helpline numbers saved successfully!");
+    showToast("Website settings and Direct Foundation Donation details saved!");
   };
 
   // Status counts
@@ -1977,6 +2008,275 @@ export default function AdminPage() {
                 className="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
               >
                 Save Announcement Settings
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Direct Foundation Donation & PhonePe QR Management */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2.5 bg-purple-100 text-purple-900 rounded-2xl">
+                <QrCode className="w-5 h-5 text-purple-800" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Direct Foundation Donation & PhonePe QR
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                    Point 3 Config
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Manage the PhonePe QR code and UPI ID (<strong className="text-slate-800">akkyc5@ybl</strong>) shown on the &quot;Direct Pay&quot; popup and /donate page.
+                </p>
+              </div>
+            </div>
+
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={settingsForm.directDonation?.enabled ?? true}
+                onChange={(e) =>
+                  setSettingsForm({
+                    ...settingsForm,
+                    directDonation: {
+                      ...(settingsForm.directDonation || {
+                        upiId: "akkyc5@ybl",
+                        accountName: "ANKIT KUMAR",
+                        qrCodeUrl: "/foundation-qr.jpg",
+                        title: "Direct Foundation Donation",
+                        subtitle: "Scan with PhonePe, Google Pay, or Paytm directly.",
+                      }),
+                      enabled: e.target.checked,
+                    },
+                  })
+                }
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-700"></div>
+              <span className="ml-2.5 text-xs font-bold text-slate-700">
+                {(settingsForm.directDonation?.enabled ?? true) ? "Active on Website" : "Disabled / Hidden"}
+              </span>
+            </label>
+          </div>
+
+          <form onSubmit={handleSaveSettings} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Foundation Official UPI ID *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={settingsForm.directDonation?.upiId || "akkyc5@ybl"}
+                    onChange={(e) =>
+                      setSettingsForm({
+                        ...settingsForm,
+                        directDonation: {
+                          ...(settingsForm.directDonation || {
+                            enabled: true,
+                            accountName: "ANKIT KUMAR",
+                            qrCodeUrl: "/foundation-qr.jpg",
+                            title: "Direct Foundation Donation",
+                            subtitle: "Scan with PhonePe, Google Pay, or Paytm directly.",
+                          }),
+                          upiId: e.target.value.trim(),
+                        },
+                      })
+                    }
+                    placeholder="e.g. akkyc5@ybl"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-bold text-purple-900 outline-none focus:ring-2 focus:ring-purple-700"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Default: <code className="font-bold text-slate-600">akkyc5@ybl</code>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Payee / Bank Account Holder Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={settingsForm.directDonation?.accountName || "ANKIT KUMAR"}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      directDonation: {
+                        ...(settingsForm.directDonation || {
+                          enabled: true,
+                          upiId: "akkyc5@ybl",
+                          qrCodeUrl: "/foundation-qr.jpg",
+                          title: "Direct Foundation Donation",
+                          subtitle: "Scan with PhonePe, Google Pay, or Paytm directly.",
+                        }),
+                        accountName: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="e.g. ANKIT KUMAR"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-purple-700"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Displayed as payee name during UPI intent &amp; on QR modal.
+                </p>
+              </div>
+            </div>
+
+            {/* QR Code Image Preview and Upload Section */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                PhonePe / UPI QR Code Image
+              </label>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative w-28 h-36 rounded-2xl overflow-hidden border-2 border-purple-800 bg-black shrink-0 shadow-md">
+                  <Image
+                    src={settingsForm.directDonation?.qrCodeUrl || "/foundation-qr.jpg"}
+                    alt="Direct Foundation QR Code"
+                    fill
+                    sizes="112px"
+                    className="object-contain"
+                  />
+                </div>
+
+                <div className="flex-1 w-full space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingFoundationQr ? "Uploading QR..." : "Upload New QR Image"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleUploadFoundationQr}
+                        disabled={uploadingFoundationQr}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSettingsForm({
+                          ...settingsForm,
+                          directDonation: {
+                            ...(settingsForm.directDonation || {
+                              enabled: true,
+                              upiId: "akkyc5@ybl",
+                              accountName: "ANKIT KUMAR",
+                              title: "Direct Foundation Donation",
+                              subtitle: "Scan with PhonePe, Google Pay, or Paytm directly.",
+                            }),
+                            qrCodeUrl: "/foundation-qr.jpg",
+                          },
+                        })
+                      }
+                      className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition"
+                    >
+                      Reset to Default PhonePe QR
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Or Paste Direct Image URL:
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsForm.directDonation?.qrCodeUrl || "/foundation-qr.jpg"}
+                      onChange={(e) =>
+                        setSettingsForm({
+                          ...settingsForm,
+                          directDonation: {
+                            ...(settingsForm.directDonation || {
+                              enabled: true,
+                              upiId: "akkyc5@ybl",
+                              accountName: "ANKIT KUMAR",
+                              title: "Direct Foundation Donation",
+                              subtitle: "Scan with PhonePe, Google Pay, or Paytm directly.",
+                            }),
+                            qrCodeUrl: e.target.value.trim(),
+                          },
+                        })
+                      }
+                      placeholder="/foundation-qr.jpg"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono text-slate-700 outline-none focus:ring-2 focus:ring-purple-700"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Title and Subtitle */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Card Title
+                </label>
+                <input
+                  type="text"
+                  value={settingsForm.directDonation?.title || "Direct Foundation Donation"}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      directDonation: {
+                        ...(settingsForm.directDonation || {
+                          enabled: true,
+                          upiId: "akkyc5@ybl",
+                          accountName: "ANKIT KUMAR",
+                          qrCodeUrl: "/foundation-qr.jpg",
+                          subtitle: "Scan with PhonePe, Google Pay, or Paytm directly.",
+                        }),
+                        title: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Direct Foundation Donation"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-purple-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Card Subtitle / Description
+                </label>
+                <input
+                  type="text"
+                  value={settingsForm.directDonation?.subtitle || "Scan with PhonePe, Google Pay, or Paytm directly."}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      directDonation: {
+                        ...(settingsForm.directDonation || {
+                          enabled: true,
+                          upiId: "akkyc5@ybl",
+                          accountName: "ANKIT KUMAR",
+                          qrCodeUrl: "/foundation-qr.jpg",
+                          title: "Direct Foundation Donation",
+                        }),
+                        subtitle: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Scan with PhonePe, Google Pay, or Paytm directly."
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-purple-700"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
+              >
+                Save Direct Donation Settings
               </button>
             </div>
           </form>

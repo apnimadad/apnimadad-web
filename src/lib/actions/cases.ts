@@ -491,6 +491,63 @@ export async function uploadAdditionalDocument(
 }
 
 /**
+ * Beneficiary: Update case media (photo/video), UPI ID, QR code, bank details, and documents
+ */
+export async function updateBeneficiaryCaseMediaAndPayment(
+  caseId: string,
+  payload: {
+    upi_id?: string;
+    qr_code_url?: string | null;
+    bank_account?: string;
+    ifsc?: string;
+    photo_url?: string;
+    video_url?: string;
+    documents?: { name: string; type: string; url: string }[];
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createServiceClient() || (await createServerSupabase());
+  if (!supabase) return { success: false, error: "Database not connected" };
+
+  const updateFields: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.upi_id !== undefined) {
+    updateFields.upi_id = payload.upi_id.trim();
+  }
+
+  if (payload.qr_code_url !== undefined && payload.qr_code_url !== null) {
+    updateFields.qr_code_url = payload.qr_code_url;
+  } else if (payload.upi_id && payload.upi_id.trim().length > 0) {
+    // If upi_id provided but no custom QR, generate standard dynamic UPI QR
+    updateFields.qr_code_url = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=upi://pay?pa=${encodeURIComponent(
+      payload.upi_id.trim()
+    )}&cu=INR`;
+  }
+
+  if (payload.bank_account !== undefined) updateFields.bank_account = payload.bank_account;
+  if (payload.ifsc !== undefined) updateFields.ifsc = payload.ifsc;
+  if (payload.photo_url !== undefined) updateFields.photo_url = payload.photo_url;
+  if (payload.video_url !== undefined) updateFields.video_url = payload.video_url;
+  if (payload.documents !== undefined) updateFields.documents = payload.documents;
+
+  const { error } = await supabase
+    .from("cases")
+    .update(updateFields)
+    .eq("id", caseId);
+
+  if (error) {
+    console.error("updateBeneficiaryCaseMediaAndPayment error:", error);
+    return { success: false, error: error.message };
+  }
+
+  safeRevalidatePath(`/cases/${caseId}`);
+  safeRevalidatePath("/dashboard");
+  safeRevalidatePath("/admin");
+  return { success: true };
+}
+
+/**
  * Fetch donations for a specific donor from Supabase
  */
 export async function getUserDonations(donorId?: string): Promise<Record<string, unknown>[]> {

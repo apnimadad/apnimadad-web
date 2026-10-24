@@ -11,6 +11,7 @@ import {
   recordDonation,
   submitCase,
   uploadAdditionalDocument,
+  updateBeneficiaryCaseMediaAndPayment,
 } from "@/lib/actions/cases";
 import { Case, Category } from "@/types/database";
 import Link from "next/link";
@@ -158,6 +159,26 @@ export default function DashboardPage() {
   // Attach additional document to existing case state
   const [attachDocCategory, setAttachDocCategory] = useState("Hospital Estimation Bill");
   const [uploadingAttachDoc, setUploadingAttachDoc] = useState(false);
+
+  // Beneficiary Manage Case Modal State (Media, Files, QR, UPI)
+  const [manageCaseModal, setManageCaseModal] = useState<Case | null>(null);
+  const [manageForm, setManageForm] = useState({
+    upiId: "",
+    qrCodeUrl: "",
+    bankAccount: "",
+    ifsc: "",
+    photoUrl: "",
+    videoUrl: "",
+    documents: [] as { name: string; type: string; url: string }[],
+  });
+  const [manageActiveSection, setManageActiveSection] = useState<"docs" | "payment" | "media">("docs");
+  const [uploadingManageDoc, setUploadingManageDoc] = useState(false);
+  const [manageDocCategory, setManageDocCategory] = useState("Hospital Estimation Bill");
+  const [uploadingManagePhoto, setUploadingManagePhoto] = useState(false);
+  const [uploadingManageVideo, setUploadingManageVideo] = useState(false);
+  const [uploadingManageQr, setUploadingManageQr] = useState(false);
+  const [savingManageCase, setSavingManageCase] = useState(false);
+  const [manageToast, setManageToast] = useState<string | null>(null);
 
   // Direct UPI Donation Form state
   const [recordForm, setRecordForm] = useState({
@@ -493,6 +514,167 @@ export default function DashboardPage() {
       alert(`Error: ${err instanceof Error ? err.message : "Failed"}`);
     } finally {
       setUploadingAttachDoc(false);
+    }
+  };
+
+  // Open Beneficiary Manage Case Modal
+  const handleOpenManageMediaModal = (c: Case) => {
+    setManageCaseModal(c);
+    setManageForm({
+      upiId: c.upi_id || "",
+      qrCodeUrl: c.qr_code_url || "",
+      bankAccount: c.bank_account || "",
+      ifsc: c.ifsc || "",
+      photoUrl: c.photo_url || "",
+      videoUrl: c.video_url || "",
+      documents: (c.documents as { name: string; type: string; url: string }[]) || [],
+    });
+    setManageToast(null);
+    setManageActiveSection("docs");
+  };
+
+  // Upload Document inside Manage Modal
+  const handleUploadManageDoc = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingManageDoc(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-docs");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setManageForm((prev) => ({
+          ...prev,
+          documents: [
+            ...prev.documents,
+            { name: file.name, type: manageDocCategory, url: data.url },
+          ],
+        }));
+        setManageToast("Document uploaded! Click 'Save Changes' to commit to database.");
+        e.target.value = "";
+      } else {
+        alert(`Document upload failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: unknown) {
+      alert(`Upload error: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingManageDoc(false);
+    }
+  };
+
+  const handleRemoveManageDoc = (index: number) => {
+    setManageForm((prev) => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index),
+    }));
+    setManageToast("Document removed from list. Click 'Save Changes' to update.");
+  };
+
+  // Upload Patient Photo inside Manage Modal
+  const handleUploadManagePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingManagePhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-photos");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setManageForm((prev) => ({ ...prev, photoUrl: data.url }));
+        setManageToast("Photo uploaded! Click 'Save Changes' to commit.");
+      } else {
+        alert(`Photo upload failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: unknown) {
+      alert(`Upload error: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingManagePhoto(false);
+    }
+  };
+
+  // Upload Appeal Video inside Manage Modal
+  const handleUploadManageVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingManageVideo(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-videos");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setManageForm((prev) => ({ ...prev, videoUrl: data.url }));
+        setManageToast("Video uploaded! Click 'Save Changes' to commit.");
+      } else {
+        alert(`Video upload failed: ${data.error || "Please try pasting a video link instead."}`);
+      }
+    } catch (err: unknown) {
+      alert(`Upload error: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingManageVideo(false);
+    }
+  };
+
+  // Upload Custom QR Code Image inside Manage Modal
+  const handleUploadManageQr = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingManageQr(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "case-photos");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setManageForm((prev) => ({ ...prev, qrCodeUrl: data.url }));
+        setManageToast("QR Code image uploaded! Click 'Save Changes' to commit.");
+      } else {
+        alert(`QR upload failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: unknown) {
+      alert(`Upload error: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setUploadingManageQr(false);
+    }
+  };
+
+  // Save all media and payment updates to backend Supabase
+  const handleSaveManageCase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manageCaseModal) return;
+
+    setSavingManageCase(true);
+    setManageToast(null);
+    try {
+      const res = await updateBeneficiaryCaseMediaAndPayment(manageCaseModal.id, {
+        upi_id: manageForm.upiId,
+        qr_code_url: manageForm.qrCodeUrl || null,
+        bank_account: manageForm.bankAccount,
+        ifsc: manageForm.ifsc,
+        photo_url: manageForm.photoUrl,
+        video_url: manageForm.videoUrl,
+        documents: manageForm.documents,
+      });
+
+      if (res.success) {
+        await loadDashboardData();
+        setManageToast("All files, documents, QR code & UPI updated successfully in database!");
+        setTimeout(() => {
+          setManageCaseModal(null);
+        }, 1500);
+      } else {
+        alert(`Update failed: ${res.error || "Unknown error"}`);
+      }
+    } catch (err: unknown) {
+      alert(`Save error: ${err instanceof Error ? err.message : "Error"}`);
+    } finally {
+      setSavingManageCase(false);
     }
   };
 
@@ -924,17 +1106,25 @@ export default function DashboardPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex flex-wrap items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenManageMediaModal(c)}
+                                className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                              >
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>Upload Files, QR &amp; Media</span>
+                              </button>
                               <button
                                 onClick={() => setAttachDocModal(c.id)}
-                                className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                                className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                               >
                                 <Paperclip className="w-3.5 h-3.5" />
-                                <span>Attach Doctor Bill</span>
+                                <span>Attach Bill</span>
                               </button>
                               <Link
                                 href={`/cases/${c.id}`}
-                                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition flex items-center gap-1"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>Public Page</span>
@@ -2516,6 +2706,408 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: Comprehensive Beneficiary Files, UPI, QR & Media Manager */}
+      {manageCaseModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div 
+            className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto animate-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white p-5 sm:p-6 relative">
+              <button
+                type="button"
+                onClick={() => setManageCaseModal(null)}
+                className="absolute top-4 right-4 p-2 text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30 mb-2">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Beneficiary Verification &amp; Media Center</span>
+              </div>
+
+              <h3 className="text-lg sm:text-xl font-black text-white">
+                Manage Files, QR Codes &amp; Media
+              </h3>
+              <p className="text-xs text-slate-300 mt-0.5 truncate max-w-lg">
+                Appeal: <strong className="text-white">{manageCaseModal.title}</strong> ({manageCaseModal.patient_name})
+              </p>
+
+              {/* Sub-Tabs */}
+              <div className="flex items-center gap-2 mt-4 overflow-x-auto no-scrollbar pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setManageActiveSection("docs")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    manageActiveSection === "docs"
+                      ? "bg-white text-emerald-950 shadow-sm"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Documents &amp; Bills ({manageForm.documents.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setManageActiveSection("payment")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    manageActiveSection === "payment"
+                      ? "bg-white text-emerald-950 shadow-sm"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  }`}
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>UPI ID &amp; QR Code</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setManageActiveSection("media")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    manageActiveSection === "media"
+                      ? "bg-white text-emerald-950 shadow-sm"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  }`}
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span>Patient Photo &amp; Video</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Notification Toast */}
+            {manageToast && (
+              <div className="bg-emerald-50 border-b border-emerald-200 px-5 py-2.5 text-xs font-semibold text-emerald-900 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{manageToast}</span>
+              </div>
+            )}
+
+            {/* Modal Body Form */}
+            <form onSubmit={handleSaveManageCase} className="p-5 sm:p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* SECTION 1: DOCUMENTS & MEDICAL BILLS */}
+              {manageActiveSection === "docs" && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                      <Paperclip className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Upload New Document / Hospital Bill</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Document Type
+                        </label>
+                        <select
+                          value={manageDocCategory}
+                          onChange={(e) => setManageDocCategory(e.target.value)}
+                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-600 bg-white"
+                        >
+                          <option value="Hospital Estimation Bill">Hospital Estimation Bill (अस्पताल बिल)</option>
+                          <option value="Doctor Prescription & Reports">Doctor Prescription (डॉक्टर पर्ची)</option>
+                          <option value="Lab & Diagnostic Report">Lab / Diagnostic Report (जांच रिपोर्ट)</option>
+                          <option value="Aadhaar / ID Proof">Aadhaar / ID Proof (पहचान पत्र)</option>
+                          <option value="Discharge Summary">Discharge Summary (छुट्टी पर्ची)</option>
+                          <option value="Income Certificate">Income Certificate (आय प्रमाण पत्र)</option>
+                          <option value="Other Medical Proof">Other Proof (अन्य दस्तावेज)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Select File (PDF, JPG, PNG)
+                        </label>
+                        <label className="inline-flex w-full items-center justify-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{uploadingManageDoc ? "Uploading..." : "Browse & Upload File"}</span>
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            onChange={handleUploadManageDoc}
+                            disabled={uploadingManageDoc}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Existing Documents List */}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                      Attached Documents ({manageForm.documents.length})
+                    </h4>
+
+                    {manageForm.documents.length === 0 ? (
+                      <div className="p-6 text-center bg-slate-50 border border-dashed border-slate-300 rounded-2xl text-slate-400">
+                        <FileText className="w-6 h-6 mx-auto mb-1 text-slate-300" />
+                        <span className="text-xs font-medium">No documents uploaded yet.</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {manageForm.documents.map((doc, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="p-2 bg-blue-50 text-blue-700 rounded-lg shrink-0">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 truncate">
+                                  {doc.name || `Document #${idx + 1}`}
+                                </div>
+                                <div className="text-[10px] text-slate-500 font-medium">
+                                  {doc.type}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition inline-flex items-center gap-1"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>View</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveManageDoc(idx)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition"
+                                title="Remove Document"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* SECTION 2: UPI ID & QR CODE */}
+              {manageActiveSection === "payment" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Direct Beneficiary UPI ID
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. patient@oksbi or phone@ybl"
+                        value={manageForm.upiId}
+                        onChange={(e) => setManageForm({ ...manageForm, upiId: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-600"
+                      />
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        Donors send money straight to this UPI with 0% platform fee.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Bank Account Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 501002938475"
+                        value={manageForm.bankAccount}
+                        onChange={(e) => setManageForm({ ...manageForm, bankAccount: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-900 outline-none focus:ring-2 focus:ring-emerald-600"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Bank IFSC Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. SBIN0001234"
+                      value={manageForm.ifsc}
+                      onChange={(e) => setManageForm({ ...manageForm, ifsc: e.target.value.toUpperCase() })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono uppercase text-slate-900 outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+
+                  {/* Custom QR Code Upload and Preview */}
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Beneficiary Custom QR Code Image (Google Pay / PhonePe / Paytm)
+                    </label>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-slate-300 bg-white shrink-0 flex items-center justify-center shadow-xs">
+                        {manageForm.qrCodeUrl ? (
+                          <Image
+                            src={manageForm.qrCodeUrl}
+                            alt="Beneficiary QR Code"
+                            fill
+                            sizes="112px"
+                            className="object-contain"
+                          />
+                        ) : manageForm.upiId ? (
+                          <div className="text-center p-2">
+                            <QrCode className="w-8 h-8 text-blue-600 mx-auto mb-1" />
+                            <span className="text-[9px] text-slate-500 block font-bold">Auto QR</span>
+                          </div>
+                        ) : (
+                          <div className="text-center p-2 text-slate-400">
+                            <QrCode className="w-8 h-8 mx-auto mb-1 opacity-50" />
+                            <span className="text-[10px] block">No QR</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 w-full space-y-2">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{uploadingManageQr ? "Uploading QR..." : "Upload QR Code Image"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleUploadManageQr}
+                            disabled={uploadingManageQr}
+                          />
+                        </label>
+                        <p className="text-[11px] text-slate-500">
+                          Upload screenshot or photo of your PhonePe, Google Pay, or BHIM QR code. Donors will scan it directly.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SECTION 3: PATIENT PHOTO & VIDEO APPEAL */}
+              {manageActiveSection === "media" && (
+                <div className="space-y-4">
+                  {/* Photo Upload */}
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Patient / Beneficiary Photo
+                    </label>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-slate-300 bg-white shrink-0 shadow-xs">
+                        {manageForm.photoUrl ? (
+                          <Image
+                            src={manageForm.photoUrl}
+                            alt="Patient Photo"
+                            fill
+                            sizes="96px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                            No Photo
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 w-full space-y-2">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{uploadingManagePhoto ? "Uploading..." : "Upload Patient Photo"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleUploadManagePhoto}
+                            disabled={uploadingManagePhoto}
+                          />
+                        </label>
+                        <p className="text-[11px] text-slate-500">
+                          A clear picture of the patient in hospital or at home increases donor trust and verification speed.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Video Appeal Upload */}
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Video Appeal (Optional)
+                    </label>
+
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs">
+                          <Video className="w-3.5 h-3.5" />
+                          <span>{uploadingManageVideo ? "Uploading Video..." : "Upload Appeal Video File"}</span>
+                          <input
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={handleUploadManageVideo}
+                            disabled={uploadingManageVideo}
+                          />
+                        </label>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                          Or Paste Video URL (YouTube, Vimeo, Cloudinary, Drive):
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://..."
+                          value={manageForm.videoUrl}
+                          onChange={(e) => setManageForm({ ...manageForm, videoUrl: e.target.value })}
+                          className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono text-slate-900 outline-none focus:ring-2 focus:ring-emerald-600"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setManageCaseModal(null)}
+                  className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={savingManageCase}
+                  className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+                >
+                  {savingManageCase ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving to Database...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Save All Changes to Database</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/components/LanguageContext";
-import TopDonorsTicker from "@/components/TopDonorsTicker";
 import CaseCard from "@/components/CaseCard";
 import { useState, useEffect } from "react";
 import { Case } from "@/types/database";
@@ -193,9 +192,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Ticker */}
-      <TopDonorsTicker />
 
       {/* Transparency Comparison Table (Apni Madad vs Traditional Platforms) */}
       <section className="py-14 sm:py-20 bg-white border-b border-slate-200">

@@ -5,10 +5,18 @@ import { useLanguage } from "./LanguageContext";
 import { useSiteSettings } from "./SiteSettingsContext";
 import Image from "next/image";
 import { Sparkles, Heart } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function TopDonorsTicker() {
+  const pathname = usePathname();
   const { lang, t } = useLanguage();
   const { donors: liveDonors } = useSiteSettings();
+
+  // Hide on admin panel to keep workspace clean
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   // Duplicate for seamless infinite loop marquee
   const donors = liveDonors.length > 0 ? [...liveDonors, ...liveDonors, ...liveDonors] : [];
 

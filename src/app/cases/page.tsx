@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect } from "react";
 import CaseCard from "@/components/CaseCard";
 import { Case, Category, AgeGroup } from "@/types/database";
 import { useLanguage } from "@/components/LanguageContext";
-import TopDonorsTicker from "@/components/TopDonorsTicker";
 import { 
   Search, 
   Filter, 
@@ -110,8 +109,6 @@ export default function CasesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
-      <TopDonorsTicker />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Header Title Section */}
         <div className="max-w-3xl mb-8">

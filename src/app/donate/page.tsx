@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useLanguage } from "@/components/LanguageContext";
 import { useAuth } from "@/components/AuthContext";
+import { useSiteSettings } from "@/components/SiteSettingsContext";
 import CaseCard from "@/components/CaseCard";
 import { useState, useEffect } from "react";
 import { Case } from "@/types/database";
@@ -15,14 +17,36 @@ import {
   Lock,
   User,
   Loader2,
+  Copy,
+  Check,
+  Smartphone,
+  ExternalLink,
+  Heart
 } from "lucide-react";
 
 export default function DonatePage() {
   const { lang, t } = useLanguage();
   const { user, profile, role } = useAuth();
+  const { settings } = useSiteSettings();
   const isDonor = role === "donor" || role === "admin";
   const [active, setActive] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+
+  const direct = settings?.directDonation || {
+    enabled: true,
+    upiId: "akkyc5@ybl",
+    accountName: "ANKIT KUMAR",
+    qrCodeUrl: "/foundation-qr.jpg",
+    title: "Direct Foundation Donation",
+    subtitle: "Scan with PhonePe, Google Pay, or Paytm to support our zero-commission medical relief mission directly.",
+  };
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText(direct.upiId);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2500);
+  };
 
   useEffect(() => {
     async function loadCases() {
@@ -52,18 +76,142 @@ export default function DonatePage() {
               <span>Zero-Commission Direct Transfer Pledge</span>
             </div>
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-3">
-              {t("donate")} Directly To Beneficiaries
+              {t("donate")} Directly To Beneficiaries & Foundation
             </h1>
             <p className="text-xs sm:text-base text-slate-300 leading-relaxed">
               {lang === "hi"
-                ? "हमारी वेबसाइट पर दिए गए किसी भी सत्यापित केस को चुनें और सीधे उनके बैंक खाते या यूपीआई आईडी में दान करें। हमारा एनजीओ कोई कमीशन या कट नहीं लेता।"
-                : "Select any verified emergency below and pay directly into the patient's UPI or hospital account. 100% of your money reaches the family in need."}
+                ? "हमारी वेबसाइट पर दिए गए किसी भी सत्यापित केस को चुनें या सीधे फाउंडेशन के आधिकारिक फोनपे QR / यूपीआई पर दान करें। हमारा एनजीओ कोई कमीशन या कट नहीं लेता।"
+                : "Support verified emergency patient cases or contribute directly to our zero-commission medical foundation via official PhonePe QR and UPI ID."}
             </p>
           </div>
         </div>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        {/* SECTION A: Direct Foundation Donation Card (PhonePe QR & UPI) */}
+        {direct.enabled && (
+          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 mb-10 shadow-xl border border-blue-800/80">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Left / Info */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-xs font-bold">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Instant Direct Option (No Login Needed)</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
+                  <Heart className="w-6 h-6 text-rose-400 fill-rose-400" />
+                  <span>{direct.title || (lang === "hi" ? "सीधा फाउंडेशन दान" : "Direct Foundation Donation")}</span>
+                </h2>
+
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  {direct.subtitle || (lang === "hi"
+                    ? "फोनपे, गूगल पे, पेटीएम या किसी भी बैंक यूपीआई ऐप से सीधे क्यूआर कोड स्कैन करके या यूपीआई आईडी में बिना किसी बिचौलिये के सहायता भेजें।"
+                    : "Pay directly via PhonePe QR code or UPI ID. 100% of your generous aid goes straight to emergency medical relief with zero deductions.")}
+                </p>
+
+                {/* Key Points */}
+                <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>0% Platform Deduction</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>Instant Bank Settlement</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>NGO Registered: IV-190300183</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>All UPI Apps Supported</span>
+                  </div>
+                </div>
+
+                {/* UPI ID Bar */}
+                <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-300">
+                    <span className="font-bold uppercase tracking-wider text-[11px] text-amber-400">
+                      Official Foundation UPI ID
+                    </span>
+                    <span className="text-slate-300">Account: <strong className="text-white">{direct.accountName}</strong></span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                    <div className="font-mono text-base sm:text-lg font-black text-amber-300 tracking-wide select-all bg-black/30 px-3.5 py-2 rounded-xl border border-white/10 truncate">
+                      {direct.upiId}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyUpi}
+                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shadow-sm ${
+                        copiedUpi
+                          ? "bg-emerald-600 text-white"
+                          : "bg-amber-400 hover:bg-amber-300 text-slate-950 font-black"
+                      }`}
+                    >
+                      {copiedUpi ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Copied to Clipboard!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          <span>Copy UPI ID</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick mobile intent pay button */}
+                <a
+                  href={`upi://pay?pa=${encodeURIComponent(direct.upiId)}&pn=${encodeURIComponent(direct.accountName)}&cu=INR&tn=Foundation%20Support`}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition active:scale-98"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>Tap to Pay with PhonePe / GPay / Paytm App</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+              </div>
+
+              {/* Right / PhonePe QR Code Container */}
+              <div className="lg:col-span-5 flex flex-col items-center justify-center">
+                <div className="bg-white p-3 sm:p-4 rounded-3xl shadow-2xl border-4 border-amber-400 text-slate-900 max-w-xs w-full text-center">
+                  <div className="text-[11px] font-black uppercase tracking-wider text-purple-900 mb-2 flex items-center justify-center gap-1.5">
+                    <QrCode className="w-4 h-4 text-purple-800" />
+                    <span>PhonePe Accepted Here</span>
+                  </div>
+
+                  <div className="relative w-full aspect-[9/16] max-h-84 rounded-2xl overflow-hidden bg-black mb-3 shadow-inner">
+                    <Image
+                      src={direct.qrCodeUrl || "/foundation-qr.jpg"}
+                      alt="PhonePe Accepted Here QR Code"
+                      fill
+                      priority
+                      className="object-contain"
+                      sizes="(max-width: 640px) 260px, 300px"
+                    />
+                  </div>
+
+                  <div className="text-xs font-black text-slate-900 tracking-tight">
+                    {direct.accountName}
+                  </div>
+                  <div className="text-[11px] font-mono font-bold text-purple-800 mt-0.5">
+                    {direct.upiId}
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Scan with any UPI app on your phone
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Direct Process Callout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 sm:mb-10">
           <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-start gap-3.5">
