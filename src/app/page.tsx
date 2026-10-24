@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/components/LanguageContext";
 import CaseCard from "@/components/CaseCard";
+import DirectDonationSection from "@/components/DirectDonationSection";
 import { useState, useEffect } from "react";
 import { Case } from "@/types/database";
 import {
@@ -258,6 +259,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Live Direct Foundation Donation Section (PhonePe QR & UPI) */}
+      <DirectDonationSection />
 
       {/* Featured Verified Cases Section */}
       <section className="py-16 sm:py-20 bg-slate-50/60">

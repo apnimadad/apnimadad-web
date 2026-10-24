@@ -16,21 +16,18 @@ import {
   LayoutDashboard,
   Lock,
   User,
-  ChevronDown,
-  QrCode
+  ChevronDown
 } from "lucide-react";
 
 import { useAuth } from "./AuthContext";
 import { useSiteSettings } from "./SiteSettingsContext";
 import NotificationBell from "./NotificationBell";
-import DirectDonateModal from "./DirectDonateModal";
 
 export default function Header() {
   const { lang, setLang } = useLanguage();
   const { user, profile, role, signOut } = useAuth();
   const { settings } = useSiteSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [directDonateOpen, setDirectDonateOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [signInMenuOpen, setSignInMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -313,16 +310,6 @@ export default function Header() {
                       </div>
                     </div>
                   )}
-                  {/* Direct Donate Foundation Button */}
-                  <button
-                    type="button"
-                    onClick={() => setDirectDonateOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 h-8 sm:h-9 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
-                    title="Direct Foundation Donation via PhonePe QR"
-                  >
-                    <QrCode className="w-3.5 h-3.5 text-slate-950" />
-                    <span>{lang === "hi" ? "सीधा दान" : "Direct Pay"}</span>
-                  </button>
                 </div>
               ) : (
                 /* Case 2: Guest (Not Logged In) */
@@ -382,25 +369,13 @@ export default function Header() {
                     )}
                   </div>
 
-                  {/* Direct Donate Foundation PhonePe Button */}
-                  <button
-                    type="button"
-                    onClick={() => setDirectDonateOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 h-8 sm:h-9 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
-                    title="Direct Foundation Donation via PhonePe QR"
-                  >
-                    <QrCode className="w-3.5 h-3.5 text-slate-950" />
-                    <span className="hidden xs:inline">{lang === "hi" ? "सीधा दान" : "Direct Pay"}</span>
-                    <span className="xs:hidden">{lang === "hi" ? "दान" : "UPI"}</span>
-                  </button>
-
                   {/* Primary Donate CTA Button: Guaranteed inside viewport */}
                   <Link
-                    href="/cases"
+                    href="/donate"
                     className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 h-8 sm:h-9 rounded-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
                   >
                     <Heart className="w-3.5 h-3.5 fill-white text-white" />
-                    <span>{lang === "hi" ? "केस दान" : "Cases"}</span>
+                    <span>{lang === "hi" ? "दान करें" : "Donate"}</span>
                   </Link>
                 </div>
               )}
@@ -547,19 +522,6 @@ export default function Header() {
                 </div>
               )}
 
-              {/* Direct Foundation Donation CTA in Mobile Menu */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  setDirectDonateOpen(true);
-                }}
-                className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition active:scale-95 cursor-pointer mt-1"
-              >
-                <QrCode className="w-4 h-4 text-slate-950" />
-                <span>{lang === "hi" ? "सीधे फोनपे QR / UPI से दान करें (0% शुल्क)" : "Direct Pay via PhonePe QR / UPI (0% Fee)"}</span>
-              </button>
-
               {/* Language Switcher in Mobile Drawer */}
               <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 mt-1">
                 <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
@@ -591,12 +553,6 @@ export default function Header() {
           </div>
         )}
       </header>
-
-      {/* Direct Foundation Donation Modal with PhonePe QR & UPI ID */}
-      <DirectDonateModal
-        isOpen={directDonateOpen}
-        onClose={() => setDirectDonateOpen(false)}
-      />
     </>
   );
 }
