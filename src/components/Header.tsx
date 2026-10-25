@@ -121,12 +121,12 @@ export default function Header() {
               </span>
             </Link>
 
-            {/* 2. Center: Navigation Links - Symmetrical, equal, beautifully aligned */}
-            <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 flex-1 mx-2 xl:mx-4">
+            {/* 2. Center: Navigation Links - Symmetrical, equal, beautifully aligned with identical left & right gaps */}
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
               {/* 1. Verified Cases */}
               <Link
                 href="/cases"
-                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname.startsWith("/cases")
                     ? "text-blue-700 bg-blue-50 font-bold shadow-2xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
@@ -139,7 +139,7 @@ export default function Header() {
               {/* 2. Woman Help */}
               <Link
                 href="/women-help"
-                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname === "/women-help"
                     ? "text-rose-700 bg-rose-50 font-bold shadow-2xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
@@ -153,7 +153,7 @@ export default function Header() {
               {/* 3. De-Addiction */}
               <Link
                 href="/satta-mukt"
-                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname === "/satta-mukt"
                     ? "text-amber-800 bg-amber-50 font-bold shadow-2xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
@@ -167,7 +167,7 @@ export default function Header() {
               {/* 4. Need Help */}
               <Link
                 href="/submit"
-                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname.startsWith("/submit")
                     ? "text-blue-700 bg-blue-50 font-bold shadow-2xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
@@ -180,7 +180,7 @@ export default function Header() {
               {/* 5. Join NGO */}
               <Link
                 href="/join"
-                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname === "/join"
                     ? "text-emerald-800 bg-emerald-50 font-bold shadow-2xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
@@ -193,7 +193,7 @@ export default function Header() {
             </nav>
 
             {/* 3. Right: Action Controls (Equal h-10 height, vertically aligned) */}
-            <div className="flex items-center justify-end gap-2 xl:gap-2.5 shrink-0">
+            <div className="flex items-center justify-end gap-1.5 sm:gap-2 xl:gap-2.5 shrink-0">
               {/* Notifications: ONLY visible after login */}
               {user && <NotificationBell />}
 
