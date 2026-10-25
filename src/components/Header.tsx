@@ -7,6 +7,7 @@ import { useLanguage } from "./LanguageContext";
 import { useState, useEffect, useRef } from "react";
 import { 
   ShieldCheck, 
+  Shield,
   Globe, 
   Menu, 
   X, 
@@ -61,11 +62,11 @@ export default function Header() {
       {/* Top Most Confidential WhatsApp Helpline & Assistance Strip */}
       <div 
         suppressHydrationWarning 
-        className="bg-gradient-to-r from-slate-950 via-emerald-950 to-slate-950 text-white text-xs py-2 px-3 sm:px-4 border-b border-emerald-500/30 shadow-xs"
+        className="bg-gradient-to-r from-slate-950 via-emerald-950 to-slate-950 text-white text-xs py-2 px-4 sm:px-6 lg:px-8 border-b border-emerald-500/30 shadow-xs"
       >
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-center sm:text-left">
           <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black border border-emerald-400/30 uppercase tracking-wider shrink-0">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black border border-emerald-400/30 uppercase tracking-wider shrink-0">
               <Lock className="w-3 h-3 text-emerald-400" />
               <span>100% गोपनीय व सुरक्षित</span>
             </span>
@@ -80,7 +81,7 @@ export default function Header() {
             href={`https://wa.me/${(settings?.whatsappHelpline || "919376998999").replace(/\D/g, "")}?text=${encodeURIComponent("नमस्ते अपनी मदद फाउंडेशन। मुझे सहायता और मार्गदर्शन की आवश्यकता है। कृपया मेरा मार्गदर्शन करें।")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md hover:shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md hover:shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 shrink-0"
           >
             <MessageCircle className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
             <span>{lang === "hi" ? "WhatsApp पर संपर्क करें" : "WhatsApp Us"}</span>
@@ -89,148 +90,136 @@ export default function Header() {
       </div>
 
       <header suppressHydrationWarning className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
-        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
-          <div className="flex items-center justify-between h-20 gap-2 xl:gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20 gap-3 xl:gap-4">
             {/* 1. Left: Brand & Identity */}
             <Link
               href="/"
               suppressHydrationWarning
-              className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0"
+              className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
             >
-              <span className="relative shrink-0 block">
+              <span className="relative shrink-0 flex items-center justify-center">
                 <Image
                   src="/logo.jpeg"
                   alt="Apni Madad Foundation Logo"
-                  width={40}
-                  height={40}
+                  width={42}
+                  height={42}
                   priority
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200 shadow-xs group-hover:scale-105 transition duration-200"
+                  className="w-10 h-10 rounded-full border border-slate-200 shadow-xs group-hover:scale-105 transition duration-200"
                 />
-                <span className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-0.5 rounded-full ring-2 ring-white">
+                <span className="absolute -bottom-0.5 -right-0.5 bg-emerald-600 text-white p-0.5 rounded-full ring-2 ring-white">
                   <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </span>
               </span>
-              <span className="block leading-tight min-w-0">
-                <span className="block font-black text-sm sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition truncate">
+              <span className="flex flex-col justify-center leading-tight">
+                <span className="font-black text-base sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition truncate">
                   Apni Madad
                 </span>
-                <span className="block text-[8px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase truncate">
+                <span className="text-[9px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase truncate">
                   <span className="hidden xs:inline sm:inline">FOUNDATION · </span>100% DIRECT HELP
                 </span>
               </span>
             </Link>
 
-            {/* 2. Center: Navigation Links (Compact & perfectly fitted, no overflow) */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {/* 2. Center: Navigation Links - Symmetrical, equal, beautifully aligned */}
+            <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 flex-1 mx-2 xl:mx-4">
               {/* 1. Verified Cases */}
               <Link
                 href="/cases"
-                className={`h-9 whitespace-nowrap inline-flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-sm font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname.startsWith("/cases")
                     ? "text-blue-700 bg-blue-50 font-bold shadow-2xs"
-                    : "text-slate-700 hover:text-slate-900 hover:bg-slate-100/80"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
                 }`}
               >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{lang === "hi" ? "सत्यापित केस" : "Verified Cases"}</span>
               </Link>
 
-              {/* 2. Woman Help (Safe & Secure) */}
+              {/* 2. Woman Help */}
               <Link
                 href="/women-help"
-                className={`h-9 whitespace-nowrap inline-flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-sm font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname === "/women-help"
-                    ? "text-rose-900 bg-rose-50 font-bold ring-1 ring-rose-200"
-                    : "text-slate-700 hover:text-rose-900 hover:bg-rose-50/60"
+                    ? "text-rose-700 bg-rose-50 font-bold shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
                 }`}
-                title={lang === "hi" ? "महिला सहायता (पहचान पूरी तरह गोपनीय)" : "Woman Help (Confidential & Safe)"}
+                title={lang === "hi" ? "महिला सहायता (पहचान पूरी तरह गोपनीय व सुरक्षित)" : "Woman Help (100% Safe & Confidential)"}
               >
-                <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                <Lock className="w-4 h-4 text-rose-500 shrink-0" />
                 <span>{lang === "hi" ? "महिला सहायता" : "Woman Help"}</span>
-                <span className="text-[10px] font-bold text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded-full border border-rose-200/60 leading-none">
-                  {lang === "hi" ? "सुरक्षित" : "Safe"}
-                </span>
               </Link>
 
-              {/* 3. De-Addiction / Satta Mukt (Secure) */}
+              {/* 3. De-Addiction */}
               <Link
                 href="/satta-mukt"
-                className={`h-9 whitespace-nowrap inline-flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-sm font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname === "/satta-mukt"
-                    ? "text-amber-950 bg-amber-50 font-bold ring-1 ring-amber-200"
-                    : "text-slate-700 hover:text-amber-950 hover:bg-amber-50/60"
+                    ? "text-amber-800 bg-amber-50 font-bold shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
                 }`}
-                title={lang === "hi" ? "सट्टा मुक्त अभियान (100% गोपनीय व सुरक्षित)" : "De-Addiction (100% Confidential)"}
+                title={lang === "hi" ? "सट्टा मुक्त अभियान (100% गोपनीय व सुरक्षित)" : "De-Addiction Support (100% Confidential)"}
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <Shield className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{lang === "hi" ? "सट्टा मुक्त अभियान" : "De-Addiction"}</span>
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-100/90 px-1.5 py-0.5 rounded-full border border-amber-200/60 leading-none">
-                  {lang === "hi" ? "गोपनीय" : "Secure"}
-                </span>
               </Link>
 
               {/* 4. Need Help */}
               <Link
                 href="/submit"
-                className={`h-9 whitespace-nowrap inline-flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-sm font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname.startsWith("/submit")
-                    ? "text-amber-800 bg-amber-50 font-bold"
-                    : "text-slate-700 hover:text-slate-900 hover:bg-slate-100/80"
+                    ? "text-blue-700 bg-blue-50 font-bold shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
                 }`}
               >
-                <HeartHandshake className="w-4 h-4 text-amber-600 shrink-0" />
+                <HeartHandshake className="w-4 h-4 text-blue-600 shrink-0" />
                 <span>{lang === "hi" ? "मदद चाहिए" : "Need Help"}</span>
               </Link>
 
-              {/* 5. Join NGO / Become Member */}
+              {/* 5. Join NGO */}
               <Link
                 href="/join"
-                className={`h-9 whitespace-nowrap inline-flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-sm font-semibold rounded-full transition-all ${
+                className={`h-10 whitespace-nowrap inline-flex items-center gap-2 px-3 xl:px-3.5 text-xs xl:text-[13px] font-semibold rounded-full transition-all ${
                   pathname === "/join"
-                    ? "text-emerald-950 bg-emerald-50 font-bold ring-1 ring-emerald-300 shadow-2xs"
-                    : "text-slate-700 hover:text-emerald-900 hover:bg-emerald-50/70"
+                    ? "text-emerald-800 bg-emerald-50 font-bold shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
                 }`}
-                title={lang === "hi" ? "फाउंडेशन के सम्मानित सदस्य बनें" : "Become Member / Join NGO"}
+                title={lang === "hi" ? "फाउंडेशन के सम्मानित सदस्य बनें" : "Join NGO / Become Member"}
               >
-                <Users className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>{lang === "hi" ? "सदस्य बनें" : "Join NGO"}</span>
-                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-full border border-emerald-200/60 leading-none">
-                  {lang === "hi" ? "जुड़ें" : "Member"}
-                </span>
+                <Users className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{lang === "hi" ? "NGO सदस्य बनें" : "Join NGO"}</span>
               </Link>
             </nav>
 
-            {/* 3. Right: Action Controls (Always inside screen, shrink-0) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-2.5 shrink-0">
+            {/* 3. Right: Action Controls (Equal h-10 height, vertically aligned) */}
+            <div className="flex items-center justify-end gap-2 xl:gap-2.5 shrink-0">
               {/* Notifications: ONLY visible after login */}
               {user && <NotificationBell />}
 
-              {/* Language Switcher: Full pill on sm+, compact toggle on mobile */}
+              {/* Language Switcher: Full pill on sm+ */}
               <div
-                className="hidden sm:inline-flex items-center bg-slate-100/90 p-0.5 sm:p-1 rounded-full border border-slate-200/90 text-xs font-semibold shadow-2xs whitespace-nowrap h-9"
+                className="hidden sm:inline-flex items-center bg-slate-100/90 p-1 rounded-full border border-slate-200/90 text-xs font-semibold shadow-2xs whitespace-nowrap h-10"
                 role="group"
                 aria-label="Language selector"
               >
                 <button
                   type="button"
                   onClick={() => setLang("en")}
-                  className={`inline-flex items-center gap-1 px-2.5 h-7 rounded-full transition-all text-xs font-bold leading-none cursor-pointer ${
+                  className={`inline-flex items-center gap-1 px-3 h-8 rounded-full transition-all text-xs font-bold cursor-pointer ${
                     lang === "en"
                       ? "bg-white text-blue-700 shadow-xs"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                   aria-label="Switch to English"
                 >
-                  <Globe className="w-3 h-3 text-blue-600" />
+                  <Globe className="w-3.5 h-3.5 text-blue-600" />
                   <span>EN</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setLang("hi")}
-                  className={`inline-flex items-center px-2.5 h-7 rounded-full transition-all text-xs font-bold leading-none cursor-pointer ${
+                  className={`inline-flex items-center px-3 h-8 rounded-full transition-all text-xs font-bold cursor-pointer ${
                     lang === "hi"
                       ? "bg-white text-blue-700 shadow-xs"
                       : "text-slate-600 hover:text-slate-900"
@@ -245,10 +234,10 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setLang(lang === "en" ? "hi" : "en")}
-                className="sm:hidden inline-flex items-center gap-1 px-2 h-8 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-extrabold text-blue-700 cursor-pointer shadow-2xs shrink-0"
+                className="sm:hidden inline-flex items-center gap-1 px-2.5 h-9 rounded-full bg-slate-100 border border-slate-200 text-xs font-extrabold text-blue-700 cursor-pointer shadow-2xs shrink-0"
                 aria-label="Toggle language"
               >
-                <Globe className="w-3 h-3 text-blue-600" />
+                <Globe className="w-3.5 h-3.5 text-blue-600" />
                 <span>{lang === "en" ? "EN" : "हिं"}</span>
               </button>
 
@@ -257,7 +246,7 @@ export default function Header() {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="inline-flex items-center gap-2 pl-2 pr-3 h-9 bg-slate-100 hover:bg-slate-200/80 rounded-full text-xs font-semibold text-slate-800 transition shadow-2xs whitespace-nowrap"
+                    className="inline-flex items-center gap-2 pl-2 pr-3.5 h-10 bg-slate-100 hover:bg-slate-200/80 rounded-full text-xs font-semibold text-slate-800 transition shadow-2xs whitespace-nowrap cursor-pointer"
                     aria-label="User menu"
                   >
                     <div className="w-6 h-6 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">
@@ -275,7 +264,7 @@ export default function Header() {
                     }`}>
                       {role === "admin" ? "Admin" : role === "beneficiary" ? "User" : "Donor"}
                     </span>
-                    <ChevronDown className="w-3 h-3 text-slate-500" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
                   </button>
 
                   {/* Dropdown Menu */}
@@ -314,7 +303,7 @@ export default function Header() {
                             setUserMenuOpen(false);
                             signOut();
                           }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 text-left"
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 text-left cursor-pointer"
                         >
                           <LogOut className="w-4 h-4 text-rose-600" />
                           <span>Sign Out</span>
@@ -325,17 +314,17 @@ export default function Header() {
                 </div>
               ) : (
                 /* Case 2: Guest (Not Logged In) */
-                <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-2">
                   {/* Production Sign In Dropdown */}
                   <div className="relative" ref={signInMenuRef}>
                     <button
                       type="button"
                       onClick={() => setSignInMenuOpen(!signInMenuOpen)}
-                      className="hidden sm:inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 text-xs font-bold text-slate-700 hover:text-blue-700 shadow-2xs transition whitespace-nowrap"
+                      className="hidden sm:inline-flex items-center gap-1.5 px-3.5 h-10 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 text-xs font-bold text-slate-700 hover:text-blue-700 shadow-2xs transition whitespace-nowrap cursor-pointer"
                     >
                       <User className="w-3.5 h-3.5 text-slate-600" />
                       <span>{lang === "hi" ? "साइन इन" : "Sign In"}</span>
-                      <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${signInMenuOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${signInMenuOpen ? "rotate-180" : ""}`} />
                     </button>
 
                     {signInMenuOpen && (
@@ -381,10 +370,10 @@ export default function Header() {
                     )}
                   </div>
 
-                  {/* Primary Donate CTA Button: Guaranteed inside viewport */}
+                  {/* Primary Donate CTA Button */}
                   <Link
                     href="/donate"
-                    className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 h-8 sm:h-9 rounded-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
+                    className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 xl:px-5 h-9 sm:h-10 rounded-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition active:scale-95 whitespace-nowrap shrink-0"
                   >
                     <Heart className="w-3.5 h-3.5 fill-white text-white" />
                     <span>{lang === "hi" ? "दान करें" : "Donate"}</span>
@@ -392,9 +381,9 @@ export default function Header() {
                 </div>
               )}
 
-              {/* Mobile Hamburger Toggle (44x44px accessible touch target) */}
+              {/* Mobile Hamburger Toggle */}
               <button
-                className="lg:hidden w-10 h-10 flex items-center justify-center text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer shrink-0"
+                className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer shrink-0"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
