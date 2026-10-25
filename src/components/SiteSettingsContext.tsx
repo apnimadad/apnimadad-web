@@ -32,6 +32,55 @@ const defaultTopDonors: TopDonor[] = [
     photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
     caseTitle: "Orphan Education Care",
   },
+  {
+    id: "td-4",
+    name: "Sanjay K. Verma",
+    amount: 45000,
+    photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
+    caseTitle: "Brain Trauma ICU Care",
+  },
+  {
+    id: "td-5",
+    name: "Pooja Agarwal",
+    amount: 30000,
+    photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
+    caseTitle: "Neonatal Incubator Relief",
+  },
+  {
+    id: "td-6",
+    name: "Harish Chandran",
+    amount: 21000,
+    photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+    caseTitle: "Kidney Dialysis Support",
+  },
+  {
+    id: "td-7",
+    name: "Sunita Deshmukh",
+    amount: 20000,
+    photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop",
+    caseTitle: "Spinal Rehabilitation Aid",
+  },
+  {
+    id: "td-8",
+    name: "Mohammad Farhan",
+    amount: 18500,
+    photoUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop",
+    caseTitle: "Urgent Bone Marrow Aid",
+  },
+  {
+    id: "td-9",
+    name: "Kavita Chawla",
+    amount: 15000,
+    photoUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=100&h=100&fit=crop",
+    caseTitle: "Pediatric Eye Surgery",
+  },
+  {
+    id: "td-10",
+    name: "Amitabh Sengupta",
+    amount: 40000,
+    photoUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop",
+    caseTitle: "Accidental Trauma Relief",
+  },
 ];
 
 export interface SiteAnnouncement {
@@ -83,8 +132,8 @@ const defaultSiteSettings: SiteSettings = {
     title: "Direct Foundation Donation",
     subtitle: "Scan with PhonePe, Google Pay, or Paytm to support our zero-commission medical relief mission directly.",
   },
-  helplinePhone: "+91 98765 43210",
-  whatsappHelpline: "919876543210",
+  helplinePhone: "+91 93769 98999",
+  whatsappHelpline: "919376998999",
   totalLivesImpacted: 2450,
   totalDirectTransferred: 12850000,
 };
@@ -104,7 +153,7 @@ interface SiteSettingsContextType {
 
 const SiteSettingsContext = createContext<SiteSettingsContextType | null>(null);
 
-const STORAGE_KEY_DONORS = "apni_madad_site_donors";
+const STORAGE_KEY_DONORS = "apni_madad_site_donors_v2";
 const STORAGE_KEY_SETTINGS = "apni_madad_site_settings";
 
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
@@ -117,9 +166,14 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
       const savedDonors = localStorage.getItem(STORAGE_KEY_DONORS);
       if (savedDonors) {
         const parsed = JSON.parse(savedDonors);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed) && parsed.length >= 10) {
           setDonors(parsed);
+        } else {
+          setDonors(defaultTopDonors);
+          localStorage.setItem(STORAGE_KEY_DONORS, JSON.stringify(defaultTopDonors));
         }
+      } else {
+        localStorage.setItem(STORAGE_KEY_DONORS, JSON.stringify(defaultTopDonors));
       }
 
       const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);

@@ -198,7 +198,7 @@ export async function verifyEmailOtp(payload: {
       payload.fullName ||
       cached?.fullName ||
       (targetRole === "beneficiary" ? "Verified Beneficiary" : "Verified Donor");
-    const targetPhone = payload.phone || cached?.phone || "+91 98765 43210";
+    const targetPhone = payload.phone || cached?.phone || "+91 93769 98999";
 
     const verifiedProfile: Profile = {
       id: "verified-user-" + Math.random().toString(36).substring(2, 9),
@@ -269,7 +269,7 @@ export async function requestWhatsAppVerification(payload: {
   });
 
   // Official helpline WhatsApp number (can be customized via env)
-  const helpline = process.env.NEXT_PUBLIC_WHATSAPP_HELPLINE?.replace(/\D/g, "") || "919876543210";
+  const helpline = process.env.NEXT_PUBLIC_WHATSAPP_HELPLINE?.replace(/\D/g, "") || "919376998999";
 
   const messageText = `Salam / Namaste Apni Madad Foundation! Please verify my ${targetRole} account for ${targetName} (${formattedDisplay}). Security Code: ${code}`;
   const waUrl = `https://wa.me/${helpline}?text=${encodeURIComponent(messageText)}`;

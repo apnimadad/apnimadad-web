@@ -7,8 +7,6 @@ import { useLanguage } from "./LanguageContext";
 import { 
   CheckCircle, 
   QrCode, 
-  Copy, 
-  Check, 
   Smartphone, 
   ExternalLink, 
   Heart,
@@ -21,7 +19,6 @@ import {
 export default function DirectDonationSection() {
   const { settings } = useSiteSettings();
   const { lang } = useLanguage();
-  const [copiedUpi, setCopiedUpi] = useState(false);
   const [zoomModalOpen, setZoomModalOpen] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(500);
   const [customAmount, setCustomAmount] = useState("");
@@ -44,12 +41,6 @@ export default function DirectDonationSection() {
   const upiIntentUrl = amountVal > 0
     ? `upi://pay?pa=${encodeURIComponent(direct.upiId)}&pn=${encodeURIComponent(direct.accountName)}&am=${amountVal}&cu=INR&tn=Foundation%20Donation`
     : `upi://pay?pa=${encodeURIComponent(direct.upiId)}&pn=${encodeURIComponent(direct.accountName)}&cu=INR&tn=Foundation%20Donation`;
-
-  const handleCopyUpi = () => {
-    navigator.clipboard.writeText(direct.upiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2500);
-  };
 
   return (
     <section id="direct-donate" className="py-14 sm:py-20 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white relative overflow-hidden border-y border-blue-900/40">
@@ -153,63 +144,25 @@ export default function DirectDonationSection() {
                 </div>
               </div>
 
-              {/* Official UPI ID Box with 1-click Copy */}
-              <div className="p-4 sm:p-5 bg-black/40 rounded-2xl border border-white/15 space-y-3 shadow-inner">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-amber-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Official Foundation UPI ID</span>
-                  </span>
-                  <span className="text-slate-300 text-[11px]">
-                    Payee: <strong className="text-white">{direct.accountName}</strong>
-                  </span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                  <div className="font-mono text-base sm:text-lg font-black text-amber-300 tracking-wide select-all bg-white/5 px-3.5 py-2.5 rounded-xl border border-white/10 truncate">
-                    {direct.upiId}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyUpi}
-                    className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer shadow-sm ${
-                      copiedUpi
-                        ? "bg-emerald-600 text-white"
-                        : "bg-amber-400 hover:bg-amber-300 text-slate-950 font-black"
-                    }`}
-                  >
-                    {copiedUpi ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>Copied to Clipboard!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        <span>Copy UPI ID</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile 1-Tap UPI Intent Link */}
-              <div className="space-y-2">
+              {/* Mobile 1-Tap UPI Intent Link (PhonePe / GPay / Paytm) */}
+              <div className="space-y-2 pt-2">
                 <a
                   href={upiIntentUrl}
-                  className="w-full py-3.5 px-5 bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white font-extrabold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-98"
+                  className="w-full py-4 px-6 bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white font-black rounded-2xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-xl hover:shadow-2xl hover:scale-[1.01] transition active:scale-98"
                 >
-                  <Smartphone className="w-4 h-4" />
+                  <Smartphone className="w-5 h-5" />
                   <span>
                     {lang === "hi"
-                      ? "फोनपे / गूगल पे / पेटीएम से 1-टैप में दान करें"
+                      ? "PhonePe / GPay / Paytm से सीधे 1-टैप में दान करें"
                       : "Tap to Pay with PhonePe / GPay / Any UPI App"}
                   </span>
-                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  <ExternalLink className="w-4 h-4 opacity-80" />
                 </a>
 
-                <p className="text-[11px] text-center text-slate-400">
-                  Compatible with PhonePe, Google Pay, Paytm, BHIM, Cred, and all bank UPI apps.
+                <p className="text-xs text-center text-slate-300">
+                  {lang === "hi"
+                    ? "PhonePe, Google Pay, Paytm, BHIM या किसी भी UPI ऐप से 0% कटौती के साथ सीधा बैंक ट्रांसफर।"
+                    : "Compatible with PhonePe, Google Pay, Paytm, BHIM, Cred, and all bank UPI apps."}
                 </p>
               </div>
             </div>
@@ -255,11 +208,8 @@ export default function DirectDonationSection() {
                 <div className="text-sm font-black text-slate-950 tracking-tight">
                   {direct.accountName}
                 </div>
-                <div className="text-xs font-mono font-black text-purple-900 mt-0.5 select-all">
-                  {direct.upiId}
-                </div>
-                <p className="text-[11px] font-medium text-slate-500 mt-1">
-                  Scan &amp; Pay directly using any UPI App
+                <p className="text-[11px] font-semibold text-purple-900 mt-1">
+                  {lang === "hi" ? "PhonePe या किसी भी UPI ऐप से स्कैन करके दान करें" : "Scan & Pay directly using PhonePe or any UPI App"}
                 </p>
               </div>
             </div>
@@ -305,19 +255,18 @@ export default function DirectDonationSection() {
             <div className="text-base font-black text-slate-950">
               {direct.accountName}
             </div>
-            <div className="text-sm font-mono font-black text-purple-900 select-all mt-0.5">
-              {direct.upiId}
-            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {lang === "hi" ? "PhonePe, Google Pay, Paytm, BHIM द्वारा स्वीकार्य" : "Accepted on PhonePe, Google Pay, Paytm & all UPI"}
+            </p>
 
             <div className="flex items-center justify-center gap-3 mt-4">
-              <button
-                type="button"
-                onClick={handleCopyUpi}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition"
+              <a
+                href={upiIntentUrl}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs transition shadow-md"
               >
-                {copiedUpi ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedUpi ? "Copied UPI!" : "Copy UPI ID"}</span>
-              </button>
+                <Smartphone className="w-4 h-4" />
+                <span>{lang === "hi" ? "PhonePe से दान करें" : "Pay via PhonePe / UPI"}</span>
+              </a>
 
               <a
                 href={direct.qrCodeUrl || "/foundation-qr.jpg"}

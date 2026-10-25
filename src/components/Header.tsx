@@ -16,7 +16,9 @@ import {
   LayoutDashboard,
   Lock,
   User,
-  ChevronDown
+  ChevronDown,
+  MessageCircle,
+  Users
 } from "lucide-react";
 
 import { useAuth } from "./AuthContext";
@@ -33,8 +35,6 @@ export default function Header() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const signInMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-
-  const announcement = settings?.announcement;
 
   // Close menus on outside click or route change
   useEffect(() => {
@@ -58,40 +58,35 @@ export default function Header() {
 
   return (
     <>
-      {/* Top micro-announcement banner */}
-      {announcement?.enabled && (
-        <div suppressHydrationWarning className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white text-xs py-2 px-4 border-b border-white/10">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2 font-medium">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="truncate">
-                {announcement.message ||
-                  (lang === "hi"
-                    ? "100% प्रत्यक्ष सहायता: कोई कमीशन नहीं, कोई बिचौलिया नहीं। सीधे लाभार्थी के खाते में।"
-                    : "100% Direct Help. Zero Platform Fee, No Middlemen. Direct to Beneficiary UPI.")}
-              </span>
-              {announcement.linkText && announcement.linkUrl && (
-                <Link
-                  href={announcement.linkUrl}
-                  className="hidden sm:inline-block ml-1 underline text-amber-300 hover:text-white font-bold"
-                >
-                  {announcement.linkText} →
-                </Link>
-              )}
-            </div>
-            <div className="hidden sm:flex items-center gap-4 text-slate-300 text-[11px]">
-              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                100% Verified
-              </span>
-              <span>NGO Reg: IV-190300183</span>
-            </div>
+      {/* Top Most Confidential WhatsApp Helpline & Assistance Strip */}
+      <div 
+        suppressHydrationWarning 
+        className="bg-gradient-to-r from-slate-950 via-emerald-950 to-slate-950 text-white text-xs py-2 px-3 sm:px-4 border-b border-emerald-500/30 shadow-xs"
+      >
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black border border-emerald-400/30 uppercase tracking-wider shrink-0">
+              <Lock className="w-3 h-3 text-emerald-400" />
+              <span>100% गोपनीय व सुरक्षित</span>
+            </span>
+            <span className="font-semibold text-slate-100 text-xs sm:text-[13px] leading-snug">
+              {lang === "hi"
+                ? "किसी भी प्रकार की सहायता या मार्गदर्शन के लिए हमसे संपर्क करें। आपकी पहचान और जानकारी पूरी तरह गोपनीय व सुरक्षित रखी जाएगी।"
+                : "Contact us for any kind of help or guidance. Your identity and information will be kept strictly confidential and secure."}
+            </span>
           </div>
+
+          <a
+            href={`https://wa.me/${(settings?.whatsappHelpline || "919376998999").replace(/\D/g, "")}?text=${encodeURIComponent("नमस्ते अपनी मदद फाउंडेशन। मुझे सहायता और मार्गदर्शन की आवश्यकता है। कृपया मेरा मार्गदर्शन करें।")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md hover:shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 shrink-0"
+          >
+            <MessageCircle className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+            <span>{lang === "hi" ? "WhatsApp पर संपर्क करें" : "WhatsApp Us"}</span>
+          </a>
         </div>
-      )}
+      </div>
 
       <header suppressHydrationWarning className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
@@ -188,6 +183,23 @@ export default function Header() {
               >
                 <HeartHandshake className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{lang === "hi" ? "मदद चाहिए" : "Need Help"}</span>
+              </Link>
+
+              {/* 5. Join NGO / Become Member */}
+              <Link
+                href="/join"
+                className={`h-9 whitespace-nowrap inline-flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-sm font-semibold rounded-full transition-all ${
+                  pathname === "/join"
+                    ? "text-emerald-950 bg-emerald-50 font-bold ring-1 ring-emerald-300 shadow-2xs"
+                    : "text-slate-700 hover:text-emerald-900 hover:bg-emerald-50/70"
+                }`}
+                title={lang === "hi" ? "फाउंडेशन के सम्मानित सदस्य बनें" : "Become Member / Join NGO"}
+              >
+                <Users className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>{lang === "hi" ? "सदस्य बनें" : "Join NGO"}</span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-full border border-emerald-200/60 leading-none">
+                  {lang === "hi" ? "जुड़ें" : "Member"}
+                </span>
               </Link>
             </nav>
 
@@ -468,6 +480,23 @@ export default function Header() {
             >
               <HeartHandshake className="w-4 h-4 text-amber-600" />
               <span>{lang === "hi" ? "मदद चाहिए" : "Need Help"}</span>
+            </Link>
+
+            {/* Mobile Join NGO / Become Member */}
+            <Link
+              href="/join"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition ${
+                pathname === "/join" ? "bg-emerald-50 text-emerald-950 font-bold" : "text-slate-800 hover:bg-slate-50"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Users className="w-4 h-4 text-emerald-600" />
+                <span>{lang === "hi" ? "NGO सदस्य बनें" : "Join NGO / Become Member"}</span>
+              </span>
+              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                {lang === "hi" ? "सदस्य" : "Join"}
+              </span>
             </Link>
 
             {/* Mobile Auth / Role links */}

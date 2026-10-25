@@ -6,9 +6,6 @@ import { useSiteSettings } from "./SiteSettingsContext";
 import { useLanguage } from "./LanguageContext";
 import { 
   X, 
-  Copy, 
-  Check, 
-  QrCode, 
   ShieldCheck, 
   Smartphone, 
   ExternalLink,
@@ -23,7 +20,6 @@ interface DirectDonateModalProps {
 export default function DirectDonateModal({ isOpen, onClose }: DirectDonateModalProps) {
   const { settings } = useSiteSettings();
   const { lang } = useLanguage();
-  const [copied, setCopied] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(500);
   const [customAmount, setCustomAmount] = useState("");
 
@@ -44,12 +40,6 @@ export default function DirectDonateModal({ isOpen, onClose }: DirectDonateModal
   const upiIntentUrl = amountVal > 0
     ? `upi://pay?pa=${encodeURIComponent(direct.upiId)}&pn=${encodeURIComponent(direct.accountName)}&am=${amountVal}&cu=INR&tn=Foundation%20Donation`
     : `upi://pay?pa=${encodeURIComponent(direct.upiId)}&pn=${encodeURIComponent(direct.accountName)}&cu=INR&tn=Foundation%20Donation`;
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(direct.upiId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-modal overflow-y-auto">
@@ -157,37 +147,6 @@ export default function DirectDonateModal({ isOpen, onClose }: DirectDonateModal
               <div className="text-base font-black text-slate-900 tracking-tight">
                 {direct.accountName}
               </div>
-            </div>
-
-            {/* UPI ID Copy Bar */}
-            <div className="mt-3.5 flex items-center justify-between gap-2 p-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
-              <div className="flex items-center gap-2 min-w-0 pl-1 text-left">
-                <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
-                <span className="font-mono text-xs sm:text-sm font-black text-slate-900 truncate">
-                  {direct.upiId}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 ${
-                  copied
-                    ? "bg-emerald-600 text-white"
-                    : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
-                }`}
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Copy UPI</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
 

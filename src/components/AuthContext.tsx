@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : demoRole === "beneficiary"
           ? "Aarav Sharma (Patient)"
           : "Vikram Mehta (Verified Donor)",
-      phone: "+91 98765 43210",
+      phone: "+91 93769 98999",
       is_verified: true,
       created_at: new Date().toISOString(),
     };

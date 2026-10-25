@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPublicCases, submitCase } from "@/lib/actions/cases";
 import { CaseInsert } from "@/types/database";
 
+export const revalidate = 30;
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,7 +13,14 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || undefined;
 
     const cases = await getPublicCases({ category, ageGroup, status, search });
-    return NextResponse.json({ success: true, cases });
+    return NextResponse.json(
+      { success: true, cases },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to fetch cases";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

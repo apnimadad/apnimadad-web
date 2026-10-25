@@ -108,6 +108,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/join" className="hover:text-amber-400 transition flex items-center gap-1">
+                  <span>{lang === "hi" ? "NGO सदस्य बनें (Join Member)" : "Join NGO / Become Member"}</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/submit" className="hover:text-amber-400 transition flex items-center gap-1">
                   <span>{t("needHelp")} (Submit Case)</span>
                 </Link>
@@ -142,7 +147,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>+91 98765 43210 / WhatsApp Help</span>
+                <span>+91 93769 98999 / WhatsApp Help</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />

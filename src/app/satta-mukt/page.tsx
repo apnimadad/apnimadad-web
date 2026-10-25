@@ -613,7 +613,7 @@ export default function SattaMuktPage() {
           </div>
 
           <a
-            href="https://wa.me/919876543210?text=Salam%20%2F%20Namaste%20Apni%20Madad%20Foundation.%20Mujhe%20Satta%20Mukt%20Abhiyan%20ke%20tehat%20gopniya%20counseling%20chahiye."
+            href="https://wa.me/919376998999?text=Salam%20%2F%20Namaste%20Apni%20Madad%20Foundation.%20Mujhe%20Satta%20Mukt%20Abhiyan%20ke%20tehat%20gopniya%20counseling%20chahiye."
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 transition-all duration-200 flex items-center gap-2 shrink-0"

@@ -138,6 +138,8 @@ export default function AdminPage() {
     setSettingsForm(settings);
   }, [settings]);
 
+  const [adminLoading, setAdminLoading] = useState(true);
+
   const loadAdminCases = async () => {
     try {
       const data = await getAllCasesAdmin();
@@ -163,8 +165,18 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    loadAdminCases();
-    loadConfidential();
+    let isMounted = true;
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([loadAdminCases(), loadConfidential()]);
+      } finally {
+        if (isMounted) setAdminLoading(false);
+      }
+    };
+    fetchAllData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Edit form state
@@ -1211,8 +1223,162 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Cases Table */}
-          <div className="overflow-x-auto relative">
+          {/* Loading Indicator */}
+          {adminLoading && (
+            <div className="py-10 text-center text-slate-400 flex flex-col items-center justify-center bg-white border-b border-slate-100">
+              <Clock className="w-6 h-6 animate-spin text-blue-600 mb-2" />
+              <p className="text-xs font-medium text-slate-600">
+                {lang === "hi" ? "डेटाबेस से केस लोड हो रहे हैं..." : "Loading admin database..."}
+              </p>
+            </div>
+          )}
+
+          {/* Mobile Card List View (< 640px) */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {!adminLoading && filteredCases.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-xs">
+                {lang === "hi"
+                  ? "आपकी खोज के अनुसार कोई केस नहीं मिला।"
+                  : "No cases found matching your criteria."}
+              </div>
+            ) : (
+              filteredCases.map((c) => {
+                const prog = getProgress(c.amountRaised, c.amountNeeded);
+                const isChecked = selectedCaseIds.includes(c.id);
+                return (
+                  <div
+                    key={c.id}
+                    className={`p-4 space-y-3 transition ${isChecked ? "bg-blue-50/50" : "bg-white"}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="pt-1">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleSelect(c.id)}
+                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </div>
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
+                        <Image src={c.photoUrl} alt="" fill className="object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              c.status === "approved"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : c.status === "pending"
+                                ? "bg-amber-100 text-amber-800 animate-pulse"
+                                : c.status === "funded"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-rose-100 text-rose-800"
+                            }`}
+                          >
+                            {c.status === "approved" && <ShieldCheck className="w-3 h-3" />}
+                            {c.status === "pending" && <Clock className="w-3 h-3" />}
+                            {c.status === "funded" && <Sparkles className="w-3 h-3" />}
+                            <span>
+                              {c.status === "approved"
+                                ? (lang === "hi" ? "सत्यापित" : "Approved")
+                                : c.status === "pending"
+                                ? (lang === "hi" ? "लंबित" : "Pending")
+                                : c.status === "funded"
+                                ? (lang === "hi" ? "पोषित" : "Funded")
+                                : (lang === "hi" ? "अस्वीकृत" : "Rejected")}
+                            </span>
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">{c.category}</span>
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-sm mt-1 truncate">{c.title}</h4>
+                        <p className="text-xs text-slate-500">
+                          {c.patientName} ({c.age} yrs) · {c.city}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-extrabold text-slate-900">{formatINR(c.amountRaised)}</span>
+                        <span className="text-slate-500">Goal: {formatINR(c.amountNeeded)} ({prog}%)</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full"
+                          style={{ width: `${Math.min(100, prog)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mobile Action Buttons with comfortable touch targets */}
+                    <div className="flex items-center justify-between gap-1.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelected(c);
+                          setEditMode(false);
+                        }}
+                        className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs flex items-center justify-center gap-1 min-h-[40px]"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>{lang === "hi" ? "समीक्षा" : "Review"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => openEdit(c)}
+                        className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1 min-h-[40px]"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>{lang === "hi" ? "संपादित" : "Edit"}</span>
+                      </button>
+
+                      {c.status === "pending" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(c.id)}
+                            className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5"
+                            title="Approve"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReject(c.id)}
+                            className="p-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5"
+                            title="Reject"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSingle(c)}
+                        className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4 text-rose-600" />
+                      </button>
+
+                      <Link
+                        href={`/cases/${c.id}`}
+                        target="_blank"
+                        className="p-2 text-slate-400 hover:text-slate-700 rounded-xl flex items-center justify-center min-h-[40px]"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop/Tablet Cases Table (>= 640px) */}
+          <div className="hidden sm:block overflow-x-auto relative">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
                 <tr>
@@ -1409,7 +1575,7 @@ export default function AdminPage() {
 
           {/* Floating Bulk Action Bar */}
           {selectedCaseIds.length > 0 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-modal border border-slate-700">
+            <div className="fixed bottom-4 sm:bottom-6 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-center gap-2 sm:gap-3 animate-modal border border-slate-700 max-w-lg sm:max-w-none mx-auto">
               <span className="text-xs sm:text-sm font-bold bg-blue-600 text-white px-2.5 py-1 rounded-full">
                 {selectedCaseIds.length} {lang === "hi" ? "चयनित" : "selected"}
               </span>
@@ -1641,8 +1807,128 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Mobile Card View (< 640px) */}
+          <div className="block sm:hidden divide-y divide-purple-100/60">
+            {filteredConfidential.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs">
+                {lang === "hi" ? "कोई गोपनीय अनुरोध नहीं मिला।" : "No confidential requests found."}
+              </div>
+            ) : (
+              filteredConfidential.map((item) => {
+                const isWomen =
+                  item.category === "women_help" || item.confidentialCategory === "women_help";
+                const phoneDigits = (item.contactPhone || item.phone || "").replace(/\D/g, "");
+                return (
+                  <div key={item.id} className="p-4 space-y-3 bg-white">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          isWomen ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {isWomen ? <ShieldAlert className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                              isWomen
+                                ? "bg-rose-100 text-rose-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {isWomen
+                              ? (lang === "hi" ? "महिला सहायता" : "Women Help")
+                              : (lang === "hi" ? "सट्टा मुक्ति" : "De-Addiction")}
+                          </span>
+                          <span className="text-[11px] font-mono text-slate-400">
+                            #{item.id?.slice(0, 8)}
+                          </span>
+                        </div>
+                        <div className="font-bold text-slate-900 mt-1 flex items-center gap-1.5 text-sm">
+                          <EyeOff className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                          <span className="truncate">{item.aliasName || item.patient_name}</span>
+                        </div>
+                        <p className="text-xs text-slate-600 line-clamp-2 mt-0.5 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/70 text-xs text-amber-950 space-y-0.5">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                        <span>Safe Call Window:</span>
+                      </div>
+                      <div className="font-medium text-amber-900 pl-5">
+                        {item.safeContactTime || (lang === "hi" ? "दिन में किसी भी समय" : "Direct Safe Contact")}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">NGO Eyes Only</span>
+                        <span className="font-semibold text-slate-800">{item.realName || item.patient_name}</span>
+                        <div className="font-mono text-xs font-bold text-slate-900 mt-0.5">
+                          {item.contactPhone || item.phone || "Phone Provided"}
+                        </div>
+                      </div>
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                          item.status === "contacted"
+                            ? "bg-blue-100 text-blue-800"
+                            : item.status === "resolved"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {item.status === "contacted"
+                          ? (lang === "hi" ? "संपर्क किया गया" : "Contacted")
+                          : item.status === "resolved"
+                          ? (lang === "hi" ? "समाधान पूर्ण" : "Resolved")
+                          : (lang === "hi" ? "कॉल पेंडिंग" : "Pending Call")}
+                      </span>
+                    </div>
+
+                    {/* Mobile Action Buttons */}
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 pt-1">
+                      {phoneDigits && (
+                        <>
+                          <a
+                            href={`tel:${item.contactPhone || item.phone}`}
+                            className="py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-blue-200 min-h-[44px]"
+                          >
+                            <PhoneCall className="w-4 h-4" />
+                            <span>{lang === "hi" ? "कॉल करें" : "Safe Call"}</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/${phoneDigits}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-emerald-200 min-h-[44px]"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>{lang === "hi" ? "व्हाट्सएप" : "WhatsApp"}</span>
+                          </a>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedConfidential(item)}
+                        className={`py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs min-h-[44px] ${phoneDigits ? "col-span-2 sm:col-span-1 sm:flex-1" : "col-span-2"}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>{lang === "hi" ? "विवरण व काउंसलर नोट्स" : "Details & Counselor Notes"}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop/Tablet Table (>= 640px) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">

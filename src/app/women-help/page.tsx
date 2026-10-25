@@ -625,7 +625,7 @@ export default function WomenHelpPage() {
           </div>
 
           <a
-            href="https://wa.me/919876543210?text=Salam%20%2F%20Namaste%20Apni%20Madad%20Foundation.%20Mujhe%20gopniya%20mahila%20sahayata%20ki%20zaroorat%20hai."
+            href="https://wa.me/919376998999?text=Salam%20%2F%20Namaste%20Apni%20Madad%20Foundation.%20Mujhe%20gopniya%20mahila%20sahayata%20ki%20zaroorat%20hai."
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-3.5 rounded-2xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 transition-all duration-200 flex items-center gap-2 shrink-0"
