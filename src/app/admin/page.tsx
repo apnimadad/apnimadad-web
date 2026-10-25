@@ -963,108 +963,188 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Section Switcher Tabs */}
-          <div className="flex items-center gap-2.5 border-t border-slate-100 pt-4 mt-4 overflow-x-auto no-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0 flex-nowrap sm:flex-wrap">
+          {/* Section Switcher Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 border-t border-slate-100 pt-4 mt-4">
+            {/* 1. Cases & Medical Verifications */}
             <button
               type="button"
               onClick={() => setAdminSection("cases")}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-3 ${
                 adminSection === "cases"
-                  ? "bg-blue-700 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-blue-700 text-white border-blue-800 shadow-md ring-2 ring-blue-700/20"
+                  : "bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>
-                {lang === "hi" ? "केस व चिकित्सा सत्यापन" : "Cases & Medical Verifications"}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
-                  adminSection === "cases"
-                    ? "bg-blue-800 text-white"
-                    : "bg-amber-100 text-amber-900"
-                }`}
-              >
-                {pendingCount} {lang === "hi" ? "लंबित" : "Pending"}
-              </span>
+              <div className="flex items-center justify-between w-full gap-2">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                    adminSection === "cases"
+                      ? "bg-white/20 text-white"
+                      : "bg-blue-50 text-blue-700"
+                  }`}
+                >
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-black tracking-wide shrink-0 transition ${
+                    adminSection === "cases"
+                      ? "bg-white/25 text-white"
+                      : "bg-amber-100 text-amber-900 border border-amber-200/80"
+                  }`}
+                >
+                  {pendingCount} {lang === "hi" ? "लंबित" : "Pending"}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base tracking-tight leading-snug">
+                  {lang === "hi" ? "केस व चिकित्सा सत्यापन" : "Cases & Medical Verifications"}
+                </h3>
+                <p
+                  className={`text-[11px] sm:text-xs mt-0.5 line-clamp-1 ${
+                    adminSection === "cases" ? "text-blue-100" : "text-slate-500"
+                  }`}
+                >
+                  {lang === "hi" ? "शून्य-कमीशन सत्यापन व अनुमोदन" : "Zero-commission medical verification"}
+                </p>
+              </div>
             </button>
 
+            {/* 2. Confidential Support */}
             <button
               type="button"
               onClick={() => setAdminSection("confidential")}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-3 ${
                 adminSection === "confidential"
-                  ? "bg-purple-700 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-purple-700 text-white border-purple-800 shadow-md ring-2 ring-purple-700/20"
+                  : "bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <Lock className="w-4 h-4 text-amber-300" />
-              <span>
-                {lang === "hi"
-                  ? "गोपनीय सहायता (महिला सुरक्षा व सट्टा मुक्ति)"
-                  : "Confidential Support (Women & De-Addiction)"}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
-                  adminSection === "confidential"
-                    ? "bg-purple-900 text-white"
-                    : "bg-purple-100 text-purple-900"
-                }`}
-              >
-                {confidentialCases.length} {lang === "hi" ? "गोपनीय" : "Confidential"}
-              </span>
+              <div className="flex items-center justify-between w-full gap-2">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                    adminSection === "confidential"
+                      ? "bg-white/20 text-amber-300"
+                      : "bg-purple-50 text-purple-700"
+                  }`}
+                >
+                  <Lock className="w-5 h-5" />
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-black tracking-wide shrink-0 transition ${
+                    adminSection === "confidential"
+                      ? "bg-white/25 text-white"
+                      : "bg-purple-100 text-purple-900 border border-purple-200/80"
+                  }`}
+                >
+                  {confidentialCases.length} {lang === "hi" ? "गोपनीय" : "Confidential"}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base tracking-tight leading-snug">
+                  {lang === "hi"
+                    ? "गोपनीय सहायता (महिला व सट्टा मुक्ति)"
+                    : "Confidential Support (Women & De-Addiction)"}
+                </h3>
+                <p
+                  className={`text-[11px] sm:text-xs mt-0.5 line-clamp-1 ${
+                    adminSection === "confidential" ? "text-purple-100" : "text-slate-500"
+                  }`}
+                >
+                  {lang === "hi" ? "100% सुरक्षित आंतरिक आपातकालीन सहायता" : "100% private emergency desk"}
+                </p>
+              </div>
             </button>
 
+            {/* 3. Export & Media Hub */}
             <button
               type="button"
               onClick={() => setAdminSection("exports")}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-3 ${
                 adminSection === "exports"
-                  ? "bg-emerald-700 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-emerald-700 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20"
+                  : "bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <HardDrive className="w-4 h-4 text-emerald-300" />
-              <span>
-                {lang === "hi"
-                  ? "डेटा निर्यात व मीडिया (CSV • MP4 • PDF)"
-                  : "Export & Media Hub (CSV • MP4 • PDF)"}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
-                  adminSection === "exports"
-                    ? "bg-emerald-800 text-white"
-                    : "bg-emerald-100 text-emerald-900"
-                }`}
-              >
-                All Data
-              </span>
+              <div className="flex items-center justify-between w-full gap-2">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                    adminSection === "exports"
+                      ? "bg-white/20 text-emerald-200"
+                      : "bg-emerald-50 text-emerald-700"
+                  }`}
+                >
+                  <HardDrive className="w-5 h-5" />
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-black tracking-wide shrink-0 transition ${
+                    adminSection === "exports"
+                      ? "bg-white/25 text-white"
+                      : "bg-emerald-100 text-emerald-900 border border-emerald-200/80"
+                  }`}
+                >
+                  {lang === "hi" ? "सभी डेटा" : "All Data"}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base tracking-tight leading-snug">
+                  {lang === "hi"
+                    ? "डेटा निर्यात व मीडिया (CSV • MP4 • PDF)"
+                    : "Export & Media Hub (CSV • MP4 • PDF)"}
+                </h3>
+                <p
+                  className={`text-[11px] sm:text-xs mt-0.5 line-clamp-1 ${
+                    adminSection === "exports" ? "text-emerald-100" : "text-slate-500"
+                  }`}
+                >
+                  {lang === "hi" ? "डेटाबेस बैकअप व अस्पताल बिल डाउनलोड" : "Live CSV database & media proofs"}
+                </p>
+              </div>
             </button>
 
+            {/* 4. Live Donors & Website Control */}
             <button
               type="button"
               onClick={() => setAdminSection("website")}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-3 ${
                 adminSection === "website"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-slate-900 text-white border-slate-950 shadow-md ring-2 ring-slate-900/20"
+                  : "bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <Sliders className="w-4 h-4 text-amber-400" />
-              <span>
-                {lang === "hi"
-                  ? "लाइव दानकर्ता व वेबसाइट नियंत्रण"
-                  : "Live Donors & Website Control"}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
-                  adminSection === "website"
-                    ? "bg-slate-800 text-amber-300"
-                    : "bg-slate-200 text-slate-700"
-                }`}
-              >
-                {donors.length} {lang === "hi" ? "दानकर्ता" : "Donors"}
-              </span>
+              <div className="flex items-center justify-between w-full gap-2">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                    adminSection === "website"
+                      ? "bg-white/20 text-amber-400"
+                      : "bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-black tracking-wide shrink-0 transition ${
+                    adminSection === "website"
+                      ? "bg-white/25 text-amber-300"
+                      : "bg-slate-100 text-slate-800 border border-slate-200/80"
+                  }`}
+                >
+                  {donors.length} {lang === "hi" ? "दानकर्ता" : "Donors"}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base tracking-tight leading-snug">
+                  {lang === "hi"
+                    ? "लाइव दानकर्ता व वेबसाइट नियंत्रण"
+                    : "Live Donors & Website Control"}
+                </h3>
+                <p
+                  className={`text-[11px] sm:text-xs mt-0.5 line-clamp-1 ${
+                    adminSection === "website" ? "text-slate-300" : "text-slate-500"
+                  }`}
+                >
+                  {lang === "hi" ? "टिकर, हेल्पलाइन व बैनर नियंत्रण" : "Live ticker & website settings"}
+                </p>
+              </div>
             </button>
           </div>
         </div>
