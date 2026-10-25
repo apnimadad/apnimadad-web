@@ -54,6 +54,9 @@ import {
   Paperclip,
   FileUp,
   HardDrive,
+  Trophy,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 type AdminCase = Case & {
@@ -110,6 +113,8 @@ export default function AdminPage() {
   const [selected, setSelected] = useState<AdminCase | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "funded" | "rejected" | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showQuickGuide, setShowQuickGuide] = useState(false);
   const [search, setSearch] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [newCaseModal, setNewCaseModal] = useState(false);
@@ -352,6 +357,9 @@ export default function AdminPage() {
           ? c.status === "rejected" || c.status === "closed"
           : c.status === activeTab;
 
+      const matchCategory =
+        categoryFilter === "all" ? true : c.category === categoryFilter;
+
       const matchSearch =
         search.trim() === "" ||
         (c.title && c.title.toLowerCase().includes(search.toLowerCase())) ||
@@ -359,9 +367,9 @@ export default function AdminPage() {
         (c.city && c.city.toLowerCase().includes(search.toLowerCase())) ||
         (c.id && c.id.toLowerCase().includes(search.toLowerCase()));
 
-      return matchTab && matchSearch;
+      return matchTab && matchCategory && matchSearch;
     });
-  }, [cases, activeTab, search]);
+  }, [cases, activeTab, categoryFilter, search]);
 
   // Filtered Confidential Cases
   const filteredConfidential = useMemo(() => {
@@ -477,6 +485,29 @@ export default function AdminPage() {
       setSelected((s) => (s ? { ...s, status: "rejected", verified: false } : null));
     }
     showToast("Case rejected. Notification sent to beneficiary.");
+  };
+
+  const handleMarkFunded = async (id: string) => {
+    try {
+      await updateCase(id, {
+        status: "funded",
+        verified: true,
+      });
+      setCases((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: "funded", verified: true } : c))
+      );
+      if (selected?.id === id) {
+        setSelected((s) => (s ? { ...s, status: "funded", verified: true } : null));
+      }
+      showToast(
+        lang === "hi"
+          ? "🎉 केस पूर्णतः पोषित (Fully Funded) चिह्नित किया गया!"
+          : "🎉 Case marked as Fully Funded!"
+      );
+    } catch (err) {
+      console.error("handleMarkFunded error:", err);
+      showToast(lang === "hi" ? "त्रुटि: स्टेटस अपडेट नहीं हुआ" : "Error updating case status");
+    }
   };
 
   const openEdit = (c: AdminCase) => {
@@ -724,6 +755,31 @@ export default function AdminPage() {
         );
       } else {
         showToast(`Bulk reject error: ${res.error || "Failed"}`);
+      }
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkMarkFunded = async () => {
+    if (selectedCaseIds.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      const res = await updateCasesBulk(selectedCaseIds, "funded");
+      if (res.success) {
+        setCases((prev) =>
+          prev.map((c) =>
+            selectedCaseIds.includes(c.id) ? { ...c, status: "funded", verified: true } : c
+          )
+        );
+        setSelectedCaseIds([]);
+        showToast(
+          lang === "hi"
+            ? `${selectedCaseIds.length} केस पूर्णतः पोषित (Funded) चिह्नित किए गए!`
+            : `${selectedCaseIds.length} case(s) marked as Fully Funded!`
+        );
+      } else {
+        showToast(`Bulk mark funded error: ${res.error || "Failed"}`);
       }
     } finally {
       setIsBulkProcessing(false);
@@ -1153,60 +1209,177 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {adminSection === "cases" ? (
           <>
-        {/* Metric Cards */}
+        {/* Quick Admin Helper Banner */}
+        <div className="mb-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-emerald-50 border border-blue-200/80 rounded-2xl p-4 sm:p-5 shadow-xs transition-all">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Sparkles className="w-5 h-5 text-amber-300" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <span>{lang === "hi" ? "त्वरित एडमिन सहायता और शॉर्टकट" : "Quick Admin Shortcuts & Guide"}</span>
+                  <span className="text-[10px] bg-blue-600 text-white font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Easy Mode
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {lang === "hi"
+                    ? "केस सत्यापन, पोषित स्थिति और श्रेणी फिल्टर अब केवल 1-क्लिक में उपलब्ध हैं।"
+                    : "Case verification, category filtering, and funding status are now 1-click away."}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowQuickGuide(!showQuickGuide)}
+              className="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-lg bg-white/80 border border-blue-200 cursor-pointer shadow-2xs"
+            >
+              <span>{showQuickGuide ? (lang === "hi" ? "छुपाएं" : "Hide") : (lang === "hi" ? "टिप्स देखें" : "View Tips")}</span>
+              {showQuickGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {showQuickGuide && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-blue-200/60 text-xs">
+              <div className="bg-white/90 p-3 rounded-xl border border-blue-100">
+                <p className="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                  <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[11px] font-black">1</span>
+                  {lang === "hi" ? "कार्ड पर क्लिक करके फिल्टर करें" : "Click Metrics to Filter"}
+                </p>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  {lang === "hi"
+                    ? "ऊपर दिए गए 'समीक्षा लंबित', 'सक्रिय', या 'पूर्णतः पोषित' कार्ड पर सीधे क्लिक करें।"
+                    : "Tap any Metric card above to filter table instantly without scrolling."}
+                </p>
+              </div>
+              <div className="bg-white/90 p-3 rounded-xl border border-blue-100">
+                <p className="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
+                  {lang === "hi" ? "1-क्लिक स्वीकृति और पोषित" : "1-Click Approve & Funded"}
+                </p>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  {lang === "hi"
+                    ? "लंबित केस को 🟢 से तुरंत अप्रूव करें और लक्ष्य पूरा होने पर 🏆 पोषित चिह्नित करें।"
+                    : "Use 🟢 to publish verified cases live or 🏆 to mark goals met immediately."}
+                </p>
+              </div>
+              <div className="bg-white/90 p-3 rounded-xl border border-blue-100">
+                <p className="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                  <span className="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[11px] font-black">3</span>
+                  {lang === "hi" ? "श्रेणी और त्वरित खोज" : "Category & Instant Clear"}
+                </p>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  {lang === "hi"
+                    ? "श्रेणी ड्रॉपडाउन से मेडिकल, शिक्षा आदि चुनें और ✕ बटन से तुरंत सर्च रीसेट करें।"
+                    : "Filter by category dropdown or tap ✕ to reset search in a fraction of a second."}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Metric Cards - Interactive & 1-Click Filter */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("pending")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              activeTab === "pending"
+                ? "bg-amber-50/70 border-amber-300 ring-2 ring-amber-500 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-amber-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-amber-700 transition">
                 {lang === "hi" ? "समीक्षा लंबित" : "Pending Review"}
               </span>
-              <Clock className="w-4 h-4 text-amber-500" />
+              <Clock className={`w-4 h-4 transition ${activeTab === "pending" ? "text-amber-600 scale-110" : "text-amber-500"}`} />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
               {pendingCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi"
-                ? "दस्तावेज सत्यापन आवश्यक"
-                : "Requires document verification"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "दस्तावेज सत्यापन आवश्यक" : "Requires verification"}
+              </p>
+              <span className="text-[10px] font-bold text-amber-600/80 uppercase">
+                {activeTab === "pending" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "क्लिक करें →" : "View →")}
+              </span>
+            </div>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("approved")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              activeTab === "approved"
+                ? "bg-blue-50/70 border-blue-300 ring-2 ring-blue-600 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-blue-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-blue-900 transition">
                 {lang === "hi" ? "सक्रिय सत्यापित" : "Active Verified"}
               </span>
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <ShieldCheck className={`w-4 h-4 transition ${activeTab === "approved" ? "text-blue-600 scale-110" : "text-emerald-500"}`} />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-blue-900">
               {approvedCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi"
-                ? "सीधे UPI भुगतान स्वीकार्य"
-                : "Accepting direct UPI transfers"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "सीधे UPI भुगतान स्वीकार्य" : "Accepting direct UPI"}
+              </p>
+              <span className="text-[10px] font-bold text-blue-700/80 uppercase">
+                {activeTab === "approved" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "क्लिक करें →" : "View →")}
+              </span>
+            </div>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("funded")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              activeTab === "funded"
+                ? "bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-600 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-800 transition">
                 {lang === "hi" ? "पूर्णतः पोषित" : "Fully Funded"}
               </span>
-              <Sparkles className="w-4 h-4 text-amber-500" />
+              <Trophy className={`w-4 h-4 transition ${activeTab === "funded" ? "text-emerald-600 scale-110" : "text-amber-500"}`} />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
+            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
               {fundedCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi" ? "लक्ष्य सीधे पूरे हुए" : "Goals met directly"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "लक्ष्य सीधे पूरे हुए" : "Goals met directly"}
+              </p>
+              <span className="text-[10px] font-bold text-emerald-700/80 uppercase">
+                {activeTab === "funded" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "क्लिक करें →" : "View →")}
+              </span>
+            </div>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("all");
+              setCategoryFilter("all");
+              setSearch("");
+            }}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              activeTab === "all" && categoryFilter === "all" && !search
+                ? "bg-slate-50 border-slate-300 ring-2 ring-slate-700 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-slate-900 transition">
                 {lang === "hi" ? "सीधी सहायता हस्तांतरित" : "Direct Aid Transferred"}
               </span>
               <TrendingUp className="w-4 h-4 text-emerald-600" />
@@ -1214,21 +1387,26 @@ export default function AdminPage() {
             <div className="text-xl sm:text-2xl font-extrabold text-emerald-700 truncate">
               {formatINR(totalRaised)}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi" ? "₹0 कमीशन कटौती" : "₹0 commission retained"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "₹0 कमीशन कटौती" : "₹0 commission retained"}
+              </p>
+              <span className="text-[10px] font-bold text-slate-600 uppercase">
+                {lang === "hi" ? "सभी देखें →" : "View All →"}
+              </span>
+            </div>
+          </button>
         </div>
 
         {/* Tabbed Navigation + Search Controls */}
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden mb-8">
-          <div className="p-4 sm:p-5 border-b border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 border-b border-slate-200/80 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             {/* Tabs: ALL IS FIRST */}
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 scrollbar-none">
               <button
                 type="button"
                 onClick={() => setActiveTab("all")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   activeTab === "all"
                     ? "bg-slate-800 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -1240,7 +1418,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("pending")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   activeTab === "pending"
                     ? "bg-amber-500 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -1252,7 +1430,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("approved")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   activeTab === "approved"
                     ? "bg-blue-800 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -1264,7 +1442,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("funded")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   activeTab === "funded"
                     ? "bg-emerald-700 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -1276,7 +1454,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("rejected")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   activeTab === "rejected"
                     ? "bg-rose-700 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -1286,20 +1464,64 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Search Input */}
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="search"
-                placeholder={
-                  lang === "hi"
-                    ? "मरीज, शीर्षक या शहर खोजें..."
-                    : "Search patient, title or city..."
-                }
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
-              />
+            {/* Search Input & Category Filter */}
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto">
+              <div className="relative flex-1 sm:w-56">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder={
+                    lang === "hi"
+                      ? "मरीज, शीर्षक या शहर खोजें..."
+                      : "Search patient, title or city..."
+                  }
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-8 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    title={lang === "hi" ? "सर्च साफ़ करें" : "Clear search"}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Category Filter Dropdown */}
+              <div className="relative shrink-0">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl bg-white text-slate-700 outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer shadow-xs"
+                >
+                  <option value="all">{lang === "hi" ? "सभी श्रेणियां" : "All Categories"}</option>
+                  <option value="medical">{lang === "hi" ? "चिकित्सा (Medical)" : "Medical"}</option>
+                  <option value="education">{lang === "hi" ? "शिक्षा (Education)" : "Education"}</option>
+                  <option value="accident">{lang === "hi" ? "दुर्घटना (Accident)" : "Accident"}</option>
+                  <option value="disability">{lang === "hi" ? "दिव्यांग (Disability)" : "Disability"}</option>
+                  <option value="family">{lang === "hi" ? "पारिवारिक (Family)" : "Family"}</option>
+                  <option value="other">{lang === "hi" ? "अन्य (Other)" : "Other"}</option>
+                </select>
+              </div>
+
+              {(search || categoryFilter !== "all" || activeTab !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setCategoryFilter("all");
+                    setActiveTab("all");
+                  }}
+                  className="text-[11px] font-bold text-slate-500 hover:text-rose-600 px-2 py-1 bg-slate-100 hover:bg-rose-50 rounded-lg transition shrink-0 cursor-pointer"
+                  title={lang === "hi" ? "सभी फिल्टर रीसेट करें" : "Reset all filters"}
+                >
+                  {lang === "hi" ? "रीसेट ✕" : "Reset ✕"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1391,14 +1613,14 @@ export default function AdminPage() {
                     </div>
 
                     {/* Mobile Action Buttons with comfortable touch targets */}
-                    <div className="flex items-center justify-between gap-1.5 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1">
                       <button
                         type="button"
                         onClick={() => {
                           setSelected(c);
                           setEditMode(false);
                         }}
-                        className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs flex items-center justify-center gap-1 min-h-[40px]"
+                        className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs flex items-center justify-center gap-1 min-h-[40px] cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>{lang === "hi" ? "समीक्षा" : "Review"}</span>
@@ -1407,7 +1629,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => openEdit(c)}
-                        className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1 min-h-[40px]"
+                        className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1 min-h-[40px] cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>{lang === "hi" ? "संपादित" : "Edit"}</span>
@@ -1418,27 +1640,40 @@ export default function AdminPage() {
                           <button
                             type="button"
                             onClick={() => handleApprove(c.id)}
-                            className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5"
-                            title="Approve"
+                            className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-3 gap-1 cursor-pointer"
+                            title={lang === "hi" ? "स्वीकृत करें" : "Approve"}
                           >
                             <CheckCircle className="w-4 h-4" />
+                            <span>{lang === "hi" ? "स्वीकृत" : "Approve"}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleReject(c.id)}
-                            className="p-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5"
-                            title="Reject"
+                            className="p-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5 cursor-pointer"
+                            title={lang === "hi" ? "अस्वीकृत करें" : "Reject"}
                           >
                             <XCircle className="w-4 h-4" />
                           </button>
                         </>
                       )}
 
+                      {c.status === "approved" && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkFunded(c.id)}
+                          className="p-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-3 gap-1 cursor-pointer shadow-xs"
+                          title={lang === "hi" ? "पूर्णतः पोषित चिह्नित करें" : "Mark as Fully Funded"}
+                        >
+                          <Trophy className="w-4 h-4 text-amber-300" />
+                          <span>{lang === "hi" ? "पोषित करें" : "Funded"}</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => handleDeleteSingle(c)}
-                        className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5"
-                        title="Delete"
+                        className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs flex items-center justify-center min-h-[40px] px-2.5 cursor-pointer"
+                        title={lang === "hi" ? "हटाएं" : "Delete"}
                       >
                         <Trash2 className="w-4 h-4 text-rose-600" />
                       </button>
@@ -1447,6 +1682,7 @@ export default function AdminPage() {
                         href={`/cases/${c.id}`}
                         target="_blank"
                         className="p-2 text-slate-400 hover:text-slate-700 rounded-xl flex items-center justify-center min-h-[40px]"
+                        title={lang === "hi" ? "लाइव देखें" : "View Live"}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Link>
@@ -1590,19 +1826,21 @@ export default function AdminPage() {
                                 setSelected(c);
                                 setEditMode(false);
                               }}
-                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition"
+                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition inline-flex items-center gap-1 text-xs cursor-pointer"
                               title={lang === "hi" ? "केस समीक्षा" : "Review Case"}
                             >
                               <Eye className="w-3.5 h-3.5" />
+                              <span className="hidden xl:inline">{lang === "hi" ? "समीक्षा" : "Review"}</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => openEdit(c)}
-                              className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg transition"
+                              className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg transition inline-flex items-center gap-1 text-xs cursor-pointer"
                               title={lang === "hi" ? "विवरण संपादित करें" : "Edit Details"}
                             >
                               <Edit3 className="w-3.5 h-3.5" />
+                              <span className="hidden xl:inline">{lang === "hi" ? "एडिट" : "Edit"}</span>
                             </button>
 
                             {c.status === "pending" && (
@@ -1610,26 +1848,40 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleApprove(c.id)}
-                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition"
+                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition inline-flex items-center gap-1 text-xs shadow-xs cursor-pointer"
                                   title={lang === "hi" ? "स्वीकृत व सत्यापित करें" : "Approve & Verify"}
                                 >
                                   <CheckCircle className="w-3.5 h-3.5" />
+                                  <span>{lang === "hi" ? "स्वीकृत" : "Approve"}</span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleReject(c.id)}
-                                  className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition"
+                                  className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition inline-flex items-center gap-1 text-xs cursor-pointer"
                                   title={lang === "hi" ? "केस अस्वीकृत करें" : "Reject Case"}
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
+                                  <span>{lang === "hi" ? "खारिज" : "Reject"}</span>
                                 </button>
                               </>
+                            )}
+
+                            {c.status === "approved" && (
+                              <button
+                                type="button"
+                                onClick={() => handleMarkFunded(c.id)}
+                                className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg transition inline-flex items-center gap-1 text-xs shadow-xs cursor-pointer"
+                                title={lang === "hi" ? "केस पूर्णतः पोषित (Funded) चिह्नित करें" : "Mark Case as Fully Funded"}
+                              >
+                                <Trophy className="w-3.5 h-3.5 text-amber-300" />
+                                <span>{lang === "hi" ? "पोषित करें" : "Mark Funded"}</span>
+                              </button>
                             )}
 
                             <button
                               type="button"
                               onClick={() => handleDeleteSingle(c)}
-                              className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg transition"
+                              className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg transition cursor-pointer"
                               title={lang === "hi" ? "केस स्थायी रूप से हटाएं" : "Permanently Delete Case"}
                             >
                               <Trash2 className="w-3.5 h-3.5 text-rose-600" />
@@ -1669,7 +1921,7 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>{lang === "hi" ? "चयनित हटाएं" : "Delete Selected"}</span>
+                <span>{lang === "hi" ? "हटाएं" : "Delete"}</span>
               </button>
 
               <button
@@ -1679,7 +1931,17 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                <span>{lang === "hi" ? "स्वीकृत करें" : "Approve Selected"}</span>
+                <span>{lang === "hi" ? "स्वीकृत करें" : "Approve"}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isBulkProcessing}
+                onClick={handleBulkMarkFunded}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                <Trophy className="w-3.5 h-3.5 text-amber-300" />
+                <span>{lang === "hi" ? "पोषित करें" : "Mark Funded"}</span>
               </button>
 
               <button
@@ -1689,13 +1951,13 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
               >
                 <XCircle className="w-3.5 h-3.5" />
-                <span>{lang === "hi" ? "अस्वीकृत करें" : "Reject Selected"}</span>
+                <span>{lang === "hi" ? "अस्वीकृत करें" : "Reject"}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSelectedCaseIds([])}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition cursor-pointer"
                 title={lang === "hi" ? "चयन रद्द करें" : "Deselect All"}
               >
                 <X className="w-4 h-4" />
@@ -1758,11 +2020,19 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Confidential Metric Cards */}
+        {/* Confidential Metric Cards - Interactive Filter */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setConfidentialFilter("all")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              confidentialFilter === "all"
+                ? "bg-purple-50/70 border-purple-300 ring-2 ring-purple-600 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-purple-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-purple-700 transition">
                 {lang === "hi" ? "कुल गोपनीय अनुरोध" : "Total Confidential Cases"}
               </span>
               <Lock className="w-4 h-4 text-purple-600" />
@@ -1770,14 +2040,27 @@ export default function AdminPage() {
             <div className="text-2xl sm:text-3xl font-extrabold text-purple-700">
               {confidentialCases.length}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi" ? "100% शून्य पब्लिक प्रसार" : "100% Zero Public Exposure"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "100% शून्य पब्लिक प्रसार" : "100% Zero Public Exposure"}
+              </p>
+              <span className="text-[10px] font-bold text-purple-600 uppercase">
+                {confidentialFilter === "all" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "देखें →" : "View →")}
+              </span>
+            </div>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setConfidentialFilter("women_help")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              confidentialFilter === "women_help"
+                ? "bg-rose-50/70 border-rose-300 ring-2 ring-rose-600 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-rose-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-rose-700 transition">
                 {lang === "hi" ? "महिला सहायता" : "Women Help"}
               </span>
               <ShieldAlert className="w-4 h-4 text-rose-500" />
@@ -1785,14 +2068,27 @@ export default function AdminPage() {
             <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">
               {womenCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi" ? "सुरक्षित आश्रय व कानूनी मदद" : "Safe shelter & legal guidance"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "सुरक्षित आश्रय व कानूनी मदद" : "Safe shelter & legal"}
+              </p>
+              <span className="text-[10px] font-bold text-rose-600 uppercase">
+                {confidentialFilter === "women_help" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "देखें →" : "View →")}
+              </span>
+            </div>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setConfidentialFilter("satta_mukt")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              confidentialFilter === "satta_mukt"
+                ? "bg-amber-50/70 border-amber-300 ring-2 ring-amber-600 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-amber-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-amber-700 transition">
                 {lang === "hi" ? "सट्टा मुक्ति अभियान" : "De-Addiction Drive"}
               </span>
               <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -1800,14 +2096,27 @@ export default function AdminPage() {
             <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
               {sattaCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi" ? "मनोवैज्ञानिक व ऋण मार्गदर्शन" : "Psychological & debt guidance"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "मनोवैज्ञानिक व ऋण सहायता" : "Psychological & debt"}
+              </p>
+              <span className="text-[10px] font-bold text-amber-600 uppercase">
+                {confidentialFilter === "satta_mukt" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "देखें →" : "View →")}
+              </span>
+            </div>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setConfidentialFilter("urgent")}
+            className={`text-left p-5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs group ${
+              confidentialFilter === "urgent"
+                ? "bg-blue-50/70 border-blue-300 ring-2 ring-blue-600 shadow-md scale-[1.01]"
+                : "bg-white border-slate-200 hover:border-blue-300 hover:shadow-md"
+            }`}
+          >
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider group-hover:text-blue-700 transition">
                 {lang === "hi" ? "सुरक्षित कॉल लंबित" : "Pending Safe Calls"}
               </span>
               <Clock className="w-4 h-4 text-blue-500" />
@@ -1815,10 +2124,15 @@ export default function AdminPage() {
             <div className="text-2xl sm:text-3xl font-extrabold text-blue-600">
               {pendingCallsCount}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              {lang === "hi" ? "दिए गए सुरक्षित समय पर संपर्क करें" : "Contact during selected safe windows"}
-            </p>
-          </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] text-slate-400">
+                {lang === "hi" ? "दिए गए समय पर संपर्क करें" : "Contact during safe windows"}
+              </p>
+              <span className="text-[10px] font-bold text-blue-600 uppercase">
+                {confidentialFilter === "urgent" ? (lang === "hi" ? "चयनित ✓" : "Active ✓") : (lang === "hi" ? "देखें →" : "View →")}
+              </span>
+            </div>
+          </button>
         </div>
 
         {/* Filter and Inquiries Table */}

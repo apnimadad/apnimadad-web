@@ -825,9 +825,9 @@ export async function updateCasesBulk(
     .from("cases")
     .update({
       status,
-      verified: status === "approved",
+      verified: status === "approved" || status === "funded",
       verification_stage:
-        status === "approved"
+        status === "approved" || status === "funded"
           ? "verified"
           : status === "rejected"
           ? "rejected"
