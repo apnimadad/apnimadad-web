@@ -58,61 +58,61 @@ export default function CaseCard({
   };
 
   return (
-    <article className="case-card group bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-xs hover:border-blue-200 flex flex-col transition-all duration-300">
+    <article className="case-card group bg-white rounded-3xl overflow-hidden border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.06)] hover:border-blue-300/80 flex flex-col transition-all duration-300">
       {/* Photo Header */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         <Image
           src={photoUrl}
           alt={patientName}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+          className="object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent" />
 
         {/* Badges Overlay */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 items-center">
+        <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-1.5 items-center">
           {c.verified && (
-            <span className="verified-badge bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+            <span className="verified-badge bg-emerald-600 text-white text-[11px] font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-100" />
               <span>{t("verified")}</span>
             </span>
           )}
-          <span className="bg-white/95 backdrop-blur-md text-slate-800 text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs border border-white/60">
+          <span className="bg-white/95 backdrop-blur-md text-slate-800 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs border border-white/80">
             {categoryIcon()}
             <span className="capitalize">{c.category}</span>
           </span>
         </div>
 
         {c.status === "funded" && (
-          <span className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+          <span className="absolute top-3.5 right-3.5 bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>{t("funded")}</span>
           </span>
         )}
 
         {c.urgency === "high" && c.status === "approved" && (
-          <span className="absolute bottom-3 right-3 bg-red-600/95 backdrop-blur-xs text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-sm uppercase tracking-wider flex items-center gap-1">
+          <span className="absolute bottom-3.5 right-3.5 bg-rose-600/95 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1">
             <Clock className="w-3 h-3 animate-pulse" />
             <span>{t("high")} Urgency</span>
           </span>
         )}
 
-        <div className="absolute bottom-3 left-3 text-white text-xs font-medium flex items-center gap-1.5 drop-shadow-md">
+        <div className="absolute bottom-3.5 left-3.5 text-white text-xs font-semibold flex items-center gap-1.5 drop-shadow-md">
           <MapPin className="w-3.5 h-3.5 text-amber-300" />
           <span>{city}</span>
           {patientName && (
             <>
-              <span>·</span>
-              <span>{patientName} {age ? `(${age})` : ""}</span>
+              <span className="text-white/60">·</span>
+              <span className="font-bold">{patientName} {age ? `(${age})` : ""}</span>
             </>
           )}
         </div>
       </div>
 
       {/* Body Content */}
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug mb-2 line-clamp-2 group-hover:text-blue-700 transition">
+      <div className="p-5 sm:p-6 flex flex-col flex-1">
+        <h3 className="font-extrabold text-slate-900 text-base sm:text-lg leading-snug mb-2 line-clamp-2 group-hover:text-blue-700 transition">
           {title}
         </h3>
         <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 mb-4 flex-1 leading-relaxed">
@@ -120,47 +120,45 @@ export default function CaseCard({
         </p>
 
         {/* Progress Tracker */}
-        <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 mb-4">
-          <div className="flex justify-between items-baseline text-xs mb-1.5">
-            <span className="font-extrabold text-emerald-700 text-sm">
+        <div className="bg-slate-50/90 rounded-2xl p-3.5 border border-slate-100 mb-4">
+          <div className="flex justify-between items-baseline text-xs mb-2">
+            <span className="font-black text-emerald-700 text-base tracking-tight">
               {formatINR(amountRaised)}
             </span>
-            <span className="text-slate-500 font-medium">
-              {t("raised")} ({progress}%)
+            <span className="text-slate-600 font-bold text-[11px] bg-slate-200/70 px-2 py-0.5 rounded-full">
+              {t("raised")} · {progress}%
             </span>
           </div>
 
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-slate-200/80 rounded-full overflow-hidden p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-full progress-bar"
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-full progress-bar shadow-xs"
               style={{ width: `${Math.min(100, progress)}%` }}
             />
           </div>
 
-          <div className="flex justify-between text-[11px] text-slate-500 mt-1.5 pt-1 border-t border-slate-200/60 font-medium">
-            <span>Goal: {formatINR(amountNeeded)}</span>
-            <span className="text-slate-700 font-semibold">
-              Remaining: {formatINR(remaining)}
-            </span>
+          <div className="flex justify-between text-[11px] text-slate-500 mt-2 pt-1.5 border-t border-slate-200/60 font-medium">
+            <span>Goal: <strong className="text-slate-700">{formatINR(amountNeeded)}</strong></span>
+            <span>Remaining: <strong className="text-amber-800">{formatINR(remaining)}</strong></span>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-2.5 pt-1">
           <Link
             href={`/cases/${c.id}`}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm font-bold border border-slate-300 text-slate-700 hover:text-blue-800 hover:bg-blue-50/60 rounded-xl transition active:scale-98"
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700 hover:text-blue-800 rounded-xl transition active:scale-98 shadow-2xs"
           >
             <span>{t("viewDetails")}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
           </Link>
 
           {c.status === "approved" && (
             <Link
               href={`/cases/${c.id}#donate`}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs hover:shadow transition active:scale-98"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3.5 text-xs sm:text-sm font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl shadow-xs hover:shadow-md transition active:scale-98"
             >
-              <QrCode className="w-3.5 h-3.5" />
+              <QrCode className="w-3.5 h-3.5 text-slate-950" />
               <span>{t("donateNow")}</span>
             </Link>
           )}

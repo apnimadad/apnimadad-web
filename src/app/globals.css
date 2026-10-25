@@ -112,16 +112,37 @@ html {
 /* Glassmorphism helpers */
 .glass {
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .glass-dark {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 17, 32, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06);
+}
+
+/* Luxury ambient glows */
+.glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
+}
+
+.glow-amber {
+  box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.25);
+}
+
+.glow-blue {
+  box-shadow: 0 0 30px -5px rgba(37, 99, 235, 0.22);
 }
 
 /* Progress bar animation */
@@ -130,7 +151,7 @@ html {
 }
 
 .progress-bar {
-  animation: progress-fill 1.2s ease-out forwards;
+  animation: progress-fill 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Marquee for top donors */
@@ -139,7 +160,7 @@ html {
   100% { transform: translateX(-50%); }
 }
 .animate-marquee {
-  animation: marquee 42s linear infinite;
+  animation: marquee 45s linear infinite;
 }
 .animate-marquee:hover {
   animation-play-state: paused;
@@ -148,19 +169,28 @@ html {
 /* Pulse badge */
 @keyframes badge-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.9; }
+  50% { transform: scale(1.04); opacity: 0.92; }
 }
 .animate-badge {
-  animation: badge-pulse 2.5s ease-in-out infinite;
+  animation: badge-pulse 3s ease-in-out infinite;
 }
 
-/* Card hover */
+/* Floating animation */
+@keyframes subtle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.animate-float {
+  animation: subtle-float 4s ease-in-out infinite;
+}
+
+/* Card hover with gentle soothing elevation */
 .case-card {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
 }
 .case-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 35px -10px rgba(15, 23, 42, 0.12), 0 0 1px 1px rgba(15, 23, 42, 0.05);
+  transform: translateY(-5px);
+  box-shadow: 0 24px 40px -12px rgba(15, 23, 42, 0.12), 0 0 1px 1px rgba(15, 23, 42, 0.04);
 }
 
 /* Verified badge glow */
@@ -170,9 +200,9 @@ html {
 
 /* Modal animation */
 @keyframes modal-pop {
-  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+  0% { opacity: 0; transform: scale(0.96) translateY(8px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 .animate-modal {
-  animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modal-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

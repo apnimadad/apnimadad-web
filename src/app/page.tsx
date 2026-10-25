@@ -72,48 +72,49 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 text-white overflow-hidden py-16 sm:py-24">
-        {/* Glow Blobs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative bg-gradient-to-br from-[#020617] via-[#07132a] to-[#030919] text-white overflow-hidden py-16 sm:py-24">
+        {/* Soft Ambient Glows */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 right-10 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-[90px] pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* Left Content (7 cols) */}
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 backdrop-blur-md px-4 py-2 rounded-full text-xs sm:text-sm font-bold border border-white/20 shadow-xs">
+              <div className="inline-flex items-center gap-2 bg-white/[0.08] hover:bg-white/[0.12] backdrop-blur-md px-4 py-2 rounded-full text-xs sm:text-sm font-bold border border-white/20 shadow-xs transition-colors">
                 <span className="flex h-2 w-2 relative">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="text-emerald-400 font-extrabold">100% Direct Donation</span>
-                <span className="text-slate-400">·</span>
+                <span className="text-emerald-400 font-extrabold">100% Direct Beneficiary Transfer</span>
+                <span className="text-white/30">·</span>
                 <span className="text-amber-300">₹0 Platform Fee</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
                 {t("heroTitle")}
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
+              <p className="text-base sm:text-lg text-slate-300/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
                 {t("heroSubtitle")}
               </p>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-3.5 pt-2 max-w-sm sm:max-w-none mx-auto">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3.5 pt-2 max-w-sm sm:max-w-none mx-auto">
                 <Link
                   href="/cases"
-                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base w-full sm:w-auto"
+                  className="inline-flex items-center justify-center gap-2.5 px-7 py-4 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-2xl shadow-[0_10px_25px_-5px_rgba(245,158,11,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(245,158,11,0.5)] transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base w-full sm:w-auto"
                 >
-                  <HeartHandshake className="w-5 h-5" />
+                  <HeartHandshake className="w-5 h-5 text-slate-950" />
                   <span>{t("browseCases")}</span>
                 </Link>
 
                 <Link
                   href="/submit"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold rounded-2xl transition hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base w-full sm:w-auto"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-4 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md border border-white/20 hover:border-amber-400/40 text-white font-extrabold rounded-2xl transition-all hover:-translate-y-0.5 active:scale-95 text-sm sm:text-base w-full sm:w-auto shadow-sm"
                 >
                   <PlusCircle className="w-5 h-5 text-amber-400" />
                   <span>{t("submitCase")}</span>
@@ -121,7 +122,7 @@ export default function HomePage() {
               </div>
 
               {/* Trust Indicators Pill List */}
-              <div className="pt-6 border-t border-white/10 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[11px] sm:text-xs text-slate-400 font-medium">
+              <div className="pt-6 border-t border-white/10 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[11px] sm:text-xs text-slate-300/90 font-semibold">
                 <div className="flex items-center gap-1.5 text-emerald-400">
                   <ShieldCheck className="w-4 h-4 shrink-0" />
                   <span>Physically Verified Cases</span>
@@ -140,9 +141,9 @@ export default function HomePage() {
             {/* Right Interactive Visual Card (5 cols) */}
             <div className="lg:col-span-5 flex justify-center w-full">
               <div className="relative w-full max-w-sm">
-                <div className="absolute -inset-2 bg-gradient-to-r from-amber-400 via-emerald-500 to-blue-500 rounded-3xl blur-xl opacity-30 animate-pulse" />
+                <div className="absolute -inset-2 bg-gradient-to-r from-amber-400/30 via-emerald-500/30 to-blue-500/30 rounded-3xl blur-xl opacity-40 animate-pulse pointer-events-none" />
 
-                <div className="relative bg-slate-900/90 backdrop-blur-xl border border-white/15 rounded-3xl p-4 sm:p-6 shadow-2xl text-white space-y-4 sm:space-y-5">
+                <div className="relative bg-slate-900/80 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-white space-y-4 sm:space-y-5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       <Image
@@ -150,23 +151,23 @@ export default function HomePage() {
                         alt="Logo"
                         width={40}
                         height={40}
-                        className="w-10 h-10 rounded-full border-2 border-amber-400 shrink-0"
+                        className="w-10 h-10 rounded-full border-2 border-amber-400 shrink-0 shadow-xs"
                       />
                       <div className="min-w-0">
                         <div className="font-extrabold text-xs sm:text-sm text-white truncate">Direct Transfer Preview</div>
-                        <div className="text-[10px] sm:text-[11px] text-emerald-400 font-bold truncate">100% Transparent Model</div>
+                        <div className="text-[10px] sm:text-[11px] text-emerald-400 font-bold truncate">100% Transparent Protocol</div>
                       </div>
                     </div>
-                    <span className="bg-emerald-500/20 text-emerald-300 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap shrink-0">
+                    <span className="bg-emerald-500/20 text-emerald-300 text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/40 whitespace-nowrap shrink-0 shadow-inner">
                       DIRECT TRANSFER
                     </span>
                   </div>
 
                   {/* Flow Simulation Box */}
-                  <div className="bg-slate-950/70 rounded-2xl p-3 sm:p-4 border border-white/10 space-y-2.5 sm:space-y-3">
+                  <div className="bg-slate-950/80 rounded-2xl p-4 border border-white/10 space-y-2.5 shadow-inner">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Donor Gives</span>
-                      <span className="font-bold text-white">₹1,000</span>
+                      <span className="text-slate-400 font-medium">Donor Gives</span>
+                      <span className="font-extrabold text-white text-sm">₹1,000</span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-rose-400">
                       <span>Apni Madad Commission</span>
@@ -176,15 +177,15 @@ export default function HomePage() {
                       <span>Payment Gateway Fee</span>
                       <span className="font-bold">₹0 (Direct UPI)</span>
                     </div>
-                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-sm font-extrabold text-emerald-400">
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-sm font-black text-emerald-400">
                       <span>Patient Receives</span>
-                      <span className="text-base">₹1,000 (100%)</span>
+                      <span className="text-base text-emerald-300">₹1,000 (100%)</span>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-3">
+                  <div className="p-3 bg-white/[0.06] rounded-2xl border border-white/10 flex items-center gap-3">
                     <Smartphone className="w-7 h-7 sm:w-8 sm:h-8 text-amber-400 shrink-0" />
-                    <div className="text-[11px] sm:text-xs text-slate-300 leading-snug">
+                    <div className="text-[11px] sm:text-xs text-slate-300 leading-snug font-medium">
                       Open Google Pay, PhonePe, or Paytm and scan the patient&apos;s verified UPI QR directly.
                     </div>
                   </div>
@@ -219,43 +220,62 @@ export default function HomePage() {
           </div>
 
           <div className="overflow-x-auto no-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0">
-            <div className="min-w-[560px] sm:min-w-[620px] bg-slate-50/70 rounded-2xl sm:rounded-3xl border border-slate-200 p-2 sm:p-4">
+            <div className="min-w-[580px] sm:min-w-[640px] bg-white rounded-3xl border border-slate-200/90 shadow-[0_10px_35px_-10px_rgba(15,23,42,0.06)] p-3 sm:p-5">
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] sm:text-[11px]">
-                    <th className="py-3 sm:py-4 px-3 sm:px-4">Feature</th>
-                    <th className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/80 text-blue-900 rounded-t-2xl font-black text-xs sm:text-sm">
-                      Apni Madad Foundation
+                  <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase text-[10px] sm:text-[11px] tracking-wider">
+                    <th className="py-4 px-4 sm:px-5">Audit Criterion</th>
+                    <th className="py-4 px-4 sm:px-5 bg-blue-50/80 text-blue-950 rounded-t-2xl font-black text-xs sm:text-sm border-x border-t border-blue-200/60 shadow-xs">
+                      Apni Madad Foundation (Direct)
                     </th>
-                    <th className="py-3 sm:py-4 px-3 sm:px-4 text-slate-500">Other Crowdfunding Sites</th>
+                    <th className="py-4 px-4 sm:px-5 text-slate-500">Other Crowdfunding Platforms</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200/80">
-                  <tr>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Platform Commission</td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-black text-emerald-700">₹0 (Zero Commission)</td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-rose-600 font-bold">5% to 10% deducted</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Where Does Money Go?</td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-bold text-slate-900">
-                      Directly into Beneficiary / Hospital Account
+                <tbody className="divide-y divide-slate-100">
+                  <tr className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-4 sm:px-5 font-bold text-slate-800 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-black text-xs">%</span>
+                      <span>Platform Commission Cut</span>
                     </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-slate-600">Held in platform escrow wallet</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Fund Access Speed</td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-bold text-emerald-700">
-                      Instant (Same Second via UPI)
+                    <td className="py-4 px-4 sm:px-5 bg-blue-50/40 border-x border-blue-200/40 font-black text-emerald-700">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60 shadow-2xs">
+                        ₹0 (Zero Commission Guarantee)
+                      </span>
                     </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-slate-600">7 to 15 days bank payout wait</td>
+                    <td className="py-4 px-4 sm:px-5 text-rose-600 font-bold">5% to 10% deducted</td>
                   </tr>
-                  <tr>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 font-bold text-slate-800">Ground Physical Verification</td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 bg-blue-50/50 font-bold text-slate-900">
-                      Audit officers visit hospital & home
+                  <tr className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-4 sm:px-5 font-bold text-slate-800">
+                      Destination of Donated Funds
                     </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-4 text-slate-600">Mostly automated online upload</td>
+                    <td className="py-4 px-4 sm:px-5 bg-blue-50/40 border-x border-blue-200/40 font-black text-slate-900">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 text-blue-900 border border-blue-300/60">
+                        Direct to Patient / Hospital Account
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 sm:px-5 text-slate-600 font-medium">Held in platform escrow wallet</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-4 sm:px-5 font-bold text-slate-800">
+                      Fund Settlement Speed
+                    </td>
+                    <td className="py-4 px-4 sm:px-5 bg-blue-50/40 border-x border-blue-200/40 font-black text-emerald-700">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">
+                        Instant (Same Second via UPI)
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 sm:px-5 text-slate-600 font-medium">7 to 15 days bank payout delay</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-4 sm:px-5 font-bold text-slate-800">
+                      Ground Physical Verification
+                    </td>
+                    <td className="py-4 px-4 sm:px-5 bg-blue-50/40 border-x border-b border-blue-200/40 rounded-b-2xl font-black text-slate-900">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 text-blue-900 border border-blue-300/60">
+                        Field audit officers inspect hospital & home
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 sm:px-5 text-slate-600 font-medium">Automated online form upload only</td>
                   </tr>
                 </tbody>
               </table>

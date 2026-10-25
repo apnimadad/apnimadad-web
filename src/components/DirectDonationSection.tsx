@@ -43,25 +43,25 @@ export default function DirectDonationSection() {
     : `upi://pay?pa=${encodeURIComponent(direct.upiId)}&pn=${encodeURIComponent(direct.accountName)}&cu=INR&tn=Foundation%20Donation`;
 
   return (
-    <section id="direct-donate" className="py-14 sm:py-20 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white relative overflow-hidden border-y border-blue-900/40">
+    <section id="direct-donate" className="py-14 sm:py-24 bg-gradient-to-b from-[#030712] via-[#071328] to-[#030919] text-white relative overflow-hidden border-y border-white/10">
       {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-xs font-bold mb-3 shadow-xs">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/30 text-xs font-black mb-3 shadow-inner">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>{lang === "hi" ? "सीधा लाइव फाउंडेशन दान (0% शुल्क)" : "Live Direct Foundation Donation (0% Fee)"}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight mb-3 flex items-center justify-center gap-2.5">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight mb-3 flex items-center justify-center gap-2.5 drop-shadow-sm">
             <Heart className="w-7 h-7 sm:w-9 sm:h-9 text-rose-500 fill-rose-500 shrink-0" />
             <span>{direct.title || (lang === "hi" ? "सीधे फाउंडेशन को दान करें" : "Direct Foundation Donation")}</span>
           </h2>
 
-          <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-xs sm:text-base text-slate-300/90 leading-relaxed max-w-2xl mx-auto font-normal">
             {direct.subtitle || (lang === "hi"
               ? "फोनपे, गूगल पे, पेटीएम या किसी भी यूपीआई ऐप से सीधे क्यूआर कोड स्कैन करके या आधिकारिक यूपीआई आईडी में 100% पारदर्शी सहायता भेजें।"
               : "Scan with PhonePe, Google Pay, Paytm or any UPI app to transfer funds directly without middlemen or platform deductions.")}
@@ -69,7 +69,7 @@ export default function DirectDonationSection() {
         </div>
 
         {/* Live Donation Interactive Card */}
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-10 border border-white/15 shadow-2xl max-w-5xl mx-auto">
+        <div className="bg-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 sm:p-10 border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left: Payment controls & UPI copy */}
             <div className="lg:col-span-7 space-y-6">

@@ -17,48 +17,48 @@ export default function Footer() {
   const { lang, t } = useLanguage();
 
   return (
-    <footer className="bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto">
+    <footer className="bg-[#020617] text-slate-300 border-t border-slate-800/80 mt-auto">
       {/* Upper Trust Strip */}
-      <div className="border-b border-slate-800/80 bg-slate-900/60 py-6">
+      <div className="border-b border-slate-800/80 bg-slate-950/80 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 transition">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <div className="text-xs font-bold text-white">100% Physical Audit</div>
-                <div className="text-[11px] text-slate-400">Ground verified cases</div>
+                <div className="text-xs sm:text-sm font-extrabold text-white tracking-tight">100% Ground Audit</div>
+                <div className="text-[11px] text-slate-400 font-medium">Physically verified cases</div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-                <QrCode className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 transition">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 shadow-inner">
+                <QrCode className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <div className="text-xs font-bold text-white">₹0 Commission</div>
-                <div className="text-[11px] text-slate-400">Direct to Beneficiary UPI</div>
+                <div className="text-xs sm:text-sm font-extrabold text-white tracking-tight">₹0 Commission</div>
+                <div className="text-[11px] text-slate-400 font-medium">100% directly to beneficiary</div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 transition">
+              <div className="w-11 h-11 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+                <Sparkles className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <div className="text-xs font-bold text-white">Instant Settlement</div>
-                <div className="text-[11px] text-slate-400">No escrow or waiting</div>
+                <div className="text-xs sm:text-sm font-extrabold text-white tracking-tight">Instant Settlement</div>
+                <div className="text-[11px] text-slate-400 font-medium">Real-time direct UPI transfer</div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
-                <Heart className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 transition">
+              <div className="w-11 h-11 rounded-2xl bg-rose-500/15 text-rose-400 flex items-center justify-center shrink-0 shadow-inner">
+                <Heart className="w-5 h-5 text-rose-400 fill-rose-400/30" />
               </div>
               <div>
-                <div className="text-xs font-bold text-white">Transparent NGO</div>
-                <div className="text-[11px] text-slate-400">Registered Trust (India)</div>
+                <div className="text-xs sm:text-sm font-extrabold text-white tracking-tight">Registered Trust</div>
+                <div className="text-[11px] text-slate-400 font-medium">Govt Reg: IV-190300183</div>
               </div>
             </div>
           </div>
