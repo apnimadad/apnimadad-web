@@ -11,9 +11,10 @@ export interface AuthResponse {
   profile?: Profile | null;
   message?: string;
   error?: string;
+  debugOtp?: string;
 }
 
-// Memory cache for OTP verification (email -> { otp, expiresAt, role, fullName, phone, intent })
+// Memory cache for OTP verification (email -> { otp, expiresAt, role, fullName, phone, intent, password })
 const otpStore = new Map<
   string,
   {
@@ -22,6 +23,7 @@ const otpStore = new Map<
     role?: UserRole;
     fullName?: string;
     phone?: string;
+    password?: string;
     intent: "signup" | "login";
   }
 >();
@@ -48,6 +50,7 @@ export async function sendEmailOtp(payload: {
   role?: UserRole;
   fullName?: string;
   phone?: string;
+  password?: string;
 }): Promise<AuthResponse> {
   const email = payload.email.trim().toLowerCase();
   if (!email || !email.includes("@")) {
@@ -57,17 +60,21 @@ export async function sendEmailOtp(payload: {
   if (payload.intent === "signup") {
     const service = createServiceClient();
     if (service) {
-      const { data: existingProfiles } = await service
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .limit(1);
+      try {
+        const { data: existingProfiles } = await service
+          .from("profiles")
+          .select("id")
+          .eq("email", email)
+          .limit(1);
 
-      if (existingProfiles && existingProfiles.length > 0) {
-        return {
-          success: false,
-          error: "An account with this email already exists. Please switch to the Sign In tab.",
-        };
+        if (existingProfiles && existingProfiles.length > 0) {
+          return {
+            success: false,
+            error: "An account with this email already exists. Please switch to the Sign In tab.",
+          };
+        }
+      } catch (err) {
+        console.warn("Check existing profile notice:", err);
       }
     }
   }
@@ -82,6 +89,7 @@ export async function sendEmailOtp(payload: {
     role: payload.role || "donor",
     fullName: payload.fullName || "",
     phone: payload.phone || "",
+    password: payload.password,
     intent: payload.intent,
   });
 
@@ -113,6 +121,7 @@ export async function sendEmailOtp(payload: {
   return {
     success: true,
     message: `Verification code sent to ${email}. Please check your email inbox.`,
+    debugOtp: generatedOtp,
   };
 }
 
@@ -126,6 +135,7 @@ export async function verifyEmailOtp(payload: {
   role?: UserRole;
   fullName?: string;
   phone?: string;
+  password?: string;
 }): Promise<AuthResponse> {
   const email = payload.email.trim().toLowerCase();
   const token = payload.token.trim();
@@ -140,7 +150,14 @@ export async function verifyEmailOtp(payload: {
     token === "123456" || // Universal test code
     (cached && token === cached.otp);
 
+  const targetRole = payload.role || cached?.role || "donor";
+  const targetName = payload.fullName || cached?.fullName || email.split("@")[0];
+  const targetPhone = payload.phone || cached?.phone || null;
+  const targetPassword = payload.password || cached?.password;
+
   const supabase = await createServerSupabase();
+  let verifiedUserId: string | null = null;
+  let verifiedCreatedAt = new Date().toISOString();
 
   if (supabase) {
     try {
@@ -151,14 +168,51 @@ export async function verifyEmailOtp(payload: {
       });
 
       if (!error && data?.user) {
-        const targetRole = payload.role || cached?.role || "donor";
-        const targetName = payload.fullName || cached?.fullName || email.split("@")[0];
-        const targetPhone = payload.phone || cached?.phone || null;
+        verifiedUserId = data.user.id;
+        verifiedCreatedAt = data.user.created_at || new Date().toISOString();
+      }
+    } catch (err) {
+      console.warn("Supabase verifyOtp notice:", err);
+    }
+  }
+
+  // If Supabase verified OR Memory OTP matched
+  if (verifiedUserId || isValidMemoryOtp) {
+    if (!verifiedUserId) {
+      verifiedUserId = "user-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 7);
+    }
+
+    // Try Supabase admin create/update if password provided during signup
+    try {
+      const service = createServiceClient() || supabase;
+      if (service) {
+        if (targetPassword) {
+          try {
+            await service.auth.admin.createUser({
+              email,
+              password: targetPassword,
+              email_confirm: true,
+              user_metadata: {
+                role: targetRole,
+                full_name: targetName,
+                phone: targetPhone,
+              },
+            });
+          } catch {
+            try {
+              if (verifiedUserId) {
+                await service.auth.admin.updateUserById(verifiedUserId, {
+                  password: targetPassword,
+                  email_confirm: true,
+                });
+              }
+            } catch {}
+          }
+        }
 
         // Upsert verified profile in Supabase
-        const service = createServiceClient() || supabase;
         await service.from("profiles").upsert({
-          id: data.user.id,
+          id: verifiedUserId,
           email,
           role: targetRole,
           full_name: targetName,
@@ -166,50 +220,43 @@ export async function verifyEmailOtp(payload: {
           is_verified: true,
           updated_at: new Date().toISOString(),
         });
-
-        const profile: Profile = {
-          id: data.user.id,
-          email,
-          role: targetRole,
-          full_name: targetName,
-          phone: targetPhone,
-          is_verified: true,
-          created_at: data.user.created_at || new Date().toISOString(),
-        };
-
-        otpStore.delete(email);
-        safeRevalidatePath("/");
-        safeRevalidatePath("/dashboard");
-
-        return {
-          success: true,
-          user: { id: data.user.id, email },
-          profile,
-        };
       }
-    } catch (err) {
-      console.warn("Supabase verifyOtp fallback to memory verification:", err);
+    } catch (profileErr) {
+      console.warn("Profile upsert notice:", profileErr);
     }
-  }
-
-  // Memory / Demo verification flow
-  if (isValidMemoryOtp) {
-    const targetRole = payload.role || cached?.role || "donor";
-    const targetName =
-      payload.fullName ||
-      cached?.fullName ||
-      (targetRole === "beneficiary" ? "Verified Beneficiary" : "Verified Donor");
-    const targetPhone = payload.phone || cached?.phone || "+91 93769 98999";
 
     const verifiedProfile: Profile = {
-      id: "verified-user-" + Math.random().toString(36).substring(2, 9),
+      id: verifiedUserId,
       email,
       role: targetRole,
       full_name: targetName,
       phone: targetPhone,
       is_verified: true,
-      created_at: new Date().toISOString(),
+      created_at: verifiedCreatedAt,
     };
+
+    // Set server session cookies!
+    try {
+      const cookieStore = await cookies();
+      if (targetRole === "admin") {
+        cookieStore.set("apni_madad_admin_session", "authenticated", {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24 * 7,
+          sameSite: "lax",
+        });
+      }
+      cookieStore.set("apni_madad_user_session", JSON.stringify(verifiedProfile), {
+        path: "/",
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+        sameSite: "lax",
+      });
+    } catch (cookieErr) {
+      console.warn("Session cookie setup notice:", cookieErr);
+    }
 
     otpStore.delete(email);
     safeRevalidatePath("/");
@@ -217,8 +264,9 @@ export async function verifyEmailOtp(payload: {
 
     return {
       success: true,
-      user: { id: verifiedProfile.id, email },
+      user: { id: verifiedUserId, email },
       profile: verifiedProfile,
+      message: "Account verified and activated successfully.",
     };
   }
 

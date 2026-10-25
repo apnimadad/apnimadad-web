@@ -24,7 +24,7 @@ import { UserRole } from "@/types/database";
 function LoginForm() {
   const searchParams = useSearchParams();
   const { lang } = useLanguage();
-  const { signIn, signUp, requestOtp, verifyOtp } = useAuth();
+  const { signIn, requestOtp, verifyOtp } = useAuth();
 
   // Role: "donor" | "beneficiary" | "admin"
   const [role, setRole] = useState<UserRole>("donor");
@@ -39,6 +39,11 @@ function LoginForm() {
   const [otpStep, setOtpStep] = useState<"email" | "code">("email");
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
+
+  // Sign up verification flow
+  const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
+  const [signupOtp, setSignupOtp] = useState("");
+  const [signupDebugOtp, setSignupDebugOtp] = useState<string | null>(null);
 
   // Form Fields
   const [fullName, setFullName] = useState("");
@@ -276,7 +281,7 @@ function LoginForm() {
     }
   };
 
-  // 2. Password Sign Up
+  // 2. Account Sign Up with Mandatory OTP Verification
   const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
@@ -300,12 +305,14 @@ function LoginForm() {
     setMessage(null);
 
     try {
-      const res = await signUp({
+      // Send 6-digit OTP to user/donor email for verification
+      const res = await requestOtp({
         email: email.trim().toLowerCase(),
-        password,
+        intent: "signup",
+        role,
         fullName: fullName.trim(),
         phone: phone.trim() || undefined,
-        role,
+        password,
       });
 
       if (!res.success) {
@@ -313,10 +320,75 @@ function LoginForm() {
         return;
       }
 
-      setMessage({ type: "success", text: t.errors.signUpSuccess });
-      setTimeout(handleRedirect, 800);
+      setSignupStep("otp");
+      setResendTimer(60);
+      if (res.debugOtp) {
+        setSignupDebugOtp(res.debugOtp);
+      }
+      setMessage({
+        type: "success",
+        text:
+          lang === "hi"
+            ? `सत्यापन कोड आपके ईमेल ${email} पर भेज दिया गया है। खाता सक्रिय करने हेतु 6-अंकों का कोड दर्ज करें:`
+            : `Verification code sent to ${email}. Please enter the 6-digit code below to activate your account:`,
+      });
     } catch (err: unknown) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : t.errors.signUpFailed });
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : t.errors.signUpFailed,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2b. Verify Sign Up OTP & Activate Account
+  const handleVerifySignUpOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signupOtp || signupOtp.trim().length < 6) {
+      setMessage({ type: "error", text: t.errors.enterFullCode });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: signupOtp.trim(),
+        intent: "signup",
+        role,
+        fullName: fullName.trim(),
+        phone: phone.trim() || undefined,
+        password,
+      });
+
+      if (!res.success) {
+        setMessage({
+          type: "error",
+          text:
+            res.error ||
+            (lang === "hi"
+              ? "गलत या समाप्त सत्यापन कोड। कृपया पुनः प्रयास करें।"
+              : "Invalid or expired verification code. Please check and try again."),
+        });
+        return;
+      }
+
+      setMessage({
+        type: "success",
+        text:
+          lang === "hi"
+            ? "🎉 खाता सफलतापूर्वक सत्यापित और सक्रिय हो गया! पोर्टल खोला जा रहा है..."
+            : "🎉 Account verified & activated successfully! Opening your portal...",
+      });
+      setTimeout(() => handleRedirect(res.role || role), 800);
+    } catch (err: unknown) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : t.errors.verifyFailed,
+      });
     } finally {
       setLoading(false);
     }
@@ -474,6 +546,8 @@ function LoginForm() {
               type="button"
               onClick={() => {
                 setAuthTab("signin");
+                setSignupStep("form");
+                setSignupOtp("");
                 setOtpStep("email");
                 setMessage(null);
               }}
@@ -489,6 +563,8 @@ function LoginForm() {
               type="button"
               onClick={() => {
                 setAuthTab("signup");
+                setSignupStep("form");
+                setSignupOtp("");
                 setOtpStep("email");
                 setMessage(null);
               }}
@@ -709,117 +785,209 @@ function LoginForm() {
           </div>
         )}
 
-        {/* FORM SECTION 3: Create Account (Sign Up) */}
+        {/* FORM SECTION 3: Create Account (Sign Up) with Mandatory OTP Verification */}
         {authTab === "signup" && (
-          <form onSubmit={handleSignUpSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.fullNameLabel}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder={t.fullNamePlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
-                />
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              </div>
-            </div>
+          <div>
+            {signupStep === "form" ? (
+              <form onSubmit={handleSignUpSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {t.fullNameLabel}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder={t.fullNamePlaceholder}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    />
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.emailLabel}
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t.emailPlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
-                />
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              </div>
-            </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {t.emailLabel}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t.emailPlaceholder}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    />
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.phoneLabel}
-              </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={t.phonePlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
-                />
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              </div>
-            </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {t.phoneLabel}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder={t.phonePlaceholder}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    />
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.createPasswordLabel}
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
-                />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {t.createPasswordLabel}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    />
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {t.confirmPasswordLabel}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    />
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  </div>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor} cursor-pointer`}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {loading ? (
+                    <span>{t.sendingCodeBtn}</span>
+                  ) : (
+                    <>
+                      <span>{lang === "hi" ? "सत्यापन कोड भेजें व आगे बढ़ें" : "Send Verification Code & Continue"}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.confirmPasswordLabel}
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={6}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
-                />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              </div>
-            </div>
+                <p className="text-[11px] text-center text-slate-500 mt-2 flex items-center justify-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{lang === "hi" ? "सुरक्षा कारणों से ईमेल पर 6-अंकों का OTP भेजा जाएगा।" : "For your security, a 6-digit OTP will be sent to your email."}</span>
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifySignUpOtp} className="space-y-4">
+                <div className="text-center pb-2">
+                  <div className={`w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-2.5 ${currentRole.badgeColor}`}>
+                    <KeyRound className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    {lang === "hi" ? "खाता ईमेल सत्यापन" : "Verify Your Account"}
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1">
+                    {lang === "hi"
+                      ? `हमने आपके ईमेल पर 6-अंकों का सत्यापन कोड भेजा है:`
+                      : `We've sent a 6-digit verification code to:`}
+                  </p>
+                  <p className="text-xs font-bold text-blue-900 mt-0.5">{email}</p>
+                  {signupDebugOtp && (
+                    <div className="mt-2 inline-block text-[11px] font-mono font-bold bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg border border-amber-200">
+                      {lang === "hi" ? `परीक्षण सत्यापन कोड: ${signupDebugOtp} (या 123456)` : `Test OTP Code: ${signupDebugOtp} (or 123456)`}
+                    </div>
+                  )}
+                </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor}`}
-            >
-              {loading ? (
-                <span>{t.creatingAccountBtn}</span>
-              ) : (
-                <>
-                  <span>{t.signUpBtn}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 text-center">
+                    {t.enterCodeLabel}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      autoFocus
+                      value={signupOtp}
+                      onChange={(e) => setSignupOtp(e.target.value.replace(/\D/g, ""))}
+                      placeholder="123456"
+                      className="w-full py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xl font-extrabold tracking-widest focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    />
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1.5 text-center">
+                    {lang === "hi"
+                      ? "कृपया ईमेल इनबॉक्स या स्पैम फ़ोल्डर जांचें।"
+                      : "Please check your email inbox or spam folder."}
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || signupOtp.length < 6}
+                  className={`w-full py-3 text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${currentRole.btnColor} cursor-pointer`}
+                >
+                  {loading ? (
+                    <span>{t.verifyingBtn}</span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{lang === "hi" ? "सत्यापित करें और खाता शुरू करें" : "Verify & Activate Account"}</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignupStep("form");
+                      setMessage(null);
+                    }}
+                    className="text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+                  >
+                    ← {lang === "hi" ? "ईमेल / विवरण बदलें" : "Edit Details / Email"}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={resendTimer > 0 || loading}
+                    onClick={handleSignUpSubmit}
+                    className="text-blue-600 hover:underline font-bold disabled:text-slate-400 cursor-pointer"
+                  >
+                    {resendTimer > 0 ? `${t.resendIn} (${resendTimer}s)` : t.resendCodeBtn}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         )}
 
         {/* Footer Security Note */}

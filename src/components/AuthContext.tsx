@@ -40,7 +40,8 @@ interface AuthContextType {
     role?: UserRole;
     fullName?: string;
     phone?: string;
-  }) => Promise<{ success: boolean; message?: string; error?: string }>;
+    password?: string;
+  }) => Promise<{ success: boolean; message?: string; error?: string; debugOtp?: string }>;
   verifyOtp: (payload: {
     email: string;
     token: string;
@@ -48,6 +49,7 @@ interface AuthContextType {
     role?: UserRole;
     fullName?: string;
     phone?: string;
+    password?: string;
   }) => Promise<{ success: boolean; role?: UserRole; profile?: Profile; error?: string }>;
   requestWhatsApp: (payload: {
     phone: string;
@@ -274,6 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role?: UserRole;
     fullName?: string;
     phone?: string;
+    password?: string;
   }) => {
     return sendEmailOtp(payload);
   };
@@ -285,6 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role?: UserRole;
     fullName?: string;
     phone?: string;
+    password?: string;
   }) => {
     setLoading(true);
     try {
