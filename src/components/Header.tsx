@@ -57,9 +57,6 @@ export default function Header() {
 
   return (
     <>
-      {/* Top Most Recent Generous Donors Ticker Strip */}
-      <TopDonorsTicker />
-
       <header suppressHydrationWarning className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-3 xl:gap-4">
@@ -86,8 +83,8 @@ export default function Header() {
                 <span className="font-black text-base sm:text-lg xl:text-xl text-slate-900 tracking-tight group-hover:text-blue-700 transition truncate">
                   Apni Madad
                 </span>
-                <span className="text-[9px] sm:text-[10px] text-slate-500 font-bold tracking-wider uppercase truncate">
-                  <span className="hidden xs:inline sm:inline">FOUNDATION · </span>100% DIRECT HELP
+                <span className="text-[11px] sm:text-xs text-emerald-700 font-bold tracking-wide truncate">
+                  शेखावाटी
                 </span>
               </span>
             </Link>
@@ -542,6 +539,8 @@ export default function Header() {
           </div>
         )}
       </header>
+      {/* Top Most Recent Generous Donors Ticker Strip - Positioned Below Navbar */}
+      <TopDonorsTicker />
     </>
   );
 }
