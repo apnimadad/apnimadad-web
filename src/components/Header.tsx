@@ -18,18 +18,16 @@ import {
   Lock,
   User,
   ChevronDown,
-  MessageCircle,
   Users
 } from "lucide-react";
 
 import { useAuth } from "./AuthContext";
-import { useSiteSettings } from "./SiteSettingsContext";
 import NotificationBell from "./NotificationBell";
+import TopDonorsTicker from "./TopDonorsTicker";
 
 export default function Header() {
   const { lang, setLang } = useLanguage();
   const { user, profile, role, signOut } = useAuth();
-  const { settings } = useSiteSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [signInMenuOpen, setSignInMenuOpen] = useState(false);
@@ -59,35 +57,8 @@ export default function Header() {
 
   return (
     <>
-      {/* Top Most Confidential WhatsApp Helpline & Assistance Strip */}
-      <div 
-        suppressHydrationWarning 
-        className="bg-gradient-to-r from-slate-950 via-emerald-950 to-slate-950 text-white text-xs py-2 px-4 sm:px-6 lg:px-8 border-b border-emerald-500/30 shadow-xs"
-      >
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-center sm:text-left">
-          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black border border-emerald-400/30 uppercase tracking-wider shrink-0">
-              <Lock className="w-3 h-3 text-emerald-400" />
-              <span>100% गोपनीय व सुरक्षित</span>
-            </span>
-            <span className="font-semibold text-slate-100 text-xs sm:text-[13px] leading-snug">
-              {lang === "hi"
-                ? "किसी भी प्रकार की सहायता या मार्गदर्शन के लिए हमसे संपर्क करें। आपकी पहचान और जानकारी पूरी तरह गोपनीय व सुरक्षित रखी जाएगी।"
-                : "Contact us for any kind of help or guidance. Your identity and information will be kept strictly confidential and secure."}
-            </span>
-          </div>
-
-          <a
-            href={`https://wa.me/${(settings?.whatsappHelpline || "919376998999").replace(/\D/g, "")}?text=${encodeURIComponent("नमस्ते अपनी मदद फाउंडेशन। मुझे सहायता और मार्गदर्शन की आवश्यकता है। कृपया मेरा मार्गदर्शन करें।")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md hover:shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 shrink-0"
-          >
-            <MessageCircle className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-            <span>{lang === "hi" ? "WhatsApp पर संपर्क करें" : "WhatsApp Us"}</span>
-          </a>
-        </div>
-      </div>
+      {/* Top Most Recent Generous Donors Ticker Strip */}
+      <TopDonorsTicker />
 
       <header suppressHydrationWarning className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

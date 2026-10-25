@@ -21,7 +21,7 @@ export default function TopDonorsTicker() {
   const donors = liveDonors.length > 0 ? [...liveDonors, ...liveDonors, ...liveDonors] : [];
 
   return (
-    <section className="relative bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white py-3.5 overflow-hidden border-b border-blue-900/40">
+    <section suppressHydrationWarning className="relative bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white py-2.5 sm:py-3 overflow-hidden border-b border-blue-900/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="flex h-2.5 w-2.5 relative">

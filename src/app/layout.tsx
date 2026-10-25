@@ -5,7 +5,6 @@ import { LanguageProvider } from "@/components/LanguageContext";
 import { AuthProvider } from "@/components/AuthContext";
 import { SiteSettingsProvider } from "@/components/SiteSettingsContext";
 import Header from "@/components/Header";
-import TopDonorsTicker from "@/components/TopDonorsTicker";
 import Footer from "@/components/Footer";
 import ClientErrorGuard from "@/components/ClientErrorGuard";
 
@@ -116,7 +115,6 @@ export default function RootLayout({
           <LanguageProvider>
             <SiteSettingsProvider>
               <Header />
-              <TopDonorsTicker />
               <main suppressHydrationWarning className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
               <Footer />
             </SiteSettingsProvider>

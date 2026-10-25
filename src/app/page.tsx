@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLanguage } from "@/components/LanguageContext";
 import CaseCard from "@/components/CaseCard";
 import DirectDonationSection from "@/components/DirectDonationSection";
+import ConfidentialSupportSection from "@/components/ConfidentialSupportSection";
 import { useState, useEffect } from "react";
 import { Case } from "@/types/database";
 import {
@@ -193,6 +194,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 100% Confidential & Secure Assistance Section (Inside Body) */}
+      <ConfidentialSupportSection />
 
       {/* Transparency Comparison Table (Apni Madad vs Traditional Platforms) */}
       <section className="py-14 sm:py-20 bg-white border-b border-slate-200">
