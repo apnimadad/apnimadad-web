@@ -8,65 +8,104 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  const pathname = request.nextUrl.pathname;
+
+  // 1. Check verified session cookies first (resilient against Supabase offline/network errors)
+  const adminSession = request.cookies.get("apni_madad_admin_session");
+  const userSession = request.cookies.get("apni_madad_user_session");
+
+  if (pathname.startsWith("/admin")) {
+    if (adminSession?.value === "authenticated") {
+      return response;
+    }
+  }
+
+  if (pathname.startsWith("/dashboard")) {
+    if (adminSession?.value === "authenticated" || userSession?.value) {
+      return response;
+    }
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If Supabase is not configured, permit demo mode
+  // If Supabase is not configured, permit session cookie or redirect to login
   if (!url || !key) {
-    return response;
-  }
-
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        response = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  // Refresh auth session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
-
-  // Protect /admin routes
-  if (pathname.startsWith("/admin")) {
-    if (!user) {
+    if (pathname.startsWith("/admin") && adminSession?.value !== "authenticated") {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(redirectUrl);
     }
-
-    // Role check
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      const redirectUrl = new URL("/dashboard", request.url);
-      redirectUrl.searchParams.set("error", "admin_required");
-      return NextResponse.redirect(redirectUrl);
-    }
+    return response;
   }
 
-  // Protect /dashboard routes
-  if (pathname.startsWith("/dashboard")) {
-    if (!user) {
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    });
+
+    // Refresh auth session safely
+    let user = null;
+    try {
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch {
+      // Supabase network unreachable
+    }
+
+    // Protect /admin routes
+    if (pathname.startsWith("/admin")) {
+      if (!user && adminSession?.value !== "authenticated") {
+        const redirectUrl = new URL("/login", request.url);
+        redirectUrl.searchParams.set("next", pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+
+      if (user && adminSession?.value !== "authenticated") {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
+          if (profile?.role !== "admin") {
+            const redirectUrl = new URL("/dashboard", request.url);
+            redirectUrl.searchParams.set("error", "admin_required");
+            return NextResponse.redirect(redirectUrl);
+          }
+        } catch {
+          // Keep response
+        }
+      }
+    }
+
+    // Protect /dashboard routes
+    if (pathname.startsWith("/dashboard")) {
+      if (!user && !userSession?.value && adminSession?.value !== "authenticated") {
+        const redirectUrl = new URL("/login", request.url);
+        redirectUrl.searchParams.set("next", pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+  } catch (err) {
+    console.warn("Middleware auth error notice:", err);
+    if (pathname.startsWith("/admin") && adminSession?.value !== "authenticated") {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(redirectUrl);

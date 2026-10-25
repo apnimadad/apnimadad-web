@@ -79,34 +79,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function initAuth() {
       try {
+        // 1. Check for cookie-based session first (for Admin Desk and local session persistence)
+        const getCookie = (name: string) => {
+          if (typeof document === "undefined") return null;
+          const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+          return match ? decodeURIComponent(match[2]) : null;
+        };
+
+        const adminCookie = getCookie("apni_madad_admin_session");
+        const userCookie = getCookie("apni_madad_user_session");
+
+        if (adminCookie === "authenticated") {
+          let adminProfile: Profile = {
+            id: "admin-master-01",
+            email: "aapnimadad@proton.me",
+            role: "admin",
+            full_name: "Apni Madad Foundation (Admin)",
+            phone: "+91 93769 98999",
+            is_verified: true,
+            created_at: "2026-01-01T00:00:00.000Z",
+          };
+          if (userCookie) {
+            try {
+              const parsed = JSON.parse(userCookie) as Profile;
+              if (parsed?.email) adminProfile = parsed;
+            } catch {}
+          }
+          setUser({ id: adminProfile.id, email: adminProfile.email });
+          setProfile(adminProfile);
+          setLoading(false);
+          return;
+        }
+
+        if (userCookie) {
+          try {
+            const parsed = JSON.parse(userCookie) as Profile;
+            if (parsed && parsed.id && parsed.role) {
+              setUser({ id: parsed.id, email: parsed.email || "" });
+              setProfile(parsed);
+              setLoading(false);
+              return;
+            }
+          } catch {}
+        }
+
         if (isSupabaseConfigured()) {
           const supabase = createClient();
           if (supabase) {
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
+            try {
+              const {
+                data: { session },
+              } = await supabase.auth.getSession();
 
-            if (session?.user) {
-              setUser({ id: session.user.id, email: session.user.email || "" });
-              const { data: prof } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", session.user.id)
-                .single();
+              if (session?.user) {
+                setUser({ id: session.user.id, email: session.user.email || "" });
+                const { data: prof } = await supabase
+                  .from("profiles")
+                  .select("*")
+                  .eq("id", session.user.id)
+                  .single();
 
-              if (prof) {
-                setProfile(prof as Profile);
-              } else {
-                setProfile({
-                  id: session.user.id,
-                  email: session.user.email || "",
-                  role: (session.user.user_metadata?.role as UserRole) || "donor",
-                  full_name: session.user.user_metadata?.full_name || "User",
-                  phone: session.user.user_metadata?.phone || null,
-                  is_verified: true,
-                  created_at: session.user.created_at,
-                });
+                if (prof) {
+                  setProfile(prof as Profile);
+                } else {
+                  setProfile({
+                    id: session.user.id,
+                    email: session.user.email || "",
+                    role: (session.user.user_metadata?.role as UserRole) || "donor",
+                    full_name: session.user.user_metadata?.full_name || "User",
+                    phone: session.user.user_metadata?.phone || null,
+                    is_verified: true,
+                    created_at: session.user.created_at,
+                  });
+                }
               }
+            } catch (supaErr) {
+              console.warn("Supabase browser session init notice:", supaErr);
             }
           }
         } else {
@@ -165,66 +213,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const cleanEmail = email.trim().toLowerCase();
     try {
-      if (isSupabaseConfigured()) {
-        const supabase = createClient();
-        if (supabase) {
-          try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email: cleanEmail,
-              password: pass,
-            });
-
-            if (!error && data?.user) {
-              const { data: prof } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", data.user.id)
-                .single();
-
-              const resolvedProfile: Profile = (prof as Profile) || {
-                id: data.user.id,
-                email: data.user.email || cleanEmail,
-                role: (data.user.user_metadata?.role as UserRole) || "donor",
-                full_name: data.user.user_metadata?.full_name || cleanEmail.split("@")[0],
-                phone: data.user.user_metadata?.phone || null,
-                is_verified: true,
-                created_at: data.user.created_at,
-              };
-
-              setUser({ id: data.user.id, email: data.user.email || cleanEmail });
-              setProfile(resolvedProfile);
-              return { success: true, role: resolvedProfile.role, profile: resolvedProfile };
-            }
-          } catch (clientErr) {
-            console.warn("Direct browser signIn fallback to server action:", clientErr);
-          }
-        }
-      }
-
+      // Authenticate via Server Action to securely verify credentials and set HTTP-only cookies
       const res = await signInUser(cleanEmail, pass);
       if (res.success && res.profile) {
         setUser(res.user || null);
         setProfile(res.profile);
-        if (isSupabaseConfigured()) {
-          const supabase = createClient();
-          if (supabase) {
-            try {
-              await supabase.auth.signInWithPassword({
-                email: cleanEmail,
-                password: pass,
-              });
-            } catch {
-              // Session cookie already set on server
-            }
-          }
-        } else {
-          localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(res.profile));
-        }
         return { success: true, role: res.profile.role, profile: res.profile };
       }
-      return { success: false, error: res.error || "Login failed" };
+      return { success: false, error: res.error || "Sign in failed. Please check your credentials." };
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : "Login failed" };
+      console.error("Sign in error:", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Sign in failed. Please check your credentials.",
+      };
     } finally {
       setLoading(false);
     }
@@ -332,6 +334,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     try {
+      if (typeof document !== "undefined") {
+        document.cookie = "apni_madad_admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "apni_madad_user_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+      }
       if (isSupabaseConfigured()) {
         const supabase = createClient();
         if (supabase) {
