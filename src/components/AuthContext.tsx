@@ -41,7 +41,7 @@ interface AuthContextType {
     fullName?: string;
     phone?: string;
     password?: string;
-  }) => Promise<{ success: boolean; message?: string; error?: string; debugOtp?: string }>;
+  }) => Promise<{ success: boolean; message?: string; error?: string }>;
   verifyOtp: (payload: {
     email: string;
     token: string;

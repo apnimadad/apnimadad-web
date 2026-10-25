@@ -43,7 +43,6 @@ function LoginForm() {
   // Sign up verification flow
   const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
   const [signupOtp, setSignupOtp] = useState("");
-  const [signupDebugOtp, setSignupDebugOtp] = useState<string | null>(null);
 
   // Form Fields
   const [fullName, setFullName] = useState("");
@@ -316,15 +315,32 @@ function LoginForm() {
       });
 
       if (!res.success) {
-        setMessage({ type: "error", text: res.error || t.errors.signUpFailed });
+        const errorMsg = res.error || t.errors.signUpFailed;
+        setMessage({ type: "error", text: errorMsg });
+
+        // If email already exists, smoothly switch to the Sign In tab with email pre-filled
+        if (
+          errorMsg.toLowerCase().includes("already exists") ||
+          errorMsg.toLowerCase().includes("sign in") ||
+          errorMsg.toLowerCase().includes("पहले से मौजूद")
+        ) {
+          setTimeout(() => {
+            setAuthTab("signin");
+            setAuthMethod("password");
+            setMessage({
+              type: "error",
+              text:
+                lang === "hi"
+                  ? `इस ईमेल (${email}) से खाता पहले से बना हुआ है। कृपया पासवर्ड अथवा OTP से साइन इन करें:`
+                  : `An account with ${email} already exists. Please sign in below with your password or OTP:`,
+            });
+          }, 1400);
+        }
         return;
       }
 
       setSignupStep("otp");
       setResendTimer(60);
-      if (res.debugOtp) {
-        setSignupDebugOtp(res.debugOtp);
-      }
       setMessage({
         type: "success",
         text:
@@ -737,7 +753,7 @@ function LoginForm() {
                       required
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                      placeholder="123456"
+                      placeholder="••••••"
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-lg font-bold tracking-widest focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                     />
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -918,11 +934,6 @@ function LoginForm() {
                       : `We've sent a 6-digit verification code to:`}
                   </p>
                   <p className="text-xs font-bold text-blue-900 mt-0.5">{email}</p>
-                  {signupDebugOtp && (
-                    <div className="mt-2 inline-block text-[11px] font-mono font-bold bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg border border-amber-200">
-                      {lang === "hi" ? `परीक्षण सत्यापन कोड: ${signupDebugOtp} (या 123456)` : `Test OTP Code: ${signupDebugOtp} (or 123456)`}
-                    </div>
-                  )}
                 </div>
 
                 <div>
@@ -937,7 +948,7 @@ function LoginForm() {
                       autoFocus
                       value={signupOtp}
                       onChange={(e) => setSignupOtp(e.target.value.replace(/\D/g, ""))}
-                      placeholder="123456"
+                      placeholder="••••••"
                       className="w-full py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xl font-extrabold tracking-widest focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
                     />
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
